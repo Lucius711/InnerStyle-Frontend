@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --grid: 64px;
+}
+
+/* ---- Theme palettes (RGB channels for Tailwind <alpha-value>) ---- */
+.dark {
+  color-scheme: dark;
+  --app-bg: 5 6 12;
+  --app-surface: 10 11 20;
+  --app-elevated: 17 19 31;
+  --app-text: 237 240 247;
+  --app-muted: 148 163 184;
+  --app-faint: 100 116 139;
+  --app-line: 255 255 255;
+  --app-grid: 255 255 255;
+  --glass-bg: rgba(255, 255, 255, 0.035);
+  --glass-strong-bg: rgba(255, 255, 255, 0.06);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --scroll-track: #05060c;
+  --scroll-thumb: #272b40;
+}
+
+.light {
+  color-scheme: light;
+  --app-bg: 235 238 245;
+  --app-surface: 255 255 255;
+  --app-elevated: 244 246 250;
+  --app-text: 15 23 42;
+  --app-muted: 51 65 85;
+  --app-faint: 100 116 139;
+  --app-line: 15 23 42;
+  --app-grid: 15 23 42;
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-strong-bg: rgba(255, 255, 255, 0.95);
+  --glass-border: rgba(15, 23, 42, 0.1);
+  --scroll-track: #e6e9f0;
+  --scroll-thumb: #c3cbd9;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-app-bg text-app-text font-sans antialiased;
+  margin: 0;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(
+      110deg,
+      #a78bfa 0%,
+      #7c5cff 30%,
+      #5b6cff 55%,
+      #22d3ee 100%
+    );
+    background-size: 200% auto;
+  }
+
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    @apply backdrop-blur-xl;
+  }
+
+  .glass-strong {
+    background: var(--glass-strong-bg);
+    border: 1px solid var(--glass-border);
+    @apply backdrop-blur-2xl;
+  }
+
+  .focus-ring {
+    @apply outline-none ring-offset-2 ring-offset-app-bg focus-visible:ring-2 focus-visible:ring-brand-violet/70;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scroll-track);
+}
+
+::selection {
+  background: rgba(124, 92, 255, 0.35);
+  color: #fff;
+}
