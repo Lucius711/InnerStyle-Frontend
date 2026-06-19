@@ -178,6 +178,7 @@ export default function ImageTo3DForm({ onCreated, disabled }) {
       <AdvancedOptions
         value={options}
         onChange={setOptions}
+        imageMode
         show={source === "multi" ? { poseMode: false } : {}}
       />
 

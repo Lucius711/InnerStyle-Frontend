@@ -23,7 +23,7 @@ const STYLE_LABELS = {
  * Collapsible advanced generation settings shared by the image & text forms.
  * `show` toggles which controls appear for the given pipeline stage.
  */
-export default function AdvancedOptions({ value, onChange, show = {} }) {
+export default function AdvancedOptions({ value, onChange, show = {}, imageMode = false }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const set = (patch) => onChange({ ...value, ...patch });
@@ -87,17 +87,6 @@ export default function AdvancedOptions({ value, onChange, show = {} }) {
             className="overflow-hidden"
           >
             <div className="space-y-5 px-5 pb-6 pt-1">
-              {fields.style && (
-                <Field label={t("form.style")}>
-                  <Segmented
-                    name="style"
-                    options={styleOptions}
-                    value={value.style || "default"}
-                    onChange={(v) => set({ style: v })}
-                  />
-                </Field>
-              )}
-
               {fields.aiModel && (
                 <Field label={t("form.aiModel")}>
                   <Segmented

@@ -159,11 +159,14 @@ export const en = {
     startOver: "Start over",
     modeImage: "Image → 3D",
     modeText: "Text → 3D",
+    modeFigurine: "Chibi figurine",
     idleTitle: "Your model will appear here",
     idleImage:
       "Add an image and hit generate — you'll be able to orbit the result in real time.",
     idleText:
       "Describe something and hit generate — a preview mesh will build live.",
+    idleFigurine:
+      "Add a portrait — it's stylized into a chibi figure, then built into a colorful 3D model.",
     status: {
       PENDING: "Queued",
       IN_PROGRESS: "Generating",
@@ -174,6 +177,8 @@ export const en = {
     types: {
       IMAGE_TO_3D: "Image → 3D",
       MULTI_IMAGE_TO_3D: "Multi-image → 3D",
+      FIGURE_PROTOTYPE: "Chibi concept",
+      FIGURE_BUILD: "Chibi figurine",
       TEXT_TO_3D_PREVIEW: "Text → 3D",
       TEXT_TO_3D_REFINE: "Refine",
       REMESH: "Optimize",
@@ -215,6 +220,8 @@ export const en = {
     loadingModel: "Loading model…",
     viewer: {
       shaded: "Shaded",
+      textured: "Textured",
+      clay: "Clay (no color)",
       wireframe: "Wireframe",
       rotate: "Auto-rotate",
       grid: "Floor grid",
@@ -236,6 +243,14 @@ export const en = {
   form: {
     sourceUrl: "Image URL",
     sourceUpload: "Upload file",
+    sourceMulti: "Multiple images",
+    multiLabel: "Reference images",
+    multiHint: "1–4 views of the same subject",
+    addImage: "Add image",
+    figurineTitle: "Chibi figurine",
+    figurineDesc: "Turn a portrait into a cute chibi collectible — the photo is stylized into chibi proportions, then built as a colorful 3D figure.",
+    figurineNote: "Two automatic stages: concept image, then 3D build. Takes a few minutes.",
+    figurineGenerate: "Create chibi figurine",
     imageUrlLabel: "Image URL",
     imageUrlHint: "JPG / PNG",
     imageUrlPlaceholder: "https://example.com/character.png",
@@ -264,6 +279,7 @@ export const en = {
     styleDefault: "Default",
     styleChibi: "Chibi",
     styleHuman: "Realistic human",
+    styleImageNote: "With a photo, style mainly changes texture/color — the shape follows the photo. For a true Chibi shape, use Text → 3D.",
     aiModel: "AI model",
     topology: "Topology",
     topoTriangle: "Triangle",
@@ -295,6 +311,9 @@ export const en = {
     startedTitle: "Generation started",
     startedBody: "Your model is being created.",
     startedPreview: "Building your preview mesh.",
+    figurineStartTitle: "Creating chibi concept…",
+    figurineStartBody: "Stylizing your photo into a chibi figure.",
+    figurineBuildTitle: "Building the 3D figurine…",
     startFailTitle: "Couldn't start generation",
     noImageTitle: "No image selected",
     noImageBody: "Add an image file to continue.",

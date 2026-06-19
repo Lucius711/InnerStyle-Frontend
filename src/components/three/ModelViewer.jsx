@@ -16,6 +16,7 @@ import {
 import {
   Loader2,
   Box,
+  Circle,
   RotateCcw,
   Download,
   Play,
@@ -27,11 +28,16 @@ import {
 import { useT } from "@/hooks/useI18n";
 import { cn, formatNumber } from "@/lib/utils";
 
-/* Load model, prep materials, expose clips/stats, drive wireframe + animation. */
-function Model({ url, wireframe, clip, playing, onReady }) {
+/* Load model, prep materials, expose clips/stats, drive render mode + animation. */
+function Model({ url, mode, clip, playing, onReady }) {
   const group = useRef();
   const { scene, animations } = useGLTF(url, true, true);
   const { actions, names } = useAnimations(animations, group);
+
+  const clayMat = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: "#c4c8d2", roughness: 0.9, metalness: 0.0 }),
+    []
+  );
 
   const stats = useMemo(() => {
     let tris = 0;
@@ -41,6 +47,7 @@ function Model({ url, wireframe, clip, playing, onReady }) {
         o.castShadow = true;
         o.receiveShadow = true;
         o.frustumCulled = false;
+        if (!o.userData.origMat) o.userData.origMat = o.material;
         const mats = Array.isArray(o.material) ? o.material : [o.material];
         mats.forEach((m) => {
           if (!m) return;
@@ -68,19 +75,24 @@ function Model({ url, wireframe, clip, playing, onReady }) {
     onReady({ names: names || [], stats });
   }, [names, stats, onReady]);
 
-  // wireframe toggle
+  // Render mode: textured (original) | clay (flat grey) | wireframe
   useEffect(() => {
+    clayMat.wireframe = mode === "wireframe";
     scene.traverse((o) => {
-      if (o.isMesh) {
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (!o.isMesh) return;
+      const orig = o.userData.origMat;
+      if (mode === "clay" || mode === "wireframe") {
+        o.material = clayMat;
+      } else {
+        o.material = orig;
+        const mats = Array.isArray(orig) ? orig : [orig];
         mats.forEach((m) => {
-          if (m) m.wireframe = wireframe;
+          if (m) m.wireframe = false;
         });
       }
     });
-  }, [wireframe, scene]);
+  }, [mode, scene, clayMat]);
 
-  // play selected clip
   useEffect(() => {
     if (!names || !names.length) return undefined;
     const active = clip && actions[clip] ? clip : names[0];
@@ -95,7 +107,6 @@ function Model({ url, wireframe, clip, playing, onReady }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actions, names, clip]);
 
-  // play/pause
   useEffect(() => {
     if (!names || !names.length) return;
     const active = clip && actions[clip] ? clip : names[0];
@@ -191,9 +202,7 @@ function ToolBtn({ active, onClick, title, children }) {
       title={title}
       className={cn(
         "flex h-8 w-8 items-center justify-center rounded-lg transition-colors",
-        active
-          ? "bg-brand-violet text-white"
-          : "text-app-muted hover:bg-app-line/10 hover:text-app-text"
+        active ? "bg-brand-violet text-white" : "text-app-muted hover:bg-app-line/10 hover:text-app-text"
       )}
     >
       {children}
@@ -203,7 +212,7 @@ function ToolBtn({ active, onClick, title, children }) {
 
 export default function ModelViewer({ url, thumbnailUrl, className }) {
   const t = useT();
-  const [wireframe, setWireframe] = useState(false);
+  const [mode, setMode] = useState("textured");
   const [autoRotate, setAutoRotate] = useState(true);
   const [grid, setGrid] = useState(true);
   const [stats, setStats] = useState(null);
@@ -242,13 +251,7 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
               <directionalLight position={[4, 6, 5]} intensity={1.1} castShadow shadow-mapSize={[1024, 1024]} />
 
               <Suspense fallback={<CanvasLoader />}>
-                <Model
-                  url={url}
-                  wireframe={wireframe}
-                  clip={clip}
-                  playing={playing}
-                  onReady={handleReady}
-                />
+                <Model url={url} mode={mode} clip={clip} playing={playing} onReady={handleReady} />
                 <ContactShadows position={[0, -1, 0]} opacity={0.5} scale={10} blur={2.6} far={4} />
                 <StudioLighting />
               </Suspense>
@@ -285,13 +288,15 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
           <Fallback thumbnailUrl={thumbnailUrl} />
         )}
 
-        {/* Toolbar */}
         {url && (
           <div className="absolute left-3 top-3 flex items-center gap-1 rounded-xl border border-app-line/10 bg-app-bg/60 p-1 backdrop-blur-md">
-            <ToolBtn active={!wireframe} onClick={() => setWireframe(false)} title={t("studio.viewer.shaded")}>
+            <ToolBtn active={mode === "textured"} onClick={() => setMode("textured")} title={t("studio.viewer.textured")}>
               <Box className="h-4 w-4" />
             </ToolBtn>
-            <ToolBtn active={wireframe} onClick={() => setWireframe(true)} title={t("studio.viewer.wireframe")}>
+            <ToolBtn active={mode === "clay"} onClick={() => setMode("clay")} title={t("studio.viewer.clay")}>
+              <Circle className="h-4 w-4" />
+            </ToolBtn>
+            <ToolBtn active={mode === "wireframe"} onClick={() => setMode("wireframe")} title={t("studio.viewer.wireframe")}>
               <Grid3x3 className="h-4 w-4" />
             </ToolBtn>
             <span className="mx-0.5 h-5 w-px bg-app-line/15" />
@@ -307,7 +312,6 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
           </div>
         )}
 
-        {/* Stats */}
         {url && stats && (
           <div className="absolute right-3 top-3 rounded-xl border border-app-line/10 bg-app-bg/60 px-3 py-2 text-[11px] backdrop-blur-md">
             <div className="flex items-center justify-between gap-4">
@@ -321,7 +325,6 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
           </div>
         )}
 
-        {/* Animation bar */}
         {url && hasAnim && (
           <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-xl border border-app-line/10 bg-app-bg/70 p-1.5 backdrop-blur-md">
             <button
@@ -345,9 +348,7 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
                 ))}
               </select>
             ) : (
-              <span className="px-2 text-xs font-medium text-app-text">
-                {names[0]}
-              </span>
+              <span className="px-2 text-xs font-medium text-app-text">{names[0]}</span>
             )}
           </div>
         )}

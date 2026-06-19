@@ -84,6 +84,17 @@ export const api = {
 
   multiImageTo3d: (req) => postJson("/multi-image-to-3d", clean(req)),
   textTo3d: (req) => postJson("/text-to-3d", clean(req)),
+
+  // Creative Lab — Chibi figurine (2-stage: prototype -> build)
+  figurinePrototype: (req) => postJson("/figurine", clean(req)),
+  figurinePrototypeUpload: async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${PREFIX}/figurine/upload`, { method: "POST", body: form });
+    return parse(res);
+  },
+  figurineBuild: (req) => postJson("/figurine/build", clean(req)),
+
   refine: (req) => postJson("/refine", clean(req)),
   remesh: (req) => postJson("/remesh", clean(req)),
   retexture: (req) => postJson("/retexture", clean(req)),
