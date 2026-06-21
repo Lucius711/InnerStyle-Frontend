@@ -7,6 +7,7 @@ import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import TaskCard from "@/components/studio/TaskCard";
 import TaskDetailModal from "@/components/studio/TaskDetailModal";
 import { Segmented } from "@/components/ui/FormControls";
+import Seo from "@/components/seo/Seo";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
@@ -56,6 +57,10 @@ export default function Gallery() {
 
   return (
     <div className="relative min-h-screen px-6 pb-24 pt-28">
+      <Seo
+        title="Gallery"
+        description="Explore 3D models created with InnerStyle — textured, rigged and animated from images and text prompts."
+      />
       <div className="mx-auto max-w-6xl">
         <Reveal direction="up">
           <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">

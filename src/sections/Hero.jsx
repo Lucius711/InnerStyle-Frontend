@@ -9,7 +9,6 @@ import {
 import { Sparkles, ArrowRight, Play, ImageIcon, Type } from "lucide-react";
 import Button from "@/components/ui/Button";
 import MagneticButton from "@/components/motion/MagneticButton";
-import { Badge } from "@/components/ui/primitives";
 import { useT } from "@/hooks/useI18n";
 
 export default function Hero() {
@@ -31,17 +30,7 @@ export default function Hero() {
     >
       <div className="mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[1.1fr_0.9fr]">
         <motion.div style={{ y: yText, opacity }} className="relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Badge tone="violet" dot>
-              {t("hero.badge")}
-            </Badge>
-          </motion.div>
-
-          <h1 className="mt-6 font-display text-5xl font-bold leading-[1.05] tracking-tight text-app-text sm:text-6xl lg:text-7xl">
+          <h1 className="font-display text-5xl font-bold leading-[1.05] tracking-tight text-app-text sm:text-6xl lg:text-7xl">
             <RevealLine delay={0.05}>{t("hero.l1")}</RevealLine>
             <RevealLine delay={0.15}>
               {t("hero.l2pre")}

@@ -10,6 +10,7 @@ import {
   Gauge,
   Brush,
   Footprints,
+  Printer,
 } from "lucide-react";
 import ModelViewer from "@/components/three/ModelViewer";
 import Button from "@/components/ui/Button";
@@ -18,15 +19,36 @@ import { Badge } from "@/components/ui/primitives";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
 import { pickModelUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { printApi } from "@/lib/authApi";
 import { useT } from "@/hooks/useI18n";
+import { useToast } from "@/hooks/useToast";
+import { friendly } from "@/lib/messages";
 
 const MODEL_TYPES = ["IMAGE_TO_3D", "MULTI_IMAGE_TO_3D", "TEXT_TO_3D_REFINE", "REMESH", "RETEXTURE"];
 
 export default function ResultPanel({ task, actions = {}, busyAction }) {
   const t = useT();
+  const toast = useToast();
   const [panel, setPanel] = useState(null); // 'retexture' | 'animate' | null
   const [retexPrompt, setRetexPrompt] = useState("");
   const [actionId, setActionId] = useState(92);
+  const [printing, setPrinting] = useState("");
+
+  const orderPrint = async (provider) => {
+    setPrinting(provider);
+    try {
+      const res = await printApi.placeOrder({ taskId: task.id, provider });
+      if (res.payUrl) {
+        window.location.href = res.payUrl; // redirect to VNPay / MoMo
+      } else {
+        toast.error(t("studio.printFailTitle"), "No payment URL returned.");
+        setPrinting("");
+      }
+    } catch (err) {
+      toast.error(t("studio.printFailTitle"), friendly(err));
+      setPrinting("");
+    }
+  };
 
   if (task.status === "FAILED" || task.status === "CANCELED") {
     return <FailedState task={task} t={t} />;
@@ -93,6 +115,29 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
           </p>
         )}
       </div>
+
+      {/* Order a physical 3D print — pay directly via VNPay / MoMo */}
+      {task.modelUrls && Object.keys(task.modelUrls).length > 0 && (
+        <div className="rounded-2xl border border-brand-violet/20 bg-brand-violet/5 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-app-text">
+            <Printer className="h-4 w-4 text-brand-violet" /> {t("studio.print3dTitle")}
+          </p>
+          <p className="mt-1 text-xs text-app-faint">{t("studio.print3dHint")}</p>
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" loading={printing === "VNPAY"} onClick={() => orderPrint("VNPAY")}>
+              VNPay
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              loading={printing === "MOMO"}
+              onClick={() => orderPrint("MOMO")}
+            >
+              MoMo
+            </Button>
+          </div>
+        </div>
+      )}
 
       {animations.length > 0 && (
         <div>

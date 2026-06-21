@@ -191,13 +191,13 @@ function Logo() {
   // Dark background -> breakthrough logo; light background -> light logo.
   const src =
     theme === "dark"
-      ? "/innerstyle_logo_breakthrough_dark.svg"
+      ? "/innerstyle_logo_breakthrough.svg"
       : "/innerstyle_logo_light.svg";
   return (
     <img
       src={src}
       alt="InnerStyle"
-      className="h-14 w-auto select-none sm:h-16"
+      className="h-9 w-auto select-none"
       draggable={false}
     />
   );

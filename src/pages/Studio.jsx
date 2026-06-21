@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ImageIcon, Type, Sparkles, Cuboid, RefreshCw } from "lucide-react";
 import { Segmented } from "@/components/ui/FormControls";
 import { Badge } from "@/components/ui/primitives";
@@ -108,35 +108,19 @@ export default function Studio() {
               <div className="mb-6">
                 <Segmented name="mode" options={modes} value={mode} onChange={setMode} />
               </div>
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={mode}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.25 }}
-                >
-                  {renderForm()}
-                </motion.div>
-              </AnimatePresence>
+              <div>{renderForm()}</div>
             </div>
           </Reveal>
 
           <Reveal direction="up" delay={0.1}>
             <div className="glass min-h-[460px] rounded-3xl p-6">
-              <AnimatePresence mode="wait">
-                {!showWorkspace ? (
-                  <IdleState key="idle" mode={mode} t={t} />
-                ) : showResult ? (
-                  <motion.div key="result" exit={{ opacity: 0 }}>
-                    <ResultPanel task={task} actions={actions} busyAction={busyAction} />
-                  </motion.div>
-                ) : (
-                  <motion.div key="progress" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                    <TaskProgress task={task} startedAt={startedAt || Date.now()} />
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {!showWorkspace ? (
+                <IdleState mode={mode} t={t} />
+              ) : showResult ? (
+                <ResultPanel task={task} actions={actions} busyAction={busyAction} />
+              ) : (
+                <TaskProgress task={task} startedAt={startedAt || Date.now()} />
+              )}
             </div>
           </Reveal>
         </div>

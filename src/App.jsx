@@ -6,18 +6,29 @@ import {
   useLocation,
   Link,
 } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
 import AnimatedBackground from "@/components/motion/AnimatedBackground";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import SplashScreen from "@/components/layout/SplashScreen";
 import PageTransition from "@/components/motion/PageTransition";
 import { ToastProvider } from "@/hooks/useToast";
+import { ConfirmProvider } from "@/hooks/useConfirm";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider, useT } from "@/hooks/useI18n";
+import { AuthProvider } from "@/hooks/useAuth";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
 import Studio from "@/pages/Studio";
 import Gallery from "@/pages/Gallery";
+import Login from "@/pages/Login";
+import Register from "@/pages/Register";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
+import VerifyEmail from "@/pages/VerifyEmail";
+import Membership from "@/pages/Membership";
+import PrintOrders from "@/pages/PrintOrders";
+import PaymentReturn from "@/pages/PaymentReturn";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,8 +41,7 @@ function ScrollToTop() {
 function AnimatedRoutes() {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
+    <Routes location={location} key={location.pathname}>
         <Route
           path="/"
           element={
@@ -44,7 +54,29 @@ function AnimatedRoutes() {
           path="/studio"
           element={
             <PageTransition>
-              <Studio />
+              <ProtectedRoute>
+                <Studio />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/membership"
+          element={
+            <PageTransition>
+              <ProtectedRoute>
+                <Membership />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/print-orders"
+          element={
+            <PageTransition>
+              <ProtectedRoute>
+                <PrintOrders />
+              </ProtectedRoute>
             </PageTransition>
           }
         />
@@ -56,6 +88,19 @@ function AnimatedRoutes() {
             </PageTransition>
           }
         />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        <Route
+          path="/forgot-password"
+          element={<PageTransition><ForgotPassword /></PageTransition>}
+        />
+        <Route
+          path="/reset-password"
+          element={<PageTransition><ResetPassword /></PageTransition>}
+        />
+        <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+        <Route path="/wallet/vnpay-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
+        <Route path="/wallet/momo-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
         <Route
           path="*"
           element={
@@ -65,7 +110,6 @@ function AnimatedRoutes() {
           }
         />
       </Routes>
-    </AnimatePresence>
   );
 }
 
@@ -85,14 +129,19 @@ function NotFound() {
 export default function App() {
   return (
     <ThemeProvider>
+      <SplashScreen />
       <I18nProvider>
         <BrowserRouter>
           <ToastProvider>
-            <AnimatedBackground />
-            <ScrollToTop />
-            <Navbar />
-            <AnimatedRoutes />
-            <Footer />
+            <AuthProvider>
+              <ConfirmProvider>
+                <AnimatedBackground />
+                <ScrollToTop />
+                <Navbar />
+                <AnimatedRoutes />
+                <Footer />
+              </ConfirmProvider>
+            </AuthProvider>
           </ToastProvider>
         </BrowserRouter>
       </I18nProvider>

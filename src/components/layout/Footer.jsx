@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Github, Twitter, BookOpen } from "lucide-react";
 import { useT } from "@/hooks/useI18n";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function Footer() {
   const t = useT();
+  const { theme } = useTheme();
 
   const cols = [
     {
@@ -37,15 +39,17 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-6 py-14">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <Link to="/" className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#7c5cff,#22d3ee)] shadow-glow">
-                <svg viewBox="0 0 64 64" className="h-5 w-5" fill="none" stroke="white" strokeWidth="3" strokeLinejoin="round">
-                  <path d="M32 12 L50 22 L50 42 L32 52 L14 42 L14 22 Z" />
-                </svg>
-              </span>
-              <span className="font-display text-lg font-bold text-app-text">
-                Inner<span className="text-gradient">Style</span>
-              </span>
+            <Link to="/" className="flex items-center">
+              <img
+                src={
+                  theme === "dark"
+                    ? "/innerstyle_logo_breakthrough_dark.svg"
+                    : "/innerstyle_logo_light.svg"
+                }
+                alt="InnerStyle"
+                className="h-14 w-auto select-none sm:h-16"
+                draggable={false}
+              />
             </Link>
             <p className="mt-4 text-sm leading-relaxed text-app-muted">
               {t("footer.tagline")}

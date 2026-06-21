@@ -7,6 +7,7 @@ import AdvancedOptions from "./AdvancedOptions";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
+import { useCostConfirm } from "@/hooks/useCostConfirm";
 import { POLYCOUNT, MODEL_STYLES } from "@/lib/constants";
 
 const defaultOptions = () => ({
@@ -25,6 +26,7 @@ const styleFragment = (style) =>
 export default function TextTo3DForm({ onCreated, disabled }) {
   const { t, tServer } = useI18n();
   const toast = useToast();
+  const confirmCost = useCostConfirm();
   const [prompt, setPrompt] = useState("");
   const [options, setOptions] = useState(defaultOptions);
   const [submitting, setSubmitting] = useState(false);
@@ -44,6 +46,7 @@ export default function TextTo3DForm({ onCreated, disabled }) {
       setError(t("form.describeError"));
       return;
     }
+    if (!(await confirmCost("TEXT_TO_3D_PREVIEW"))) return;
     try {
       setSubmitting(true);
       const { style, ...rest } = options;

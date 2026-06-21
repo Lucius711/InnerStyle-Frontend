@@ -8,10 +8,12 @@ import Dropzone from "./Dropzone";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
+import { useCostConfirm } from "@/hooks/useCostConfirm";
 
 export default function FigurineForm({ onCreated, disabled }) {
   const { t, tServer } = useI18n();
   const toast = useToast();
+  const confirmCost = useCostConfirm();
   const [source, setSource] = useState("upload");
   const [imageUrl, setImageUrl] = useState("");
   const [file, setFile] = useState(null);
@@ -26,6 +28,13 @@ export default function FigurineForm({ onCreated, disabled }) {
   const submit = async (e) => {
     e.preventDefault();
     setUrlError(null);
+    const hasInput = (source === "url" && imageUrl.trim()) || (source === "upload" && file);
+    if (!hasInput) {
+      if (source === "upload") toast.error(t("toast.noImageTitle"), t("toast.noImageBody"));
+      else setUrlError(t("form.imageUrlError"));
+      return;
+    }
+    if (!(await confirmCost("FIGURE_PROTOTYPE"))) return;
     try {
       setSubmitting(true);
       let task;

@@ -1,57 +1,12 @@
-// Typed-ish API client for the InnerStyle backend.
-// All endpoints live under /api/common/3d and return the envelope:
-//   { success: boolean, message: string, data: T }
-// Errors return: { success: false, error: {...}, errors: {...}, message }
+// 3D pipeline API client (MeshyAI). All generation endpoints live under /api/common/3d and
+// now require authentication (Bearer token) — handled by the shared http layer. The model
+// proxy (GET /tasks/:id/model) stays public so the in-browser viewer can stream it.
+import { request, authedFetch, parse, apiBase, ApiError } from "@/lib/http";
 
-const BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
-const PREFIX = `${BASE}/api/common/3d`;
+export { ApiError };
 
-/** Error carrying the parsed backend error envelope + field messages. */
-export class ApiError extends Error {
-  constructor(message, status, body) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.body = body;
-    this.fields = body && body.error ? body.error : null;
-  }
-}
-
-async function parse(res) {
-  const text = await res.text();
-  let body = null;
-  try {
-    body = text ? JSON.parse(text) : null;
-  } catch {
-    body = null;
-  }
-
-  if (!res.ok) {
-    const msg =
-      (body && (firstFieldMessage(body) || body.message)) ||
-      `Request failed (${res.status})`;
-    throw new ApiError(msg, res.status, body);
-  }
-  // Unwrap the success envelope.
-  return body && "data" in body ? body.data : body;
-}
-
-function firstFieldMessage(body) {
-  if (body && body.error && typeof body.error === "object") {
-    const vals = Object.values(body.error);
-    if (vals.length) return vals[0];
-  }
-  return null;
-}
-
-async function postJson(path, payload) {
-  const res = await fetch(`${PREFIX}${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-  return parse(res);
-}
+const PREFIX = `${apiBase}/api/common/3d`;
+const PATH = "/api/common/3d";
 
 /** Strip undefined / empty-string values so we only send meaningful fields. */
 export function clean(obj) {
@@ -65,33 +20,47 @@ export function clean(obj) {
   return out;
 }
 
+const postJson = (path, payload) =>
+  request(`${PATH}${path}`, { method: "POST", body: payload, auth: true });
+
+async function postForm(path, form) {
+  const res = await authedFetch(`${PATH}${path}`, { method: "POST", rawBody: form, auth: true });
+  return parse(res);
+}
+
 export const api = {
   imageTo3d: (req) => postJson("/image-to-3d", clean(req)),
 
-  imageTo3dUpload: async (file, options = {}) => {
+  imageTo3dUpload: (file, options = {}) => {
     const form = new FormData();
     form.append("file", file);
     for (const [k, v] of Object.entries(clean(options))) {
       if (Array.isArray(v)) v.forEach((item) => form.append(k, item));
       else form.append(k, String(v));
     }
-    const res = await fetch(`${PREFIX}/image-to-3d/upload`, {
-      method: "POST",
-      body: form,
-    });
-    return parse(res);
+    return postForm("/image-to-3d/upload", form);
   },
 
   multiImageTo3d: (req) => postJson("/multi-image-to-3d", clean(req)),
+
+  multiImageTo3dUpload: (files, options = {}) => {
+    const form = new FormData();
+    files.forEach((f) => form.append("files", f));
+    for (const [k, v] of Object.entries(clean(options))) {
+      if (Array.isArray(v)) v.forEach((item) => form.append(k, item));
+      else form.append(k, String(v));
+    }
+    return postForm("/multi-image-to-3d/upload", form);
+  },
+
   textTo3d: (req) => postJson("/text-to-3d", clean(req)),
 
   // Creative Lab — Chibi figurine (2-stage: prototype -> build)
   figurinePrototype: (req) => postJson("/figurine", clean(req)),
-  figurinePrototypeUpload: async (file) => {
+  figurinePrototypeUpload: (file) => {
     const form = new FormData();
     form.append("file", file);
-    const res = await fetch(`${PREFIX}/figurine/upload`, { method: "POST", body: form });
-    return parse(res);
+    return postForm("/figurine/upload", form);
   },
   figurineBuild: (req) => postJson("/figurine/build", clean(req)),
 
@@ -101,25 +70,18 @@ export const api = {
   rig: (req) => postJson("/rig", clean(req)),
   animate: (req) => postJson("/animate", clean(req)),
 
-  getTask: async (id) => {
-    const res = await fetch(`${PREFIX}/tasks/${id}`);
-    return parse(res);
-  },
+  getTask: (id) => request(`${PATH}/tasks/${id}`, { auth: true }),
 
-  /**
-   * URL of the backend's model proxy — streams the model file same-origin so the in-browser
-   * 3D viewer isn't blocked by the Meshy CDN's missing CORS headers.
-   */
+  /** Public model proxy URL (streams same-origin so the viewer isn't blocked by CDN CORS). */
   modelUrl: (id, format = "glb") =>
     `${PREFIX}/tasks/${id}/model?format=${encodeURIComponent(format)}`,
 
-  listTasks: async ({ status, page = 0, size = 12 } = {}) => {
+  listTasks: ({ status, page = 0, size = 12 } = {}) => {
     const params = new URLSearchParams();
     if (status) params.set("status", status);
     params.set("page", String(page));
     params.set("size", String(size));
     params.set("sort", "createdAt,desc");
-    const res = await fetch(`${PREFIX}/tasks?${params.toString()}`);
-    return parse(res);
+    return request(`${PATH}/tasks?${params.toString()}`, { auth: true });
   },
 };
