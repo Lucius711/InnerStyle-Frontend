@@ -1,7 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
-import { Menu, X, Sparkles, Wallet, LogIn, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  Sparkles,
+  Wallet,
+  LogIn,
+  LogOut,
+  User,
+  Boxes,
+  Printer,
+  ChevronDown,
+} from "lucide-react";
 import MagneticButton from "@/components/motion/MagneticButton";
 import Button from "@/components/ui/Button";
 import ThemeToggle from "@/components/ui/ThemeToggle";
@@ -14,17 +25,19 @@ import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const t = useT();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const toast = useToast();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
   const { scrollY } = useScroll();
   const { pathname } = useLocation();
 
   const onLogout = async () => {
     try {
       await logout();
-      toast.success("Signed out");
+      toast.success(t("nav.logout"));
     } catch {
       toast.error("Sign out failed");
     }
@@ -36,8 +49,28 @@ export default function Navbar() {
     { label: t("nav.showcase"), href: "/#showcase" },
   ];
 
+  const accountLinks = [
+    { to: "/profile", icon: User, label: t("nav.profile") },
+    { to: "/my-3d-printing", icon: Boxes, label: t("nav.myModels") },
+    { to: "/print-history", icon: Printer, label: t("nav.printHistory") },
+    { to: "/membership", icon: Wallet, label: t("nav.membership") },
+  ];
+
+  const initial = (user?.fullName || user?.email || "?").charAt(0).toUpperCase();
+
   useMotionValueEvent(scrollY, "change", (y) => setScrolled(y > 24));
-  useEffect(() => setOpen(false), [pathname]);
+  useEffect(() => {
+    setOpen(false);
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const onClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
 
   return (
     <motion.header
@@ -66,12 +99,6 @@ export default function Navbar() {
               {l.label}
             </a>
           ))}
-          <Link
-            to="/gallery"
-            className="rounded-lg px-4 py-2 text-sm font-medium text-app-muted transition-colors hover:text-app-text"
-          >
-            {t("nav.gallery")}
-          </Link>
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
@@ -79,12 +106,6 @@ export default function Navbar() {
           <ThemeToggle />
           {isAuthenticated ? (
             <>
-              <Link
-                to="/membership"
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium text-app-muted transition-colors hover:text-app-text"
-              >
-                <Wallet className="h-4 w-4" /> {t("nav.membership")}
-              </Link>
               <MagneticButton as="div">
                 <Link to="/studio">
                   <Button size="sm" icon={Sparkles}>
@@ -92,9 +113,66 @@ export default function Navbar() {
                   </Button>
                 </Link>
               </MagneticButton>
-              <Button size="sm" variant="ghost" icon={LogOut} onClick={onLogout}>
-                {t("nav.logout")}
-              </Button>
+
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((o) => !o)}
+                  className="focus-ring flex items-center gap-1.5 rounded-full p-0.5 pr-2 transition-colors hover:bg-app-line/5"
+                  aria-label={t("nav.account")}
+                >
+                  {user?.avatarUrl ? (
+                    <img
+                      src={user.avatarUrl}
+                      alt={t("nav.account")}
+                      className="h-8 w-8 rounded-full object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[linear-gradient(135deg,#7c5cff,#5b6cff)] text-sm font-bold text-white">
+                      {initial}
+                    </span>
+                  )}
+                  <ChevronDown className="h-4 w-4 text-app-muted" />
+                </button>
+
+                <AnimatePresence>
+                  {menuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                      transition={{ duration: 0.15 }}
+                      className="glass-strong absolute right-0 mt-2 w-56 rounded-2xl p-2 shadow-card"
+                    >
+                      <div className="border-b border-app-line/10 px-3 py-2">
+                        <p className="truncate text-sm font-medium text-app-text">
+                          {user?.fullName || t("profile.info.noName")}
+                        </p>
+                        <p className="truncate text-xs text-app-faint">{user?.email}</p>
+                      </div>
+                      <div className="mt-1 flex flex-col">
+                        {accountLinks.map(({ to, icon: Icon, label }) => (
+                          <Link
+                            key={to}
+                            to={to}
+                            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-app-muted transition-colors hover:bg-app-line/5 hover:text-app-text"
+                          >
+                            <Icon className="h-4 w-4" /> {label}
+                          </Link>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={onLogout}
+                          className="mt-1 flex items-center gap-2.5 rounded-lg border-t border-app-line/10 px-3 py-2 text-sm font-medium text-app-muted transition-colors hover:bg-app-line/5 hover:text-app-text"
+                        >
+                          <LogOut className="h-4 w-4" /> {t("nav.logout")}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </>
           ) : (
             <>
@@ -146,20 +224,16 @@ export default function Navbar() {
                   {l.label}
                 </a>
               ))}
-              <Link
-                to="/gallery"
-                className="rounded-lg px-4 py-3 text-sm font-medium text-app-muted hover:bg-app-line/5 hover:text-app-text"
-              >
-                {t("nav.gallery")}
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/membership"
-                  className="rounded-lg px-4 py-3 text-sm font-medium text-app-muted hover:bg-app-line/5 hover:text-app-text"
-                >
-                  {t("nav.membership")}
-                </Link>
-              )}
+              {isAuthenticated &&
+                accountLinks.map(({ to, icon: Icon, label }) => (
+                  <Link
+                    key={to}
+                    to={to}
+                    className="flex items-center gap-2.5 rounded-lg px-4 py-3 text-sm font-medium text-app-muted hover:bg-app-line/5 hover:text-app-text"
+                  >
+                    <Icon className="h-4 w-4" /> {label}
+                  </Link>
+                ))}
               {!isAuthenticated && (
                 <Link
                   to="/login"
@@ -188,7 +262,6 @@ export default function Navbar() {
 
 function Logo() {
   const { theme } = useTheme();
-  // Dark background -> breakthrough logo; light background -> light logo.
   const src =
     theme === "dark"
       ? "/innerstyle_logo_breakthrough_dark.svg"

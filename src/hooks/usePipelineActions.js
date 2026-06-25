@@ -2,6 +2,10 @@ import { useState } from "react";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
+import { TARGET_FORMATS } from "@/lib/constants";
+
+// Always produce every supported format so the library download offers them all.
+const ALL_FORMATS = [...TARGET_FORMATS];
 
 const TOAST_BY_KIND = {
   refine: "toast.refiningTitle",
@@ -35,10 +39,20 @@ export function usePipelineActions(onCreated) {
   };
 
   const actions = {
-    onRefine: (tk) => chain("refine", () => api.refine({ sourceTaskId: tk.id, enablePbr: true })),
-    onRemesh: (tk, opts) => chain("remesh", () => api.remesh({ sourceTaskId: tk.id, ...opts })),
-    onRetexture: (tk, opts) => chain("retexture", () => api.retexture({ sourceTaskId: tk.id, ...opts })),
-    onRig: (tk, opts) => chain("rig", () => api.rig({ sourceTaskId: tk.id, heightMeters: 1.7, ...opts })),
+    onRefine: (tk) =>
+      chain("refine", () =>
+        api.refine({ sourceTaskId: tk.id, enablePbr: true, targetFormats: ALL_FORMATS })
+      ),
+    onRemesh: (tk, opts) =>
+      chain("remesh", () =>
+        api.remesh({ sourceTaskId: tk.id, targetFormats: ALL_FORMATS, ...opts })
+      ),
+    onRetexture: (tk, opts) =>
+      chain("retexture", () =>
+        api.retexture({ sourceTaskId: tk.id, targetFormats: ALL_FORMATS, ...opts })
+      ),
+    onRig: (tk, opts) =>
+      chain("rig", () => api.rig({ sourceTaskId: tk.id, heightMeters: 1.7, ...opts })),
     onAnimate: (tk, opts) => chain("animate", () => api.animate({ rigTaskId: tk.id, ...opts })),
   };
 

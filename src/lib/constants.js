@@ -39,6 +39,17 @@ export const MODEL_STYLES = [
 // Polycount slider bounds (backend: @Min 100 / @Max 300000)
 export const POLYCOUNT = { min: 1000, max: 300000, step: 1000, default: 30000 };
 
+// Remesh dialog presets (mirrors Meshy's "Target polygon count" chips).
+export const REMESH_POLY_PRESETS = [
+  { value: 3000, label: "3K" },
+  { value: 10000, label: "10K" },
+  { value: 30000, label: "30K" },
+];
+
+// Meshy can only UV-unwrap triangle meshes of 40K faces or fewer. Toggling UV unwrap
+// therefore forces triangle topology and caps the target polycount at this bound.
+export const UV_UNWRAP_MAX_POLYCOUNT = 40000;
+
 // Task lifecycle
 export const TERMINAL_STATUSES = ["SUCCEEDED", "FAILED", "CANCELED"];
 

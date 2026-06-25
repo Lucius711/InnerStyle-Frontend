@@ -8,16 +8,16 @@ import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCostConfirm } from "@/hooks/useCostConfirm";
-import { POLYCOUNT, MODEL_STYLES } from "@/lib/constants";
+import { MODEL_STYLES, TARGET_FORMATS } from "@/lib/constants";
 
 const defaultOptions = () => ({
   style: "default",
   aiModel: "latest",
-  topology: "triangle",
   poseMode: "",
-  targetPolycount: POLYCOUNT.default,
-  shouldRemesh: true,
-  targetFormats: ["glb"],
+  // Keep Meshy's original high-detail mesh (no forced remesh) for best quality.
+  shouldRemesh: false,
+  // Always generate every supported format so the library download offers them all.
+  targetFormats: [...TARGET_FORMATS],
 });
 
 const styleFragment = (style) =>

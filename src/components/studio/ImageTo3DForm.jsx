@@ -10,21 +10,23 @@ import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
 import { useI18n } from "@/hooks/useI18n";
 import { useCostConfirm } from "@/hooks/useCostConfirm";
-import { POLYCOUNT, MODEL_STYLES } from "@/lib/constants";
+import { MODEL_STYLES, TARGET_FORMATS } from "@/lib/constants";
 
 const MAX_IMAGES = 4;
 
 const defaultOptions = () => ({
   style: "default",
   aiModel: "latest",
-  topology: "triangle",
   poseMode: "",
-  targetPolycount: POLYCOUNT.default,
   shouldTexture: true,
   enablePbr: true,
-  shouldRemesh: true,
+  // Keep Meshy's original high-detail mesh (no forced remesh) for best quality.
+  shouldRemesh: false,
+  // 4K base-color texture for sharper results (Meshy-6/latest only).
+  hdTexture: true,
   texturePrompt: "",
-  targetFormats: ["glb"],
+  // Always generate every supported format so the library download offers them all.
+  targetFormats: [...TARGET_FORMATS],
 });
 
 const styleFragment = (style) =>

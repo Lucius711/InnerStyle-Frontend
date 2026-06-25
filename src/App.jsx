@@ -3,6 +3,7 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate,
   useLocation,
   Link,
 } from "react-router-dom";
@@ -20,7 +21,9 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
 import Studio from "@/pages/Studio";
-import Gallery from "@/pages/Gallery";
+import ProfileLayout from "@/components/layout/ProfileLayout";
+import Profile from "@/pages/Profile";
+import MyModels from "@/pages/MyModels";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
@@ -70,24 +73,26 @@ function AnimatedRoutes() {
             </PageTransition>
           }
         />
+
+        {/* Profile area — personal info, my 3D models, print history */}
         <Route
-          path="/print-orders"
           element={
             <PageTransition>
               <ProtectedRoute>
-                <PrintOrders />
+                <ProfileLayout />
               </ProtectedRoute>
             </PageTransition>
           }
-        />
-        <Route
-          path="/gallery"
-          element={
-            <PageTransition>
-              <Gallery />
-            </PageTransition>
-          }
-        />
+        >
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/my-3d-printing" element={<MyModels />} />
+          <Route path="/print-history" element={<PrintOrders />} />
+        </Route>
+
+        {/* Legacy routes now live inside the profile */}
+        <Route path="/gallery" element={<Navigate to="/my-3d-printing" replace />} />
+        <Route path="/print-orders" element={<Navigate to="/print-history" replace />} />
+
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
         <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
         <Route

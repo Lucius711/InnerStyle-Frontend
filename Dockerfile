@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1
 # ----- Build stage: build the Vite SPA -----
 FROM node:20-alpine AS build
 WORKDIR /app

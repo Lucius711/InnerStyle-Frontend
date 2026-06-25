@@ -114,9 +114,9 @@ function RevealLine({ children, delay }) {
 function FloatingPreview({ t }) {
   const reduce = useReducedMotion();
   const stats = [
-    { k: t("hero.statPolys"), v: "30K" },
-    { k: t("hero.statTextures"), v: "PBR" },
-    { k: t("hero.statRig"), v: "Auto" },
+    { k: t("hero.statPolys"), v: t("hero.statPolysV") },
+    { k: t("hero.statTextures"), v: t("hero.statTexturesV") },
+    { k: t("hero.statRig"), v: t("hero.statRigV") },
   ];
   return (
     <motion.div

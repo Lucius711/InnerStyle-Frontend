@@ -5,12 +5,9 @@ import {
   Field,
   Segmented,
   Toggle,
-  Slider,
-  ChipMultiSelect,
   TextInput,
 } from "@/components/ui/FormControls";
-import { TARGET_FORMATS, POLYCOUNT, MODEL_STYLES } from "@/lib/constants";
-import { formatNumber } from "@/lib/utils";
+import { MODEL_STYLES } from "@/lib/constants";
 import { useT } from "@/hooks/useI18n";
 
 const STYLE_LABELS = {
@@ -22,6 +19,9 @@ const STYLE_LABELS = {
 /**
  * Collapsible advanced generation settings shared by the image & text forms.
  * `show` toggles which controls appear for the given pipeline stage.
+ *
+ * Low-level mesh controls (polygon count, topology, remesh) are intentionally
+ * hidden: models keep Meshy's original high-detail mesh for the best quality.
  */
 export default function AdvancedOptions({ value, onChange, show = {}, imageMode = false }) {
   const t = useT();
@@ -31,14 +31,10 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
   const fields = {
     style: true,
     aiModel: true,
-    topology: true,
     poseMode: true,
-    polycount: true,
     texture: true,
     pbr: true,
-    remesh: true,
     texturePrompt: true,
-    formats: true,
     ...show,
   };
 
@@ -50,10 +46,6 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
     { value: "latest", label: t("form.modelLatest") },
     { value: "meshy-6", label: "Meshy 6" },
     { value: "meshy-5", label: "Meshy 5" },
-  ];
-  const topologies = [
-    { value: "triangle", label: t("form.topoTriangle") },
-    { value: "quad", label: t("form.topoQuad") },
   ];
   const poseModes = [
     { value: "", label: t("form.poseNone") },
@@ -98,17 +90,6 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
                 </Field>
               )}
 
-              {fields.topology && (
-                <Field label={t("form.topology")}>
-                  <Segmented
-                    name="topology"
-                    options={topologies}
-                    value={value.topology}
-                    onChange={(v) => set({ topology: v })}
-                  />
-                </Field>
-              )}
-
               {fields.poseMode && (
                 <Field label={t("form.pose")} hint={t("form.poseHint")}>
                   <Segmented
@@ -120,21 +101,7 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
                 </Field>
               )}
 
-              {fields.polycount && (
-                <Field label={t("form.polycount")}>
-                  <Slider
-                    label={t("form.resolution")}
-                    min={POLYCOUNT.min}
-                    max={POLYCOUNT.max}
-                    step={POLYCOUNT.step}
-                    value={value.targetPolycount}
-                    onChange={(v) => set({ targetPolycount: v })}
-                    format={(n) => t("form.tris", { n: formatNumber(n) })}
-                  />
-                </Field>
-              )}
-
-              {(fields.texture || fields.pbr || fields.remesh) && (
+              {(fields.texture || fields.pbr) && (
                 <div className="space-y-2.5">
                   {fields.texture && (
                     <Toggle
@@ -152,12 +119,12 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
                       onChange={(v) => set({ enablePbr: v })}
                     />
                   )}
-                  {fields.remesh && (
+                  {imageMode && (
                     <Toggle
-                      label={t("form.remesh")}
-                      description={t("form.remeshDesc")}
-                      checked={value.shouldRemesh}
-                      onChange={(v) => set({ shouldRemesh: v })}
+                      label={t("form.hdTexture")}
+                      description={t("form.hdTextureDesc")}
+                      checked={value.hdTexture}
+                      onChange={(v) => set({ hdTexture: v })}
                     />
                   )}
                 </div>
@@ -170,16 +137,6 @@ export default function AdvancedOptions({ value, onChange, show = {}, imageMode 
                     value={value.texturePrompt}
                     maxLength={600}
                     onChange={(e) => set({ texturePrompt: e.target.value })}
-                  />
-                </Field>
-              )}
-
-              {fields.formats && (
-                <Field label={t("form.formats")}>
-                  <ChipMultiSelect
-                    options={TARGET_FORMATS}
-                    value={value.targetFormats}
-                    onChange={(v) => set({ targetFormats: v })}
                   />
                 </Field>
               )}
