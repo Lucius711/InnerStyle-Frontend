@@ -12,6 +12,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Split heavy, rarely-changing libraries into their own vendor chunks so they cache well
+        // and don't bloat the initial Landing-page download.
+        manualChunks: {
+          three: ["three", "@react-three/fiber", "@react-three/drei"],
+          motion: ["framer-motion"],
+        },
+      },
+    },
+  },
   server: {
     port: 5173,
     // Listen on all interfaces + allow tunnel hosts (ngrok / cloudflared) in dev.
@@ -19,7 +31,7 @@ export default defineConfig({
     allowedHosts: [".ngrok-free.dev", ".ngrok-free.app", ".ngrok.io", ".trycloudflare.com"],
     proxy: {
       "/api": {
-        target: process.env.VITE_API_PROXY_TARGET || "http://localhost:2207",
+        target: process.env.VITE_API_PROXY_TARGET || "http://localhost:8085",
         changeOrigin: true,
       },
     },

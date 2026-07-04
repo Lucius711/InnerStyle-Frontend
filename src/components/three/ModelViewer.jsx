@@ -1,6 +1,6 @@
 import { Suspense, Component, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useLoader } from "@react-three/fiber";
 import {
   OrbitControls,
   Bounds,
@@ -13,6 +13,9 @@ import {
   useGLTF,
   useAnimations,
 } from "@react-three/drei";
+import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
+import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import {
   Loader2,
   Box,
@@ -28,16 +31,108 @@ import {
 import { useT } from "@/hooks/useI18n";
 import { cn, formatNumber } from "@/lib/utils";
 
-/* Load model, prep materials, expose clips/stats, drive render mode + animation. */
-function Model({ url, mode, clip, playing, onReady }) {
-  const group = useRef();
+/* -------------------------------------------------- format-aware model loaders */
+
+/** Extract the ?format= of the model proxy URL so we can pick the right three.js loader. */
+export function formatFromUrl(url) {
+  try {
+    const u = new URL(url, window.location.origin);
+    return (u.searchParams.get("format") || "glb").toLowerCase();
+  } catch {
+    return "glb";
+  }
+}
+
+function GltfModel({ url, ...rest }) {
   const { scene, animations } = useGLTF(url, true, true);
+  return <ProcessedModel scene={scene} animations={animations} {...rest} />;
+}
+
+function ObjModel({ url, ...rest }) {
+  const obj = useLoader(OBJLoader, url);
+  return <ProcessedModel scene={obj} animations={[]} {...rest} />;
+}
+
+function FbxModel({ url, ...rest }) {
+  const obj = useLoader(FBXLoader, url);
+  return <ProcessedModel scene={obj} animations={obj.animations || []} {...rest} />;
+}
+
+function StlModel({ url, ...rest }) {
+  const geometry = useLoader(STLLoader, url);
+  const scene = useMemo(() => {
+    const mesh = new THREE.Mesh(
+      geometry,
+      new THREE.MeshStandardMaterial({ color: "#c4c8d2", roughness: 0.85, metalness: 0.0 })
+    );
+    const g = new THREE.Group();
+    g.add(mesh);
+    return g;
+  }, [geometry]);
+  return <ProcessedModel scene={scene} animations={[]} {...rest} />;
+}
+
+/** Pick the loader by format; glb/gltf (and anything unknown) go through GLTFLoader. */
+function Model({ url, ...rest }) {
+  const format = formatFromUrl(url);
+  if (format === "obj") return <ObjModel url={url} {...rest} />;
+  if (format === "fbx") return <FbxModel url={url} {...rest} />;
+  if (format === "stl") return <StlModel url={url} {...rest} />;
+  return <GltfModel url={url} {...rest} />;
+}
+
+/* Prep materials, expose clips/stats, drive render mode + animation. */
+function ProcessedModel({ scene, animations, baseColorUrl, mode, clip, playing, onReady }) {
+  const group = useRef();
   const { actions, names } = useAnimations(animations, group);
 
   const clayMat = useMemo(
     () => new THREE.MeshStandardMaterial({ color: "#c4c8d2", roughness: 0.9, metalness: 0.0 }),
     []
   );
+
+  // Fallback colour: Meshy sometimes ships GLBs that reference the base-color texture on its
+  // CDN (no CORS) — three.js then fails to load it and the model renders grey. If, after load,
+  // no material has a map, fetch base_color same-origin via the proxy and apply it.
+  useEffect(() => {
+    if (!baseColorUrl) return undefined;
+    let hasMap = false;
+    scene.traverse((o) => {
+      if (!o.isMesh) return;
+      (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => {
+        if (m?.map) hasMap = true;
+      });
+    });
+    if (hasMap) return undefined;
+
+    let cancelled = false;
+    new THREE.TextureLoader().load(
+      baseColorUrl,
+      (tex) => {
+        if (cancelled) return;
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.flipY = false;
+        tex.anisotropy = 8;
+        scene.traverse((o) => {
+          if (!o.isMesh) return;
+          const orig = o.userData.origMat || o.material;
+          (Array.isArray(orig) ? orig : [orig]).forEach((m) => {
+            if (!m) return;
+            m.map = tex;
+            if (m.color) m.color.set("#ffffff"); // show the texture untinted
+            m.needsUpdate = true;
+          });
+        });
+      },
+      undefined,
+      () => {
+        /* texture proxy failed — leave the model as-is (grey) */
+      }
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [scene, baseColorUrl]);
 
   const stats = useMemo(() => {
     let tris = 0;
@@ -52,15 +147,23 @@ function Model({ url, mode, clip, playing, onReady }) {
         mats.forEach((m) => {
           if (!m) return;
           m.side = THREE.DoubleSide;
-          if ("envMapIntensity" in m) m.envMapIntensity = 1.1;
+          if ("envMapIntensity" in m) m.envMapIntensity = 1.5;
           if (m.map) {
             m.map.anisotropy = 8;
             m.map.colorSpace = THREE.SRGBColorSpace;
+          }
+          if ("emissive" in m && m.map) {
+            // Lift dark base-color textures slightly so the model reads bright by default.
+            m.emissive = m.color ? m.color.clone() : new THREE.Color("#ffffff");
+            m.emissiveMap = m.map;
+            m.emissiveIntensity = 0.18;
           }
           m.needsUpdate = true;
         });
         const g = o.geometry;
         if (g) {
+          // OBJ/STL meshes often ship without normals — compute them so they aren't rendered flat/unlit.
+          if (g.attributes.position && !g.attributes.normal) g.computeVertexNormals();
           verts += g.attributes.position ? g.attributes.position.count : 0;
           tris += g.index
             ? g.index.count / 3
@@ -160,10 +263,10 @@ function StudioLighting() {
   return (
     <SafeBoundary fallback={null}>
       <Environment resolution={256} frames={1}>
-        <Lightformer intensity={2.2} position={[0, 5, 2]} scale={[12, 4, 1]} />
-        <Lightformer intensity={1.4} position={[-6, 2, 2]} scale={[10, 3, 1]} color="#cfe0ff" />
-        <Lightformer intensity={1.4} position={[6, 2, 2]} scale={[10, 3, 1]} color="#ffe9d6" />
-        <Lightformer intensity={2.0} position={[0, 3, -8]} scale={[12, 6, 1]} />
+        <Lightformer intensity={3.0} position={[0, 5, 2]} scale={[12, 4, 1]} />
+        <Lightformer intensity={2.0} position={[-6, 2, 2]} scale={[10, 3, 1]} color="#cfe0ff" />
+        <Lightformer intensity={2.0} position={[6, 2, 2]} scale={[10, 3, 1]} color="#ffe9d6" />
+        <Lightformer intensity={2.6} position={[0, 3, -8]} scale={[12, 6, 1]} />
       </Environment>
     </SafeBoundary>
   );
@@ -210,7 +313,7 @@ function ToolBtn({ active, onClick, title, children }) {
   );
 }
 
-export default function ModelViewer({ url, thumbnailUrl, className }) {
+export default function ModelViewer({ url, thumbnailUrl, baseColorUrl, className, bare = false }) {
   const t = useT();
   const [mode, setMode] = useState("textured");
   const [autoRotate, setAutoRotate] = useState(true);
@@ -231,7 +334,12 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
 
   return (
     <div className={className}>
-      <div className="group relative h-full w-full overflow-hidden rounded-3xl border border-app-line/10 bg-[radial-gradient(ellipse_at_center,#1b2030,#070810)]">
+      <div
+        className={cn(
+          "group relative h-full w-full overflow-hidden bg-[radial-gradient(ellipse_at_center,#2a3145,#0d1019)]",
+          !bare && "rounded-3xl border border-app-line/10"
+        )}
+      >
         {url ? (
           <SafeBoundary resetKey={url} fallback={<Fallback thumbnailUrl={thumbnailUrl} />}>
             <Canvas
@@ -244,14 +352,16 @@ export default function ModelViewer({ url, thumbnailUrl, className }) {
                 alpha: true,
                 preserveDrawingBuffer: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.05,
+                toneMappingExposure: 1.65,
               }}
             >
-              <ambientLight intensity={0.35} />
-              <directionalLight position={[4, 6, 5]} intensity={1.1} castShadow shadow-mapSize={[1024, 1024]} />
+              <ambientLight intensity={1.05} />
+              <directionalLight position={[4, 6, 5]} intensity={1.9} castShadow shadow-mapSize={[1024, 1024]} />
+              <directionalLight position={[-5, 3, -4]} intensity={0.85} />
+              <hemisphereLight args={["#ffffff", "#3a4156", 0.6]} />
 
               <Suspense fallback={<CanvasLoader />}>
-                <Model url={url} mode={mode} clip={clip} playing={playing} onReady={handleReady} />
+                <Model url={url} baseColorUrl={baseColorUrl} mode={mode} clip={clip} playing={playing} onReady={handleReady} />
                 <ContactShadows position={[0, -1, 0]} opacity={0.5} scale={10} blur={2.6} far={4} />
                 <StudioLighting />
               </Suspense>

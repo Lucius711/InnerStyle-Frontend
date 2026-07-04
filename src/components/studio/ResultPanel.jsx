@@ -11,14 +11,15 @@ import {
   Brush,
   Footprints,
   Printer,
-  Wand2,
+  FlaskConical,
 } from "lucide-react";
 import ModelViewer from "@/components/three/ModelViewer";
-import ModelEditor from "@/components/three/ModelEditor";
+import PrintabilityCard from "@/components/studio/PrintabilityCard";
 import Button from "@/components/ui/Button";
 import { TextInput, Segmented, Toggle } from "@/components/ui/FormControls";
 import { Badge } from "@/components/ui/primitives";
 import DownloadSettings from "./DownloadSettings";
+import ShippingDialog from "./ShippingDialog";
 import { REMESH_POLY_PRESETS, UV_UNWRAP_MAX_POLYCOUNT } from "@/lib/constants";
 import { pickModelUrl } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -27,7 +28,14 @@ import { useT } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
 import { friendly } from "@/lib/messages";
 
-const MODEL_TYPES = ["IMAGE_TO_3D", "MULTI_IMAGE_TO_3D", "TEXT_TO_3D_REFINE", "REMESH", "RETEXTURE"];
+const MODEL_TYPES = [
+  "IMAGE_TO_3D",
+  "MULTI_IMAGE_TO_3D",
+  "TEXT_TO_3D_REFINE",
+  "REMESH",
+  "RETEXTURE",
+  "UPLOADED",
+];
 
 export default function ResultPanel({ task, actions = {}, busyAction }) {
   const t = useT();
@@ -36,7 +44,9 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
   const [retexPrompt, setRetexPrompt] = useState("");
   const [actionId, setActionId] = useState(92);
   const [printing, setPrinting] = useState("");
-  const [editing, setEditing] = useState(false);
+  const [shippingProvider, setShippingProvider] = useState(""); // open dialog for this provider
+  // Bumped after a base is baked server-side so the viewer reloads the updated mesh.
+  const [modelVersion, setModelVersion] = useState(0);
 
   // Remesh dialog state (mirrors Meshy's UV-unwrap / remesh panel).
   const [remeshTopology, setRemeshTopology] = useState("triangle");
@@ -59,10 +69,12 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
       targetPolycount: effectivePolycount,
     });
 
-  const orderPrint = async (provider) => {
-    setPrinting(provider);
+  // Step 1: open the shipping form for the chosen payment method.
+  // Step 2 (submitShipping): create the order with recipient + address, then redirect to pay.
+  const submitShipping = async (payload) => {
+    setPrinting(payload.provider);
     try {
-      const res = await printApi.placeOrder({ taskId: task.id, provider });
+      const res = await printApi.placeOrder({ taskId: task.id, ...payload });
       if (res.payUrl) {
         window.location.href = res.payUrl; // redirect to VNPay / MoMo
       } else {
@@ -82,13 +94,27 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
   const hasViewable =
     (task.modelUrls && Object.keys(task.modelUrls).length > 0) ||
     (task.animationUrls && Object.keys(task.animationUrls).length > 0);
-  const viewerFormat = task.modelUrls?.gltf && !task.modelUrls?.glb ? "gltf" : "glb";
-  const viewerUrl = hasViewable ? api.modelUrl(task.id, viewerFormat) : null;
   const best = pickModelUrl(task.modelUrls);
+  // The viewer picks the right three.js loader from the ?format= (glb/gltf/obj/fbx/stl), so we
+  // can preview whatever native format the task has.
+  const viewerFormat = best?.format || null;
+  // Cache-bust the model proxy by the task's last-updated time (and by modelVersion for in-session
+  // edits). The proxy sends a long Cache-Control, so without this a page refresh after editing
+  // (e.g. adding a base) would serve the stale, pre-edit GLB from the browser cache.
+  const modelVer = modelVersion || (task.updatedAt ? Date.parse(task.updatedAt) || "" : "");
+  const viewerUrl = viewerFormat
+    ? api.modelUrl(task.id, viewerFormat) + (modelVer ? `&v=${modelVer}` : "")
+    : null;
   const textures = (task.textureUrls || []).filter(Boolean);
+  // Fallback base-color URL: applied in the viewer if the GLB ships textures externally
+  // (Meshy CDN lacks CORS, so the embedded reference would otherwise render grey).
+  const baseColorUrl = textures[0]?.baseColor ? api.textureUrl(task.id, "base_color") : null;
   const animations = task.animationUrls ? Object.entries(task.animationUrls) : [];
 
   const isModel = MODEL_TYPES.includes(task.taskType);
+  // Printability applies to any finished model with a viewable mesh — including the chibi figurine
+  // (FIGURE_BUILD), which isn't in MODEL_TYPES (it doesn't take remesh/retexture/rig actions).
+  const canCheckPrintability = (isModel || task.taskType === "FIGURE_BUILD") && hasViewable;
   const canRefine = task.taskType === "TEXT_TO_3D_PREVIEW" && actions.onRefine;
   const canRemesh = isModel && actions.onRemesh;
   const canRetexture = isModel && actions.onRetexture;
@@ -114,12 +140,22 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         )}
       </div>
 
-      <ModelViewer url={viewerUrl} thumbnailUrl={task.thumbnailUrl} className="aspect-square" />
+      <ModelViewer url={viewerUrl} thumbnailUrl={api.mediaUrl(task.thumbnailUrl)} baseColorUrl={baseColorUrl} className="aspect-square" />
 
       {hasViewable && viewerUrl && (
-        <Button variant="secondary" icon={Wand2} className="w-full" onClick={() => setEditing(true)}>
-          {t("editor.open")}
-        </Button>
+        <a href={`/lab/${task.id}`} className="block">
+          <Button variant="secondary" icon={FlaskConical} className="w-full">
+            {t("lab.openCta")}
+          </Button>
+        </a>
+      )}
+
+      {canCheckPrintability && (
+        <PrintabilityCard
+          checkFn={() => api.printability(task.id)}
+          repairFn={() => api.repairModel(task.id)}
+          onRepaired={() => setModelVersion(Date.now())}
+        />
       )}
 
       {/* Downloads */}
@@ -145,20 +181,32 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
           </p>
           <p className="mt-1 text-xs text-app-faint">{t("studio.print3dHint")}</p>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" loading={printing === "VNPAY"} onClick={() => orderPrint("VNPAY")}>
+            <Button
+              size="sm"
+              loading={printing === "VNPAY"}
+              onClick={() => setShippingProvider("VNPAY")}
+            >
               VNPay
             </Button>
             <Button
               size="sm"
               variant="secondary"
               loading={printing === "MOMO"}
-              onClick={() => orderPrint("MOMO")}
+              onClick={() => setShippingProvider("MOMO")}
             >
               MoMo
             </Button>
           </div>
         </div>
       )}
+
+      <ShippingDialog
+        open={!!shippingProvider}
+        provider={shippingProvider}
+        submitting={!!printing}
+        onClose={() => setShippingProvider("")}
+        onSubmit={submitShipping}
+      />
 
       {animations.length > 0 && (
         <div>
@@ -366,7 +414,6 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         </div>
       )}
 
-      <ModelEditor open={editing} url={viewerUrl} onClose={() => setEditing(false)} />
     </motion.div>
   );
 }

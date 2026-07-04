@@ -33,7 +33,9 @@ export default function Seo({ title, description, canonical, noindex = false, im
   useEffect(() => {
     const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — 2D & Text → Animated 3D`;
     const desc = description || DEFAULT_DESC;
-    const url = canonical || window.location.href;
+    // Canonical must be a clean URL — never carry query strings (?utm=, ?v= cache-busters) or
+    // #hash fragments, which would split indexing across duplicate URLs.
+    const url = canonical || `${window.location.origin}${window.location.pathname}`;
 
     document.title = fullTitle;
     upsertMeta('meta[name="description"]', "name", "description", desc);

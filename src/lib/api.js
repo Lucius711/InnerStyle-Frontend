@@ -125,6 +125,13 @@ export const api = {
   },
   figurineBuild: (req) => postJson("/figurine/build", clean(req)),
 
+  /** Import an existing 3D file (.glb/.gltf/.obj/.fbx/.stl) into the library for preview & pipeline. */
+  importModelUpload: async (file) => {
+    const form = new FormData();
+    form.append("file", file);
+    return postForm("/import/upload", form);
+  },
+
   refine: (req) => {
     assertText(req.texturePrompt);
     return postJson("/refine", clean(req));
@@ -139,12 +146,74 @@ export const api = {
 
   getTask: (id) => request(`${PATH}/tasks/${id}`, { auth: true }),
 
+  /** Analyse a model's 3D-print readiness (watertight / volume / holes / non-manifold). */
+  printability: (id) => request(`${PATH}/tasks/${id}/printability`, { auth: true }),
+
+  /**
+   * Auto-repair the model into a watertight, printable mesh and SAVE it in place (no file download —
+   * the existing download button serves the repaired model). Returns { before, after, task }.
+   */
+  repairModel: (id) => request(`${PATH}/tasks/${id}/repair`, { method: "POST", auth: true }),
+
+  /**
+   * Persist a custom base/stand into the model. The server bakes the base into the stored mesh
+   * in place, so the streamed model, preview, and export ZIP all then include it. Returns the
+   * updated task. `shape` is cylinder|square|hexagon; ratios are fractions; `color` is #RRGGBB.
+   */
+  addBase: (id, { shape, heightRatio, marginRatio, color, signatureText, signatureStrokes, signaturePenWidth, signatureDepthRatio, signatureRaised } = {}) =>
+    postJson(`/tasks/${id}/base`, clean({
+      shape, heightRatio, marginRatio, color,
+      signatureText, signatureStrokes, signaturePenWidth, signatureDepthRatio, signatureRaised,
+    })),
+
+  /** Remove the base previously baked into the model (returns the base-less model). */
+  removeBase: (id) => request(`${PATH}/tasks/${id}/base`, { method: "DELETE", auth: true }),
+
+  /**
+   * Replace a task's preview thumbnail with a freshly captured PNG of the edited model. Meshy never
+   * regenerates its thumbnail after an in-place edit (e.g. adding a base), so the editor captures
+   * the model and uploads it here; the task's thumbnailUrl then points at GET /tasks/{id}/thumbnail.
+   */
+  uploadThumbnail: async (id, blob) => {
+    const res = await authedFetch(`${PATH}/tasks/${id}/thumbnail`, {
+      method: "PUT",
+      auth: true,
+      rawBody: blob,
+      headers: { "Content-Type": "image/png" },
+    });
+    if (!res.ok) throw new ApiError(`Thumbnail upload failed (${res.status})`, res.status, null);
+    return true;
+  },
+
+  /**
+   * Replace the task's model with the edited mesh exported in-browser (material + transform edits
+   * baked via three.js GLTFExporter). The server stores it in place, so the streamed model,
+   * preview, and export ZIP all reflect the edits. `glb` is a Blob/ArrayBuffer of GLB bytes;
+   * returns the updated task.
+   */
+  replaceModel: async (id, glb) => {
+    const res = await authedFetch(`${PATH}/tasks/${id}/model`, {
+      method: "PUT",
+      auth: true,
+      rawBody: glb,
+      headers: { "Content-Type": "model/gltf-binary" },
+    });
+    return parse(res);
+  },
+
+  /** Resolve a stored media URL: absolute (Meshy CDN) URLs pass through, relative self-paths get apiBase. */
+  mediaUrl: (u) => (!u ? u : /^(https?:|data:|blob:)/i.test(u) ? u : `${apiBase}${u}`),
+
   /** Permanently delete one of my tasks. */
   deleteTask: (id) => request(`${PATH}/tasks/${id}`, { method: "DELETE", auth: true }),
 
   /** Public model proxy URL (streams same-origin so the viewer isn't blocked by CDN CORS). */
   modelUrl: (id, format = "glb") =>
     `${PREFIX}/tasks/${id}/model?format=${encodeURIComponent(format)}`,
+
+  /** Public texture proxy URL (same-origin, so the viewer can apply maps the CDN won't CORS). */
+  textureUrl: (id, map = "base_color") =>
+    `${PREFIX}/tasks/${id}/texture?map=${encodeURIComponent(map)}`,
 
   /**
    * Download a model in the chosen format, optionally resized to a physical height (mm) with a

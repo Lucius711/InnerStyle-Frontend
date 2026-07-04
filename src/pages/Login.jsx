@@ -6,6 +6,7 @@ import SocialButtons from "@/components/auth/SocialButtons";
 import { Field, TextInput } from "@/components/ui/FormControls";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
+import { isStaff } from "@/components/auth/StaffRoute";
 import { useToast } from "@/hooks/useToast";
 import { friendly } from "@/lib/messages";
 
@@ -24,9 +25,10 @@ export default function Login() {
     e.preventDefault();
     setBusy(true);
     try {
-      await login({ email, password });
+      const account = await login({ email, password });
       toast.success("Welcome back", "You're signed in.");
-      navigate(from, { replace: true });
+      // Staff land on their fulfilment dashboard; everyone else on their intended page.
+      navigate(isStaff(account) ? "/staff" : from, { replace: true });
     } catch (err) {
       toast.error("Sign in failed", friendly(err));
     } finally {

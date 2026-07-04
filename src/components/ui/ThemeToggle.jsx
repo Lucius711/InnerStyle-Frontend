@@ -2,17 +2,21 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Sun, Moon } from "lucide-react";
 import { useTheme } from "@/hooks/useTheme";
 
-/** Animated light/dark switch. */
+/**
+ * Light/dark switch. The actual transition is a full-screen "door" reveal handled
+ * by the ThemeProvider; this button just triggers it and shows the current icon.
+ */
 export default function ThemeToggle({ className }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, transitioning } = useTheme();
   const isDark = theme === "dark";
 
   return (
     <button
       type="button"
       onClick={toggleTheme}
+      disabled={transitioning}
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      className={`focus-ring relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-app-line/10 bg-app-line/5 text-app-muted transition-colors hover:text-app-text ${className || ""}`}
+      className={`focus-ring relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-app-line/10 bg-app-line/5 text-app-muted transition-colors hover:text-app-text disabled:cursor-default ${className || ""}`}
     >
       <AnimatePresence mode="wait" initial={false}>
         <motion.span

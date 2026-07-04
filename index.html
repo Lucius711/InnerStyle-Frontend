@@ -2,6 +2,35 @@
 <html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <!-- TEMP DEBUG: surface load/eval errors on devices with no console (e.g. iPhone). Remove later. -->
+    <script>
+      (function () {
+        function show(msg) {
+          try {
+            var d = document.getElementById("__err__");
+            if (!d) {
+              d = document.createElement("pre");
+              d.id = "__err__";
+              d.style.cssText =
+                "position:fixed;inset:0;z-index:99999;margin:0;padding:16px;overflow:auto;" +
+                "background:#0b0b12;color:#ff8b8b;font:12px/1.5 monospace;white-space:pre-wrap;word-break:break-word";
+              (document.body || document.documentElement).appendChild(d);
+            }
+            d.textContent += msg + "\n\n";
+          } catch (e) {}
+        }
+        window.addEventListener("error", function (e) {
+          if (e && e.message) {
+            show("[error] " + e.message + (e.filename ? "\n@ " + e.filename + ":" + e.lineno + ":" + e.colno : ""));
+          } else if (e && e.target && (e.target.src || e.target.href)) {
+            show("[resource failed to load] " + (e.target.src || e.target.href));
+          }
+        }, true);
+        window.addEventListener("unhandledrejection", function (e) {
+          show("[promise] " + ((e && e.reason && (e.reason.message || e.reason)) || "unknown"));
+        });
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b0b12" />
@@ -9,10 +38,6 @@
     <meta
       name="description"
       content="InnerStyle turns a single 2D image or a line of text into a textured, rigged and animated 3D model — in minutes. Personalized 3D model generation powered by AI."
-    />
-    <meta
-      name="keywords"
-      content="3D model generator, image to 3D, text to 3D, AI 3D, rigging, animation, personalized 3D, MeshyAI"
     />
     <title>InnerStyle — 2D & Text to Animated 3D</title>
     <link rel="canonical" href="https://innerstyle.app/" />
@@ -44,21 +69,69 @@
       rel="stylesheet"
     />
 
-    <!-- Structured data: SoftwareApplication -->
+    <!-- Structured data: Organization + WebSite + SoftwareApplication -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "InnerStyle",
-        "applicationCategory": "MultimediaApplication",
-        "operatingSystem": "Web",
-        "description": "InnerStyle turns 2D images and text prompts into textured, rigged, animated 3D models using an AI pipeline.",
-        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" }
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://innerstyle.app/#organization",
+            "name": "InnerStyle",
+            "url": "https://innerstyle.app/",
+            "logo": "https://innerstyle.app/og-cover.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://innerstyle.app/#website",
+            "name": "InnerStyle",
+            "url": "https://innerstyle.app/",
+            "publisher": { "@id": "https://innerstyle.app/#organization" },
+            "inLanguage": ["en", "vi"]
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "InnerStyle",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web",
+            "description": "InnerStyle turns 2D images and text prompts into textured, rigged, animated 3D models using an AI pipeline.",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" }
+          }
+        ]
       }
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      Crawler-visible homepage shell. React (createRoot) replaces #root on mount, so this content
+      is only seen in the raw HTML — i.e. by non-JS crawlers (Bing, social scrapers) and as a no-JS
+      fallback. It gives them a real <h1>, description and primary links without needing SSR.
+    -->
+    <div id="root">
+      <main style="max-width:720px;margin:0 auto;padding:96px 24px;color:#e8e8ef;font-family:Inter,system-ui,sans-serif">
+        <h1 style="font-size:2.25rem;line-height:1.15;font-weight:700">InnerStyle — Turn a photo into a living 3D character</h1>
+        <p style="margin-top:16px;color:#9aa0b4;font-size:1.05rem;line-height:1.6">
+          Just one photo or a line of text. InnerStyle creates a complete 3D character — with color,
+          shape, poses and movement — ready to use in games, videos, AR or 3D printing.
+        </p>
+        <p style="margin-top:24px">
+          <a href="/studio" style="color:#7c5cff;font-weight:600">Start creating — free</a>
+        </p>
+        <ul style="margin-top:24px;color:#9aa0b4;line-height:1.8;list-style:disc;padding-left:20px">
+          <li>Image to 3D — turn a single image into a textured 3D model</li>
+          <li>Text to 3D — generate a 3D model from a text prompt</li>
+          <li>Rigging &amp; animation — auto-rig and animate your character</li>
+          <li>AR preview — view your model in your room</li>
+          <li>3D printing — order a physical print of your creation</li>
+        </ul>
+        <noscript>
+          <p style="margin-top:24px;color:#9aa0b4">
+            InnerStyle needs JavaScript to run the 3D studio. Please enable JavaScript to create,
+            preview and order your models.
+          </p>
+        </noscript>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

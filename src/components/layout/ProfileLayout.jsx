@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { to: "/profile", icon: User, key: "navProfile" },
-  { to: "/my-3d-printing", icon: Boxes, key: "navModels" },
-  { to: "/print-history", icon: Printer, key: "navPrints" },
+  { to: "/my-3d-printing", icon: Boxes, key: "navModels", customerOnly: true },
+  { to: "/print-history", icon: Printer, key: "navPrints", customerOnly: true },
 ];
 
 /** Shared shell for the profile area: header + internal nav list + routed content. */
@@ -17,6 +17,9 @@ export default function ProfileLayout() {
   const { user } = useAuth();
   const name = user?.fullName || t("profile.info.noName");
   const initial = (user?.fullName || user?.email || "?").charAt(0).toUpperCase();
+  // Staff are operators: hide the customer-only tabs (model library, print history).
+  const isStaff = Array.isArray(user?.roles) && user.roles.includes("STAFF");
+  const navItems = NAV.filter((item) => !(item.customerOnly && isStaff));
 
   return (
     <div className="relative min-h-screen px-6 pb-24 pt-28">
@@ -42,7 +45,7 @@ export default function ProfileLayout() {
         </div>
 
         <div className="mt-8 flex flex-wrap gap-1 border-b border-app-line/10">
-          {NAV.map(({ to, icon: Icon, key }) => (
+          {navItems.map(({ to, icon: Icon, key }) => (
             <NavLink
               key={to}
               to={to}

@@ -11,6 +11,7 @@ import {
   User,
   Boxes,
   Printer,
+  Package,
   ChevronDown,
 } from "lucide-react";
 import MagneticButton from "@/components/motion/MagneticButton";
@@ -49,12 +50,20 @@ export default function Navbar() {
     { label: t("nav.showcase"), href: "/#showcase" },
   ];
 
-  const accountLinks = [
-    { to: "/profile", icon: User, label: t("nav.profile") },
-    { to: "/my-3d-printing", icon: Boxes, label: t("nav.myModels") },
-    { to: "/print-history", icon: Printer, label: t("nav.printHistory") },
-    { to: "/membership", icon: Wallet, label: t("nav.membership") },
-  ];
+  const userIsStaff = Array.isArray(user?.roles) && user.roles.includes("STAFF");
+  // Staff are operators, not customers: no model creation, model library,
+  // print orders or membership — only order fulfilment.
+  const accountLinks = userIsStaff
+    ? [
+        { to: "/staff", icon: Package, label: t("nav.staff") },
+        { to: "/profile", icon: User, label: t("nav.profile") },
+      ]
+    : [
+        { to: "/profile", icon: User, label: t("nav.profile") },
+        { to: "/my-3d-printing", icon: Boxes, label: t("nav.myModels") },
+        { to: "/print-history", icon: Printer, label: t("nav.printHistory") },
+        { to: "/membership", icon: Wallet, label: t("nav.membership") },
+      ];
 
   const initial = (user?.fullName || user?.email || "?").charAt(0).toUpperCase();
 
@@ -106,13 +115,15 @@ export default function Navbar() {
           <ThemeToggle />
           {isAuthenticated ? (
             <>
-              <MagneticButton as="div">
-                <Link to="/studio">
-                  <Button size="sm" icon={Sparkles}>
-                    {t("nav.start")}
-                  </Button>
-                </Link>
-              </MagneticButton>
+              {!userIsStaff && (
+                <MagneticButton as="div">
+                  <Link to="/studio">
+                    <Button size="sm" icon={Sparkles}>
+                      {t("nav.start")}
+                    </Button>
+                  </Link>
+                </MagneticButton>
+              )}
 
               <div className="relative" ref={menuRef}>
                 <button
@@ -143,7 +154,7 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.98 }}
                       transition={{ duration: 0.15 }}
-                      className="glass-strong absolute right-0 mt-2 w-56 rounded-2xl p-2 shadow-card"
+                      className="glass-menu absolute right-0 mt-2 w-56 rounded-2xl p-2 shadow-card"
                     >
                       <div className="border-b border-app-line/10 px-3 py-2">
                         <p className="truncate text-sm font-medium text-app-text">
@@ -212,7 +223,7 @@ export default function Navbar() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="glass-strong absolute inset-x-4 top-20 rounded-2xl p-4 md:hidden"
+            className="glass-menu absolute inset-x-4 top-20 rounded-2xl p-4 md:hidden"
           >
             <div className="flex flex-col gap-1">
               {links.map((l) => (
@@ -242,11 +253,13 @@ export default function Navbar() {
                   {t("nav.login")}
                 </Link>
               )}
-              <Link to={isAuthenticated ? "/studio" : "/register"} className="mt-2">
-                <Button className="w-full" icon={Sparkles}>
-                  {t("nav.start")}
-                </Button>
-              </Link>
+              {!(isAuthenticated && userIsStaff) && (
+                <Link to={isAuthenticated ? "/studio" : "/register"} className="mt-2">
+                  <Button className="w-full" icon={Sparkles}>
+                    {t("nav.start")}
+                  </Button>
+                </Link>
+              )}
               {isAuthenticated && (
                 <Button className="mt-2 w-full" variant="ghost" icon={LogOut} onClick={onLogout}>
                   {t("nav.logout")}

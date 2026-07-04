@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Link2, Sparkles } from "lucide-react";
+import { Link2, Sparkles, FlaskConical } from "lucide-react";
 import Button from "@/components/ui/Button";
 import MagneticButton from "@/components/motion/MagneticButton";
 import { Field, TextInput, Segmented } from "@/components/ui/FormControls";
@@ -13,6 +14,7 @@ import { useCostConfirm } from "@/hooks/useCostConfirm";
 export default function FigurineForm({ onCreated, disabled }) {
   const { t, tServer } = useI18n();
   const toast = useToast();
+  const navigate = useNavigate();
   const confirmCost = useCostConfirm();
   const [source, setSource] = useState("upload");
   const [imageUrl, setImageUrl] = useState("");
@@ -97,6 +99,17 @@ export default function FigurineForm({ onCreated, disabled }) {
           {t("form.figurineGenerate")}
         </Button>
       </MagneticButton>
+
+      <Button
+        type="button"
+        variant="secondary"
+        size="lg"
+        className="w-full"
+        icon={FlaskConical}
+        onClick={() => navigate("/lab")}
+      >
+        {t("lab.openCta")}
+      </Button>
     </form>
   );
 }

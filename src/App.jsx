@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
 import {
   BrowserRouter,
   Routes,
@@ -18,20 +19,28 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider, useT } from "@/hooks/useI18n";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import StaffRoute from "@/components/auth/StaffRoute";
 import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
-import Studio from "@/pages/Studio";
 import ProfileLayout from "@/components/layout/ProfileLayout";
-import Profile from "@/pages/Profile";
-import MyModels from "@/pages/MyModels";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import ForgotPassword from "@/pages/ForgotPassword";
 import ResetPassword from "@/pages/ResetPassword";
 import VerifyEmail from "@/pages/VerifyEmail";
-import Membership from "@/pages/Membership";
-import PrintOrders from "@/pages/PrintOrders";
-import PaymentReturn from "@/pages/PaymentReturn";
+import Profile from "@/pages/Profile";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+
+// Heavy / authenticated routes are code-split so the marketing Landing page doesn't ship
+// three.js, recharts, the studio forms, etc. in the initial bundle.
+const Studio = lazy(() => import("@/pages/Studio"));
+const CreativeLab = lazy(() => import("@/pages/CreativeLab"));
+const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
+const MyModels = lazy(() => import("@/pages/MyModels"));
+const PrintOrders = lazy(() => import("@/pages/PrintOrders"));
+const Membership = lazy(() => import("@/pages/Membership"));
+const PaymentReturn = lazy(() => import("@/pages/PaymentReturn"));
+const ArView = lazy(() => import("@/pages/ArView"));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -41,9 +50,18 @@ function ScrollToTop() {
   return null;
 }
 
+function RouteFallback() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Loader2 className="h-7 w-7 animate-spin text-brand-violet" />
+    </div>
+  );
+}
+
 function AnimatedRoutes() {
   const location = useLocation();
   return (
+    <Suspense fallback={<RouteFallback />}>
     <Routes location={location} key={location.pathname}>
         <Route
           path="/"
@@ -57,7 +75,7 @@ function AnimatedRoutes() {
           path="/studio"
           element={
             <PageTransition>
-              <ProtectedRoute>
+              <ProtectedRoute customerOnly>
                 <Studio />
               </ProtectedRoute>
             </PageTransition>
@@ -67,8 +85,28 @@ function AnimatedRoutes() {
           path="/membership"
           element={
             <PageTransition>
-              <ProtectedRoute>
+              <ProtectedRoute customerOnly>
                 <Membership />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/lab"
+          element={
+            <PageTransition>
+              <ProtectedRoute customerOnly>
+                <CreativeLab />
+              </ProtectedRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/lab/:taskId"
+          element={
+            <PageTransition>
+              <ProtectedRoute customerOnly>
+                <CreativeLab />
               </ProtectedRoute>
             </PageTransition>
           }
@@ -85,9 +123,35 @@ function AnimatedRoutes() {
           }
         >
           <Route path="/profile" element={<Profile />} />
-          <Route path="/my-3d-printing" element={<MyModels />} />
-          <Route path="/print-history" element={<PrintOrders />} />
+          <Route
+            path="/my-3d-printing"
+            element={
+              <ProtectedRoute customerOnly>
+                <MyModels />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/print-history"
+            element={
+              <ProtectedRoute customerOnly>
+                <PrintOrders />
+              </ProtectedRoute>
+            }
+          />
         </Route>
+
+        {/* Staff fulfilment dashboard (ROLE_STAFF only) */}
+        <Route
+          path="/staff"
+          element={
+            <PageTransition>
+              <StaffRoute>
+                <StaffDashboard />
+              </StaffRoute>
+            </PageTransition>
+          }
+        />
 
         {/* Legacy routes now live inside the profile */}
         <Route path="/gallery" element={<Navigate to="/my-3d-printing" replace />} />
@@ -104,6 +168,8 @@ function AnimatedRoutes() {
           element={<PageTransition><ResetPassword /></PageTransition>}
         />
         <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+        {/* Standalone, chrome-free AR launcher (opened from the QR on a phone) */}
+        <Route path="/ar/:taskId" element={<ErrorBoundary><ArView /></ErrorBoundary>} />
         <Route path="/wallet/vnpay-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
         <Route path="/wallet/momo-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
         <Route
@@ -115,6 +181,7 @@ function AnimatedRoutes() {
           }
         />
       </Routes>
+    </Suspense>
   );
 }
 
@@ -131,6 +198,21 @@ function NotFound() {
   );
 }
 
+/* App chrome (background, navbar, footer): hidden on the standalone AR launcher route. */
+function Shell() {
+  const { pathname } = useLocation();
+  const bare = pathname.startsWith("/ar/");
+  return (
+    <>
+      {!bare && <AnimatedBackground />}
+      <ScrollToTop />
+      {!bare && <Navbar />}
+      <AnimatedRoutes />
+      {!bare && <Footer />}
+    </>
+  );
+}
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -140,11 +222,7 @@ export default function App() {
           <ToastProvider>
             <AuthProvider>
               <ConfirmProvider>
-                <AnimatedBackground />
-                <ScrollToTop />
-                <Navbar />
-                <AnimatedRoutes />
-                <Footer />
+                <Shell />
               </ConfirmProvider>
             </AuthProvider>
           </ToastProvider>

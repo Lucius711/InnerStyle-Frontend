@@ -140,6 +140,7 @@ export default function ImageTo3DForm({ onCreated, disabled }) {
 
   return (
     <form onSubmit={submit} className="space-y-5">
+      <div data-tour="input" className="space-y-5">
       <Segmented name="imgSource" options={sourceTabs} value={source} onChange={setSource} />
 
       <motion.div
@@ -249,14 +250,18 @@ export default function ImageTo3DForm({ onCreated, disabled }) {
           </div>
         )}
       </motion.div>
+      </div>
 
+      <div data-tour="advanced">
       <AdvancedOptions
         value={options}
         onChange={setOptions}
         imageMode
         show={source === "multi" ? { poseMode: false } : {}}
       />
+      </div>
 
+      <div data-tour="create">
       <MagneticButton as="div" className="w-full" strength={0.2}>
         <Button
           type="submit"
@@ -269,6 +274,7 @@ export default function ImageTo3DForm({ onCreated, disabled }) {
           {t("form.generateModel")}
         </Button>
       </MagneticButton>
+      </div>
     </form>
   );
 }

@@ -37,7 +37,7 @@ export default function LanguageSwitcher() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.96 }}
             transition={{ duration: 0.18 }}
-            className="glass-strong absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-2xl p-1.5 shadow-card"
+            className="glass-menu absolute right-0 top-11 z-50 w-44 overflow-hidden rounded-2xl p-1.5 shadow-card"
           >
             {LANGUAGES.map((l) => {
               const active = l.code === lang;

@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
+
+# Authenticated tool / per-user pages — no public content to index.
+Disallow: /studio
+Disallow: /my-3d-printing
+Disallow: /print-history
+Disallow: /profile
+Disallow: /membership
+Disallow: /staff
+Disallow: /ar/
 Disallow: /wallet
 Disallow: /login
 Disallow: /register

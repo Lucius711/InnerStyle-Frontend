@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Box, Clock, MoreVertical, Trash2 } from "lucide-react";
+import { Clock, MoreVertical, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
 import { STATUS_META } from "@/lib/constants";
+import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 import { useT } from "@/hooks/useI18n";
 
@@ -11,7 +12,9 @@ export default function TaskCard({ task, onOpen, onDelete }) {
   const t = useT();
   const meta = STATUS_META[task.status] || STATUS_META.PENDING;
   const [menuOpen, setMenuOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const menuRef = useRef(null);
+  const thumb = task.thumbnailUrl && !imgError ? api.mediaUrl(task.thumbnailUrl) : null;
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -34,17 +37,12 @@ export default function TaskCard({ task, onOpen, onDelete }) {
     >
       <div className="relative aspect-square overflow-hidden bg-[radial-gradient(ellipse_at_center,#1b2030,#070810)]">
         <div className="pointer-events-none absolute inset-0 bg-grid-faint [background-size:28px_28px] opacity-20" />
-        {task.thumbnailUrl ? (
-          <img
-            src={task.thumbnailUrl}
-            alt=""
-            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-app-faint">
-            <Box className="h-9 w-9" />
-          </div>
-        )}
+        <img
+          src={thumb || "/model-placeholder.svg"}
+          alt=""
+          onError={() => setImgError(true)}
+          className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
+        />
 
         <div className="absolute left-2 top-2">
           <Badge tone={meta.tone}>{t(`studio.status.${task.status}`)}</Badge>

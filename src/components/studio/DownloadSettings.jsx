@@ -5,9 +5,11 @@ import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
 import { USDZExporter } from "three/examples/jsm/exporters/USDZExporter.js";
-import { Download, Crown, Lock, ChevronsUpDown } from "lucide-react";
+import { Download, Crown, Lock } from "lucide-react";
+import { export3mf } from "@/lib/export3mf";
+import { zipSync, strToU8 } from "three/examples/jsm/libs/fflate.module.js";
 import Button from "@/components/ui/Button";
-import { Field, Segmented, Toggle, TextInput } from "@/components/ui/FormControls";
+import { Field, Segmented, Toggle, TextInput, SelectMenu } from "@/components/ui/FormControls";
 import { api } from "@/lib/api";
 import { membershipApi } from "@/lib/authApi";
 import { useI18n } from "@/hooks/useI18n";
@@ -20,27 +22,9 @@ const UNITS = ["cm", "mm"];
 
 // Always-available download formats. GLB is the source; the rest are produced
 // in-browser from the GLB when the server didn't generate them natively.
-const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "usdz", "ply"];
+// 3MF is the standard slicer format (Bambu Studio, PrusaSlicer, Cura).
+const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "3mf", "usdz", "ply"];
 
-/** A compact native <select> styled to match the app's inputs. */
-function Select({ value, onChange, options }) {
-  return (
-    <div className="relative">
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="focus-ring w-full appearance-none rounded-xl border border-app-line/10 bg-app-line/[0.03] px-3 py-2.5 text-sm text-app-text outline-none transition-colors hover:bg-app-line/[0.05]"
-      >
-        {options.map((o) => (
-          <option key={o.value} value={o.value} className="bg-app-elevated text-app-text">
-            {o.label}
-          </option>
-        ))}
-      </select>
-      <ChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-app-faint" />
-    </div>
-  );
-}
 
 /** Load the model's GLB and re-export it to another format entirely in the browser. */
 async function convertFromGlb(glbUrl, fmt) {
@@ -50,6 +34,7 @@ async function convertFromGlb(glbUrl, fmt) {
   scene.updateMatrixWorld(true);
   if (fmt === "obj") return { data: new OBJExporter().parse(scene), type: "text/plain" };
   if (fmt === "stl") return { data: new STLExporter().parse(scene, { binary: true }), type: "model/stl" };
+  if (fmt === "3mf") return export3mf(scene);
   if (fmt === "usdz") return { data: await new USDZExporter().parseAsync(scene), type: "model/vnd.usdz+zip" };
   if (fmt === "ply") {
     return new Promise((resolve, reject) => {
@@ -79,6 +64,72 @@ function triggerDownload(data, type, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Texture maps to bundle into the ZIP (proxy map name -> task.textureUrls[0] field).
+const TEXTURE_MAPS = [
+  ["base_color", "baseColor"],
+  ["metallic", "metallic"],
+  ["normal", "normal"],
+  ["roughness", "roughness"],
+  ["emission", "emission"],
+];
+
+function urlExt(url, fallback = "png") {
+  const m = /\.([a-z0-9]+)(?:\?|#|$)/i.exec(url || "");
+  return m ? m[1].toLowerCase() : fallback;
+}
+
+function toU8(data) {
+  if (data instanceof Uint8Array) return data;
+  if (data instanceof ArrayBuffer) return new Uint8Array(data);
+  if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+  if (typeof data === "string") return strToU8(data);
+  return new Uint8Array(data);
+}
+
+/** Fetch a task's texture maps (same-origin proxy) as ZIP entries: { "textures/<name>.<ext>": U8 }. */
+async function fetchTextureFiles(task) {
+  const tex0 = (task.textureUrls || [])[0];
+  const files = {};
+  if (!tex0) return files;
+  for (const [proxyName, field] of TEXTURE_MAPS) {
+    if (!tex0[field]) continue;
+    try {
+      const res = await fetch(api.textureUrl(task.id, proxyName));
+      if (!res.ok) continue;
+      files[`textures/${proxyName}.${urlExt(tex0[field])}`] = new Uint8Array(await res.arrayBuffer());
+    } catch {
+      /* skip a map that fails to fetch */
+    }
+  }
+  return files;
+}
+
+/** Classic + PBR .mtl binding the exported maps (mirrors the server OBJ export). */
+function buildMtl(matName, texFiles) {
+  const find = (n) => Object.keys(texFiles).find((k) => k.startsWith(`textures/${n}`));
+  const base = find("base_color");
+  const metal = find("metallic");
+  const norm = find("normal");
+  const rough = find("roughness");
+  let s = "# InnerStyle export\n";
+  s += `newmtl ${matName}\n`;
+  s += "Ka 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 0.000 0.000 0.000\n";
+  if (base) s += `map_Kd ${base}\n`;
+  if (norm) s += `map_Bump ${norm}\nbump ${norm}\n`;
+  if (metal) s += `map_Pm ${metal}\n`;
+  if (rough) s += `map_Pr ${rough}\n`;
+  return s;
+}
+
+/** Drop stale mtllib/usemtl and bind a single material (mirrors the server's OBJ export). */
+function bindMtlToObj(objText, mtlFile, matName) {
+  const obj = objText.replace(/^\s*mtllib.*\r?\n?/gm, "").replace(/^\s*usemtl.*\r?\n?/gm, "");
+  const idx = obj.search(/^f\s/m);
+  const usemtl = `usemtl ${matName}\n`;
+  const body = idx >= 0 ? obj.slice(0, idx) + usemtl + obj.slice(idx) : usemtl + obj;
+  return `mtllib ${mtlFile}\n` + body;
+}
+
 /**
  * "Download settings" panel for a finished model. The format dropdown always offers
  * GLB/OBJ/STL/USDZ/PLY: formats the server generated are streamed directly (and can be
@@ -93,6 +144,12 @@ export default function DownloadSettings({ task }) {
     () => Object.keys(task.modelUrls || {}).map((f) => f.toLowerCase()),
     [task.modelUrls]
   );
+
+  // Whether this task ships any PBR maps (so the export ZIP carries a textures/ folder).
+  const hasTextures = useMemo(() => {
+    const tex0 = (task.textureUrls || [])[0];
+    return !!tex0 && Object.values(tex0).some(Boolean);
+  }, [task.textureUrls]);
 
   const [format, setFormat] = useState("glb");
   const [resize, setResize] = useState(false);
@@ -121,12 +178,35 @@ export default function DownloadSettings({ task }) {
   const canResize = resize && resizable && premium;
   const willConvert = !serverHas && format !== "glb";
 
+  // Picking a format that can't be resized (GLB/3MF/USDZ/PLY) clears any pending resize, so the
+  // height value can't linger and silently do nothing — it only ever applies to STL/OBJ.
+  useEffect(() => {
+    if (!resizable && resize) setResize(false);
+  }, [resizable, resize]);
+
   const download = async () => {
     setBusy(true);
     try {
       if (willConvert) {
-        const { data, type } = await convertFromGlb(api.modelUrl(task.id, "glb"), format);
-        triggerDownload(data, type, `model.${format}`);
+        // Convert from GLB in the browser, then bundle the model together with its colour/texture
+        // maps into a ZIP — so every format downloads as a ZIP that carries the colour files.
+        const { data } = await convertFromGlb(api.modelUrl(task.id, "glb"), format);
+        const texFiles = await fetchTextureFiles(task);
+        const files = { ...texFiles };
+        const matName = "innerstyle";
+        if (format === "obj" && Object.keys(texFiles).length > 0) {
+          const objText = typeof data === "string" ? data : new TextDecoder().decode(toU8(data));
+          files["model.obj"] = strToU8(bindMtlToObj(objText, "model.mtl", matName));
+          files["model.mtl"] = strToU8(buildMtl(matName, texFiles));
+        } else {
+          files[`model.${format}`] = toU8(data);
+        }
+        const zipped = zipSync(files);
+        triggerDownload(
+          new Blob([zipped], { type: "application/zip" }),
+          "application/zip",
+          `innerstyle-model-${task.id.slice(0, 8)}.zip`
+        );
         return;
       }
 
@@ -139,8 +219,9 @@ export default function DownloadSettings({ task }) {
         }
         heightMm = unit === "cm" ? h * 10 : h;
       }
+      // The server returns a ZIP (model file + texture maps), streamed straight from Meshy.
       const blob = await api.exportModel(task.id, { format, heightMm, origin });
-      triggerDownload(blob, "application/octet-stream", `model.${format}`);
+      triggerDownload(blob, "application/zip", `innerstyle-model-${task.id.slice(0, 8)}.zip`);
     } catch (err) {
       toast.error(t("studio.downloadFailTitle"), tServer(err.message) || friendly(err));
     } finally {
@@ -154,7 +235,8 @@ export default function DownloadSettings({ task }) {
 
   return (
     <div className="space-y-4 rounded-2xl border border-app-line/10 bg-app-line/[0.03] p-4">
-      {/* Resize toggle (premium) */}
+      {/* Resize (premium) — only meaningful for server-side STL/OBJ. For every other format we
+          show a clear hint instead of interactive controls, so the height can't appear to apply. */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-app-text">{t("studio.resize")}</span>
@@ -164,69 +246,81 @@ export default function DownloadSettings({ task }) {
             </span>
           )}
         </div>
-        <Toggle
-          checked={canResize}
-          onChange={(v) => {
-            if (!premium) {
-              toast.info(t("studio.resizeProOnly"), t("studio.resizeProHint"));
-              return;
-            }
-            setResize(v);
-          }}
-          label={t("studio.resizeLabel")}
-          description={
-            !resizable ? t("studio.resizeFormatHint") : t("studio.resizeDescription")
-          }
-        />
+
+        {resizable ? (
+          <Toggle
+            checked={canResize}
+            onChange={(v) => {
+              if (!premium) {
+                toast.info(t("studio.resizeProOnly"), t("studio.resizeProHint"));
+                return;
+              }
+              setResize(v);
+            }}
+            label={t("studio.resizeLabel")}
+            description={t("studio.resizeDescription")}
+          />
+        ) : (
+          <p className="rounded-xl border border-app-line/10 bg-app-line/[0.03] px-3 py-2 text-[11px] text-app-faint">
+            {t("studio.resizeFormatHint")}
+          </p>
+        )}
       </div>
 
-      {/* Height + unit */}
-      <Field label={t("studio.height")}>
-        <div className="flex items-center gap-2">
-          <TextInput
-            type="number"
-            min={1}
-            step="0.5"
-            value={height}
-            disabled={!canResize}
-            onChange={(e) => setHeight(e.target.value)}
-            className="flex-1"
-          />
-          <div className="w-24">
-            <Select
-              value={unit}
-              onChange={setUnit}
-              options={UNITS.map((u) => ({ value: u, label: u }))}
-            />
-          </div>
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-app-line/10 bg-app-line/[0.03] text-app-faint" title={t("studio.aspectLocked")}>
-            <Lock className="h-4 w-4" />
-          </span>
-        </div>
-      </Field>
+      {/* Height + unit + Origin — shown only when resize is actually active (STL/OBJ, Pro, toggled on) */}
+      {canResize && (
+        <>
+          <Field label={t("studio.height")}>
+            <div className="flex items-center gap-2">
+              <TextInput
+                type="number"
+                min={1}
+                step="0.5"
+                value={height}
+                onChange={(e) => setHeight(e.target.value)}
+                className="flex-1"
+              />
+              <div className="w-24">
+                <SelectMenu
+                  value={unit}
+                  onChange={setUnit}
+                  options={UNITS.map((u) => ({ value: u, label: u }))}
+                  searchable={false}
+                />
+              </div>
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-app-line/10 bg-app-line/[0.03] text-app-faint" title={t("studio.aspectLocked")}>
+                <Lock className="h-4 w-4" />
+              </span>
+            </div>
+          </Field>
 
-      {/* Origin */}
-      <Field label={t("studio.origin")}>
-        <Segmented
-          name="origin"
-          value={origin}
-          onChange={setOrigin}
-          options={[
-            { value: "BOTTOM", label: t("studio.originBottom") },
-            { value: "CENTER", label: t("studio.originCenter") },
-          ]}
-        />
-      </Field>
+          <Field label={t("studio.origin")}>
+            <Segmented
+              name="origin"
+              value={origin}
+              onChange={setOrigin}
+              options={[
+                { value: "BOTTOM", label: t("studio.originBottom") },
+                { value: "CENTER", label: t("studio.originCenter") },
+              ]}
+            />
+          </Field>
+        </>
+      )}
 
       {/* Format */}
       <Field label={t("studio.format")}>
-        <Select
+        <SelectMenu
           value={format}
           onChange={setFormat}
           options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
+          searchable={false}
         />
         {willConvert && (
           <p className="mt-1.5 text-[11px] text-app-faint">{t("studio.convertNote")}</p>
+        )}
+        {format === "stl" && hasTextures && (
+          <p className="mt-1.5 text-[11px] text-app-faint">{t("studio.stlTextureNote")}</p>
         )}
       </Field>
 

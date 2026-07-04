@@ -20,6 +20,8 @@
   --glass-bg: rgba(255, 255, 255, 0.035);
   --glass-strong-bg: rgba(255, 255, 255, 0.06);
   --glass-border: rgba(255, 255, 255, 0.1);
+  /* Opaque surface for dropdown menus / popovers so they stay readable over busy content. */
+  --menu-bg: rgba(17, 19, 31, 0.97);
   --scroll-track: #05060c;
   --scroll-thumb: #272b40;
 }
@@ -37,6 +39,7 @@
   --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-strong-bg: rgba(255, 255, 255, 0.95);
   --glass-border: rgba(15, 23, 42, 0.1);
+  --menu-bg: rgba(255, 255, 255, 0.99);
   --scroll-track: #e6e9f0;
   --scroll-thumb: #c3cbd9;
 }
@@ -93,8 +96,27 @@ body {
     @apply backdrop-blur-2xl;
   }
 
+  /* Opaque dropdown / popover surface — readable over any background. */
+  .glass-menu {
+    background: var(--menu-bg);
+    border: 1px solid var(--glass-border);
+    @apply backdrop-blur-2xl;
+  }
+
   .focus-ring {
     @apply outline-none ring-offset-2 ring-offset-app-bg focus-visible:ring-2 focus-visible:ring-brand-violet/70;
+  }
+}
+
+/* Mobile / touch: backdrop-filter blur is expensive on iOS Safari (re-blurs on every scroll
+   frame). Drop the radius hard on small/coarse screens — the frosted look is preserved enough
+   while scrolling stays smooth. */
+@media (max-width: 768px), (pointer: coarse) {
+  .glass,
+  .glass-strong,
+  .glass-menu {
+    backdrop-filter: blur(8px) !important;
+    -webkit-backdrop-filter: blur(8px) !important;
   }
 }
 
