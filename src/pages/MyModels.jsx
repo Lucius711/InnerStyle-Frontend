@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader2, Images, RefreshCw } from "lucide-react";
 import { Skeleton } from "@/components/ui/primitives";
 import Button from "@/components/ui/Button";
@@ -18,6 +19,7 @@ export default function MyModels() {
   const { t, tServer } = useI18n();
   const toast = useToast();
   const confirm = useConfirm();
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
   const [page, setPage] = useState(0);
   const [last, setLast] = useState(true);
@@ -109,7 +111,7 @@ export default function MyModels() {
           <StaggerGroup className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {tasks.map((task) => (
               <StaggerItem key={task.id}>
-                <TaskCard task={task} onOpen={setSelected} onDelete={handleDelete} />
+                <TaskCard task={task} onOpen={setSelected} onDelete={handleDelete} onEdit={(tk) => navigate(`/lab/${tk.id}`)} />
               </StaggerItem>
             ))}
           </StaggerGroup>

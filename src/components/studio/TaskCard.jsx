@@ -1,20 +1,25 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, MoreVertical, Trash2 } from "lucide-react";
+import { Clock, MoreVertical, Trash2, PenLine } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
 import { STATUS_META } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 import { useT } from "@/hooks/useI18n";
 
-/** A single task tile for the gallery grid. Pass `onDelete` to show a "..." menu. */
-export default function TaskCard({ task, onOpen, onDelete }) {
+/**
+ * A single task tile for the gallery grid.
+ * - `onDelete` → show "..." menu with delete option
+ * - `onEdit`   → add "Edit 3D" option to the menu (only for SUCCEEDED tasks with a model)
+ */
+export default function TaskCard({ task, onOpen, onDelete, onEdit }) {
   const t = useT();
   const meta = STATUS_META[task.status] || STATUS_META.PENDING;
   const [menuOpen, setMenuOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const menuRef = useRef(null);
   const thumb = task.thumbnailUrl && !imgError ? api.mediaUrl(task.thumbnailUrl) : null;
+  const canEdit = onEdit && task.status === "SUCCEEDED" && task.modelUrls && Object.keys(task.modelUrls).length > 0;
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -48,7 +53,7 @@ export default function TaskCard({ task, onOpen, onDelete }) {
           <Badge tone={meta.tone}>{t(`studio.status.${task.status}`)}</Badge>
         </div>
 
-        {onDelete && (
+        {(onDelete || canEdit) && (
           <div className="absolute right-2 top-2" ref={menuRef}>
             <button
               type="button"
@@ -62,18 +67,33 @@ export default function TaskCard({ task, onOpen, onDelete }) {
               <MoreVertical className="h-4 w-4" />
             </button>
             {menuOpen && (
-              <div className="glass-strong absolute right-0 z-10 mt-1 w-36 rounded-xl p-1.5 shadow-card">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(false);
-                    onDelete(task);
-                  }}
-                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
-                >
-                  <Trash2 className="h-4 w-4" /> {t("gallery.delete")}
-                </button>
+              <div className="glass-strong absolute right-0 z-10 mt-1 w-40 rounded-xl p-1.5 shadow-card">
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onEdit(task);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-brand-violet transition-colors hover:bg-brand-violet/10"
+                  >
+                    <PenLine className="h-4 w-4" /> {t("gallery.edit3d")}
+                  </button>
+                )}
+                {onDelete && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(false);
+                      onDelete(task);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/10"
+                  >
+                    <Trash2 className="h-4 w-4" /> {t("gallery.delete")}
+                  </button>
+                )}
               </div>
             )}
           </div>

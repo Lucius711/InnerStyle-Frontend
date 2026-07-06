@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
 
 const container = (stagger, delay) => ({
   hidden: {},
@@ -26,13 +27,18 @@ export function StaggerGroup({
   amount = 0.2,
   once = true,
 }) {
+  // useInView (state-driven) instead of the declarative `whileInView` prop: on SPA
+  // navigation the group is often already in the viewport at mount, where
+  // `whileInView` + `once` can miss the intersection and leave children stuck hidden.
+  const ref = useRef(null);
+  const inView = useInView(ref, { once, amount });
   return (
     <motion.div
+      ref={ref}
       className={className}
       variants={container(stagger, delay)}
       initial="hidden"
-      whileInView="show"
-      viewport={{ once, amount }}
+      animate={inView ? "show" : "hidden"}
     >
       {children}
     </motion.div>

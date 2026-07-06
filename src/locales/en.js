@@ -39,6 +39,14 @@ export const en = {
     converting: "Converting to GLB…",
     convertHint: "This format will be converted to GLB so you can edit it in 3D.",
     loadFailTitle: "Couldn't load model",
+    editTitle: "Edit with a prompt",
+    editRetexture: "Re-texture",
+    editRefine: "Refine",
+    editPromptPh: "Describe the change, e.g. golden samurai armor",
+    editApply: "Apply",
+    editGenerating: "Generating new model…",
+    editHint: "Creates a new version of the model from your description. May take a bit; it opens automatically when ready.",
+    editUploadedNote: "Prompt editing is only available for AI-generated models. Uploaded models don't support this feature.",
   },
 
   shipping: {
@@ -124,6 +132,7 @@ export const en = {
     deleteFail: "Delete failed",
     deleteConfirmTitle: "Delete this model?",
     deleteConfirmMsg: "This model will be removed from your library. This can't be undone.",
+    edit3d: "Edit 3D",
   },
 
   profile: {
@@ -581,6 +590,11 @@ export const en = {
     modelDropHint: "GLB · GLTF · OBJ · FBX · STL · up to {mb} MB",
     modelDropTypeError: "Please use a GLB, GLTF, OBJ, FBX, or STL file.",
     modelDropSizeError: "File must be smaller than {mb} MB.",
+    browseFolder: "Select folder",
+    companionFiles: "texture file(s) included",
+    folderDropTitle: "Drop your model folder here",
+    folderDropHint: "Folder containing a 3D file + textures subfolder",
+    folderStructure: "Supported folder structure:",
     imageUrlLabel: "Image URL",
     imageUrlHint: "JPG / PNG",
     imageUrlPlaceholder: "https://example.com/character.png",

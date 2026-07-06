@@ -282,6 +282,10 @@ function Fallback({ thumbnailUrl }) {
           <img
             src={thumbnailUrl}
             alt="Model preview"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = "/model-placeholder.svg";
+            }}
             className="relative max-h-72 w-auto rounded-2xl border border-app-line/10 object-contain shadow-card"
           />
         </div>

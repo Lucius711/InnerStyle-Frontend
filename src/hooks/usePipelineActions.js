@@ -39,9 +39,9 @@ export function usePipelineActions(onCreated) {
   };
 
   const actions = {
-    onRefine: (tk) =>
+    onRefine: (tk, opts) =>
       chain("refine", () =>
-        api.refine({ sourceTaskId: tk.id, enablePbr: true, targetFormats: ALL_FORMATS })
+        api.refine({ sourceTaskId: tk.id, enablePbr: true, targetFormats: ALL_FORMATS, ...opts })
       ),
     onRemesh: (tk, opts) =>
       chain("remesh", () =>

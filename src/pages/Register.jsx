@@ -24,8 +24,8 @@ export default function Register() {
     setBusy(true);
     try {
       await register({ fullName, email, password });
-      toast.success("Account created", "Check your email to verify your address.");
-      navigate("/login", { replace: true });
+      toast.success("Account created", "We emailed you a verification code.");
+      navigate(`/verify-email?email=${encodeURIComponent(email)}`, { replace: true });
     } catch (err) {
       toast.error("Sign up failed", friendly(err));
     } finally {

@@ -39,6 +39,14 @@ export const vi = {
     converting: "Đang chuyển sang GLB…",
     convertHint: "Định dạng này sẽ được chuyển sang GLB để bạn có thể chỉnh sửa 3D.",
     loadFailTitle: "Không tải được mô hình",
+    editTitle: "Chỉnh sửa bằng prompt",
+    editRetexture: "Đổi texture",
+    editRefine: "Tinh chỉnh",
+    editPromptPh: "Mô tả thay đổi, vd: giáp samurai vàng",
+    editApply: "Áp dụng",
+    editGenerating: "Đang tạo mô hình mới…",
+    editHint: "Tạo một phiên bản mới của mô hình theo mô tả. Có thể mất vài chục giây; mô hình mới sẽ tự mở khi xong.",
+    editUploadedNote: "Chỉnh sửa bằng prompt chỉ dành cho mô hình được tạo bởi AI. Mô hình tải lên không hỗ trợ tính năng này.",
   },
 
   shipping: {
@@ -124,6 +132,7 @@ export const vi = {
     deleteFail: "Xóa thất bại",
     deleteConfirmTitle: "Xóa model này?",
     deleteConfirmMsg: "Model sẽ bị xóa khỏi thư viện của bạn. Không thể hoàn tác.",
+    edit3d: "Chỉnh sửa 3D",
   },
 
   profile: {
@@ -578,6 +587,11 @@ export const vi = {
     modelDropHint: "GLB · GLTF · OBJ · FBX · STL · tối đa {mb} MB",
     modelDropTypeError: "Vui lòng dùng file GLB, GLTF, OBJ, FBX hoặc STL.",
     modelDropSizeError: "File phải nhỏ hơn {mb} MB.",
+    browseFolder: "Chọn thư mục",
+    companionFiles: "file texture đính kèm",
+    folderDropTitle: "Kéo thả thư mục vào đây",
+    folderDropHint: "Thư mục chứa file 3D + thư mục texture",
+    folderStructure: "Cấu trúc thư mục hỗ trợ:",
     imageUrlLabel: "Đường dẫn ảnh",
     imageUrlHint: "JPG / PNG",
     imageUrlPlaceholder: "https://example.com/character.png",

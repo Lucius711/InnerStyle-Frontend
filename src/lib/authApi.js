@@ -36,8 +36,8 @@ export const authApi = {
     }
   },
 
-  verifyEmail: (token) =>
-    request("/api/user/auth/verify-email", { method: "POST", body: { token } }),
+  verifyEmail: (email, otp) =>
+    request("/api/user/auth/verify-email", { method: "POST", body: { email, otp } }),
 
   resendVerification: (email) =>
     request("/api/user/auth/resend-verification", { method: "POST", body: { email } }),

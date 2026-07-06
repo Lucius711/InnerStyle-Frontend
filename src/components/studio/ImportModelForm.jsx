@@ -12,26 +12,33 @@ import { useI18n } from "@/hooks/useI18n";
 export default function ImportModelForm({ onCreated, disabled }) {
   const { t, tServer } = useI18n();
   const toast = useToast();
-  const [file, setFile] = useState(null);
+  // { modelFile: File, companions: File[] } | null
+  const [selection, setSelection] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [converting, setConverting] = useState(false);
 
+  const handleFile = (val) => {
+    // val is null (clear) or { modelFile, companions }
+    setSelection(val);
+  };
+
   const submit = async (e) => {
     e.preventDefault();
-    if (!file) {
+    if (!selection?.modelFile) {
       toast.error(t("toast.noModelTitle"), t("toast.noModelBody"));
       return;
     }
+    const { modelFile, companions } = selection;
     try {
       setSubmitting(true);
-      // Convert OBJ/FBX/STL to GLB in the browser so the model is previewable + editable.
-      let upload = file;
-      if (needsGlbConversion(file)) {
+      let upload = modelFile;
+      if (needsGlbConversion(modelFile)) {
         setConverting(true);
         try {
-          upload = await convertToGlb(file);
+          // Pass companions so OBJ can pick up MTL + textures for color.
+          upload = await convertToGlb(modelFile, companions);
         } catch {
-          upload = file;
+          upload = modelFile;
         } finally {
           setConverting(false);
         }
@@ -45,6 +52,9 @@ export default function ImportModelForm({ onCreated, disabled }) {
     }
   };
 
+  const modelFile = selection?.modelFile ?? null;
+  const companions = selection?.companions ?? [];
+
   return (
     <form onSubmit={submit} className="space-y-5" data-tour="input">
       <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-4">
@@ -55,7 +65,11 @@ export default function ImportModelForm({ onCreated, disabled }) {
       </div>
 
       <Field label={t("form.importLabel")}>
-        <ModelDropzone file={file} onFile={setFile} />
+        <ModelDropzone
+          file={modelFile}
+          companions={companions}
+          onFile={handleFile}
+        />
       </Field>
 
       <p className="rounded-xl border border-app-line/10 bg-app-line/[0.02] px-4 py-3 text-xs leading-relaxed text-app-faint">
@@ -75,7 +89,7 @@ export default function ImportModelForm({ onCreated, disabled }) {
           {converting ? t("lab.converting") : t("form.importSubmit")}
         </Button>
       </MagneticButton>
-      {file && needsGlbConversion(file) && (
+      {modelFile && needsGlbConversion(modelFile) && (
         <p className="text-center text-[11px] text-app-faint">{t("lab.convertHint")}</p>
       )}
     </form>
