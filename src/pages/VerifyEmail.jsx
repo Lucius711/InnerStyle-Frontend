@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, ShieldCheck, RotateCw } from "lucide-react";
 import AuthShell from "@/components/auth/AuthShell";
 import { Field, TextInput } from "@/components/ui/FormControls";
+import OtpInput from "@/components/ui/OtpInput";
 import Button from "@/components/ui/Button";
 import { authApi } from "@/lib/authApi";
 import { useToast } from "@/hooks/useToast";
@@ -15,15 +16,17 @@ export default function VerifyEmail() {
 
   const [email, setEmail] = useState(params.get("email") || "");
   const [otp, setOtp] = useState("");
+  const OTP_LENGTH = 6;
   const [status, setStatus] = useState("idle"); // idle | ok
   const [busy, setBusy] = useState(false);
   const [resending, setResending] = useState(false);
 
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (e, code = otp) => {
+    if (e) e.preventDefault();
+    if (busy || code.trim().length < OTP_LENGTH) return;
     setBusy(true);
     try {
-      await authApi.verifyEmail(email.trim(), otp.trim());
+      await authApi.verifyEmail(email.trim(), code.trim());
       setStatus("ok");
     } catch (err) {
       toast.error("Verification failed", friendly(err));
@@ -87,20 +90,22 @@ export default function VerifyEmail() {
             placeholder="you@example.com"
           />
         </Field>
-        <Field label="Verification code" hint="6 digits">
-          <TextInput
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            required
-            pattern="\d{4,9}"
-            maxLength={9}
+        <Field label="Verification code" hint={`${OTP_LENGTH} digits`}>
+          <OtpInput
             value={otp}
-            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-            placeholder="Enter the code"
-            className="text-center text-lg tracking-[0.4em]"
+            onChange={setOtp}
+            length={OTP_LENGTH}
+            disabled={busy}
+            onComplete={(code) => submit(null, code)}
           />
         </Field>
-        <Button type="submit" className="w-full" loading={busy} icon={ShieldCheck}>
+        <Button
+          type="submit"
+          className="w-full"
+          loading={busy}
+          disabled={otp.length < OTP_LENGTH}
+          icon={ShieldCheck}
+        >
           Verify email
         </Button>
       </form>
