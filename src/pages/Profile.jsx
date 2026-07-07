@@ -1,4 +1,5 @@
 import { ShieldCheck, ShieldAlert } from "lucide-react";
+import Seo from "@/components/seo/Seo";
 import { Badge } from "@/components/ui/primitives";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useI18n";
@@ -22,6 +23,7 @@ export default function Profile() {
 
   return (
     <div className="max-w-2xl">
+      <Seo title="Profile" noindex />
       <h2 className="mb-4 text-lg font-semibold text-app-text">{t("profile.info.title")}</h2>
       <div className="rounded-2xl border border-app-line/10 bg-app-line/[0.03] px-5">
         <Row label={t("profile.info.fullName")}>{user.fullName || t("profile.info.noName")}</Row>

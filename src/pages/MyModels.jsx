@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Images, RefreshCw } from "lucide-react";
+import Seo from "@/components/seo/Seo";
 import { Skeleton } from "@/components/ui/primitives";
 import Button from "@/components/ui/Button";
 import { StaggerGroup, StaggerItem } from "@/components/motion/Stagger";
@@ -79,6 +80,7 @@ export default function MyModels() {
 
   return (
     <div>
+      <Seo title="My 3D models" noindex />
       <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
         <div>
           <h2 className="text-lg font-semibold text-app-text">{t("profile.models.title")}</h2>

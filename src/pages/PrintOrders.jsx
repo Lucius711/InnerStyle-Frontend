@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Printer, Loader2, RefreshCw } from "lucide-react";
+import Seo from "@/components/seo/Seo";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
 import { printApi } from "@/lib/authApi";
@@ -43,6 +44,7 @@ export default function PrintOrders() {
 
   return (
     <div>
+      <Seo title="Print history" noindex />
       <div className="flex items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold text-app-text">{t("profile.prints.title")}</h2>

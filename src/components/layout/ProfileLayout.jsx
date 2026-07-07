@@ -1,6 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { User, Boxes, Printer } from "lucide-react";
-import Seo from "@/components/seo/Seo";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
@@ -23,7 +22,6 @@ export default function ProfileLayout() {
 
   return (
     <div className="relative min-h-screen px-6 pb-24 pt-28">
-      <Seo title={t("profile.title")} noindex />
       <div className="mx-auto max-w-6xl">
         <div className="flex items-center gap-4">
           {user?.avatarUrl ? (
