@@ -6,8 +6,8 @@ const AuthContext = createContext(null);
 
 /**
  * Session provider. Loads the current user on mount (if a token exists) and exposes
- * login / register / social / logout helpers. Listens for "innerstyle:logout" emitted by the
- * HTTP layer when a refresh fails.
+ * social / logout helpers. Sign-in is social-only. Listens for "innerstyle:logout" emitted by
+ * the HTTP layer when a refresh fails.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -37,19 +37,11 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("innerstyle:logout", onLogout);
   }, [loadUser]);
 
-  const login = useCallback(async (credentials) => {
-    const data = await authApi.login(credentials);
-    setUser(data.user);
-    return data.user;
-  }, []);
-
   const social = useCallback(async (provider, token) => {
     const data = await authApi.socialLogin(provider, token);
     setUser(data.user);
     return data.user;
   }, []);
-
-  const register = useCallback((payload) => authApi.register(payload), []);
 
   const logout = useCallback(async () => {
     await authApi.logout();
@@ -60,9 +52,7 @@ export function AuthProvider({ children }) {
     user,
     loading,
     isAuthenticated: !!user,
-    login,
     social,
-    register,
     logout,
     refreshUser: loadUser,
   };

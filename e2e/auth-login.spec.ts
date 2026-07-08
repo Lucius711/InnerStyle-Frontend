@@ -1,78 +1,70 @@
 import { test, expect } from "@playwright/test";
-import { mockAuth, ok, err } from "./helpers";
+import { ok } from "./helpers";
 
-// A broad catch-all so pages that load after auth (studio, staff) don't hit the network.
+/**
+ * Sign-in is social-only (Google / Facebook). The provider SDKs aren't loaded in e2e (no
+ * VITE_GOOGLE_CLIENT_ID / VITE_FACEBOOK_APP_ID), so we can't drive a real social sign-in.
+ * Instead we assert: the login page is password-free, legacy auth routes redirect to /login,
+ * and a seeded session (JWT already in storage) is honoured by the route guards.
+ */
+
+/** Catch-all so protected pages that fetch on mount don't hit the network. */
 async function mockRest(page) {
   await page.route("**/api/**", (r) =>
     r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(ok([])) })
   );
 }
 
-test.describe("Login", () => {
-  test("TC-E2E-009: valid USER login lands on /studio", async ({ page }) => {
-    await mockRest(page);
-    await mockAuth(page, {
-      login: {
-        status: 200,
-        body: ok({
-          accessToken: "a",
-          refreshToken: "r",
-          tokenType: "Bearer",
-          expiresIn: 900,
-          user: { id: "u1", email: "huy@example.com", roles: ["USER"] },
-        }),
-      },
-    });
-    await page.goto("/login");
-    await page.getByPlaceholder("you@example.com").fill("huy@example.com");
-    await page.getByPlaceholder("••••••••").fill("S3curePass!");
-    await page.getByRole("button", { name: "Sign in" }).click();
+/** Seed a JWT session and make the profile endpoints return `user`. */
+async function seedSession(page, user) {
+  await page.addInitScript(() => {
+    localStorage.setItem("innerstyle.accessToken", "seeded-access");
+    localStorage.setItem("innerstyle.refreshToken", "seeded-refresh");
+  });
+  const me = (r) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(ok(user)) });
+  await page.route("**/api/user/account/me", me);
+  await page.route("**/api/staff/account/me", me);
+}
 
-    await expect(page).toHaveURL(/\/studio/);
+test.describe("Login (social-only)", () => {
+  test("TC-E2E-009: login page renders the sign-in card with no password form", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    // The email/password form has been removed entirely.
+    await expect(page.getByPlaceholder("you@example.com")).toHaveCount(0);
+    await expect(page.getByPlaceholder("••••••••")).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Sign in" })).toHaveCount(0);
   });
 
-  test("TC-E2E-010: valid STAFF login lands on /staff", async ({ page }) => {
-    await mockRest(page);
-    await mockAuth(page, {
-      login: {
-        status: 200,
-        body: ok({
-          accessToken: "a",
-          refreshToken: "r",
-          tokenType: "Bearer",
-          expiresIn: 900,
-          user: { id: "s1", email: "staff@example.com", roles: ["STAFF"] },
-        }),
-      },
+  for (const path of ["/register", "/forgot-password", "/reset-password", "/verify-email"]) {
+    test(`TC-E2E-013: legacy ${path} redirects to /login`, async ({ page }) => {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/login$/);
     });
-    await page.goto("/login");
-    await page.getByPlaceholder("you@example.com").fill("staff@example.com");
-    await page.getByPlaceholder("••••••••").fill("S3curePass!");
-    await page.getByRole("button", { name: "Sign in" }).click();
+  }
 
+  test("TC-E2E-010: a seeded USER session reaches a protected page", async ({ page }) => {
+    await mockRest(page);
+    await seedSession(page, {
+      id: "u1",
+      email: "huy@example.com",
+      fullName: "Huy",
+      roles: ["USER"],
+    });
+    await page.goto("/profile");
+    await expect(page).toHaveURL(/\/profile/);
+  });
+
+  test("TC-E2E-011: a seeded STAFF session reaches /staff", async ({ page }) => {
+    await mockRest(page);
+    await seedSession(page, {
+      id: "s1",
+      email: "staff@example.com",
+      fullName: "Staff",
+      roles: ["STAFF"],
+    });
+    await page.goto("/staff");
     await expect(page).toHaveURL(/\/staff/);
-  });
-
-  test("TC-E2E-011: invalid credentials show an error toast", async ({ page }) => {
-    const e = err("auth.invalidCredentials", 401);
-    await mockAuth(page, { login: { status: e.status, body: e.body } });
-    await page.goto("/login");
-    await page.getByPlaceholder("you@example.com").fill("huy@example.com");
-    await page.getByPlaceholder("••••••••").fill("wrong");
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await expect(page.getByText("Incorrect email or password.")).toBeVisible();
-    await expect(page).toHaveURL(/\/login/);
-  });
-
-  test("TC-E2E-012: unverified account shows the verify hint", async ({ page }) => {
-    const e = err("auth.emailNotVerified", 401);
-    await mockAuth(page, { login: { status: e.status, body: e.body } });
-    await page.goto("/login");
-    await page.getByPlaceholder("you@example.com").fill("huy@example.com");
-    await page.getByPlaceholder("••••••••").fill("S3curePass!");
-    await page.getByRole("button", { name: "Sign in" }).click();
-
-    await expect(page.getByText("Please verify your email before signing in.")).toBeVisible();
   });
 });

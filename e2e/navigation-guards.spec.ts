@@ -22,7 +22,7 @@ test.describe("Route guards & navigation", () => {
 
   test("TC-E2E-021: public login page renders without auth", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   });
 
   test("TC-E2E-017: logout clears session and returns to a public view", async ({ page }) => {

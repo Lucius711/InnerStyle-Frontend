@@ -2,18 +2,6 @@
 import { request, authedFetch, tokenStore } from "@/lib/http";
 
 export const authApi = {
-  register: (payload) =>
-    request("/api/user/auth/register", { method: "POST", body: payload }),
-
-  login: async ({ email, password }) => {
-    const data = await request("/api/user/auth/login", {
-      method: "POST",
-      body: { email, password },
-    });
-    tokenStore.set(data);
-    return data;
-  },
-
   socialLogin: async (provider, token) => {
     const data = await request(`/api/user/auth/oauth/${provider}`, {
       method: "POST",
@@ -35,21 +23,6 @@ export const authApi = {
       tokenStore.clear();
     }
   },
-
-  verifyEmail: (email, otp) =>
-    request("/api/user/auth/verify-email", { method: "POST", body: { email, otp } }),
-
-  resendVerification: (email) =>
-    request("/api/user/auth/resend-verification", { method: "POST", body: { email } }),
-
-  forgotPassword: (email) =>
-    request("/api/user/auth/forgot-password", { method: "POST", body: { email } }),
-
-  resetPassword: (token, newPassword) =>
-    request("/api/user/auth/reset-password", {
-      method: "POST",
-      body: { token, newPassword },
-    }),
 
   // Role-aware profile: USER accounts resolve via /user/account/me; staff-only
   // accounts fall back to /staff/account/me (the user path requires ROLE_USER).

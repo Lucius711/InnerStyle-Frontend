@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 import { useToast } from "@/hooks/useToast";
 import { friendly } from "@/lib/messages";
 
@@ -31,6 +32,10 @@ function loadScript(src, id) {
  */
 export default function SocialButtons({ onSuccess }) {
   const { social } = useAuth();
+  const { theme } = useTheme();
+  // GSI only offers outline (white) / filled_black / filled_blue — match the app palette:
+  // a white "outline" button on the light theme, a dark button on the dark theme.
+  const gsiTheme = theme === "dark" ? "filled_black" : "outline";
   const toast = useToast();
   const googleBtnRef = useRef(null);
   const handlerRef = useRef();
@@ -46,32 +51,49 @@ export default function SocialButtons({ onSuccess }) {
     }
   };
 
-  // Google Identity Services
+  // Google Identity Services. Note: under React StrictMode (dev) the effect runs twice, and the
+  // GSI <script> can already be in the DOM but not yet executed — so instead of relying on the
+  // loadScript resolve timing, we poll until window.google.accounts.id is actually available and
+  // only then initialize + render the button. This is robust to the double-mount and to slow loads.
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return undefined;
     let cancelled = false;
-    loadScript("https://accounts.google.com/gsi/client", "gsi-script")
-      .then(() => {
-        if (cancelled || !window.google || !window.google.accounts) return;
-        window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: (resp) => handlerRef.current("google", resp.credential),
+    loadScript("https://accounts.google.com/gsi/client", "gsi-script").catch(() => {});
+
+    const startedAt = Date.now();
+    const timer = setInterval(() => {
+      if (cancelled) {
+        clearInterval(timer);
+        return;
+      }
+      const gid = window.google && window.google.accounts && window.google.accounts.id;
+      if (!gid) {
+        if (Date.now() - startedAt > 8000) clearInterval(timer); // give up after 8s
+        return;
+      }
+      clearInterval(timer);
+      gid.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (resp) => handlerRef.current("google", resp.credential),
+      });
+      if (googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = ""; // avoid a duplicate button on the StrictMode re-run
+        gid.renderButton(googleBtnRef.current, {
+          theme: gsiTheme,
+          size: "large",
+          shape: "pill",
+          text: "signin_with",
+          logo_alignment: "center",
+          width: 360,
         });
-        if (googleBtnRef.current) {
-          window.google.accounts.id.renderButton(googleBtnRef.current, {
-            theme: "filled_black",
-            size: "large",
-            shape: "pill",
-            text: "continue_with",
-            width: 320,
-          });
-        }
-      })
-      .catch(() => {});
+      }
+    }, 100);
+
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
-  }, []);
+  }, [gsiTheme]);
 
   // Preload + init the Facebook SDK so FB.login can be called synchronously on click.
   useEffect(() => {
@@ -97,7 +119,18 @@ export default function SocialButtons({ onSuccess }) {
     );
   }, [toast]);
 
-  if (!GOOGLE_CLIENT_ID && !FACEBOOK_APP_ID) return null;
+  // No provider configured → show a clear notice instead of an empty card. Sign-in is social-only,
+  // so without VITE_GOOGLE_CLIENT_ID / VITE_FACEBOOK_APP_ID there is no way in.
+  if (!GOOGLE_CLIENT_ID && !FACEBOOK_APP_ID) {
+    return (
+      <div className="mt-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+        Social sign-in isn&apos;t configured yet. Set{" "}
+        <code className="font-mono text-xs">VITE_GOOGLE_CLIENT_ID</code> (and optionally{" "}
+        <code className="font-mono text-xs">VITE_FACEBOOK_APP_ID</code>) in the frontend{" "}
+        <code className="font-mono text-xs">.env</code>, then restart the dev server.
+      </div>
+    );
+  }
 
   return (
     <div className="mt-2 space-y-3">
@@ -107,13 +140,14 @@ export default function SocialButtons({ onSuccess }) {
         <span className="h-px flex-1 bg-app-line/10" />
       </div>
 
-      {GOOGLE_CLIENT_ID && <div ref={googleBtnRef} className="flex justify-center" />}
+      <div className="mx-auto flex w-full max-w-[360px] flex-col gap-3">
+      {GOOGLE_CLIENT_ID && <div ref={googleBtnRef} className="flex justify-center overflow-hidden rounded-full" />}
 
       {FACEBOOK_APP_ID && (
         <button
           type="button"
           onClick={facebookLogin}
-          className="focus-ring flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#1877F2] text-sm font-semibold text-white transition hover:brightness-110"
+          className="focus-ring flex h-11 w-full items-center justify-center gap-2 rounded-full bg-[#1877F2] text-sm font-semibold text-white shadow-sm transition hover:brightness-110"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
             <path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07c0 6.02 4.39 11.01 10.13 11.93v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8v8.44C19.61 23.08 24 18.09 24 12.07z" />
@@ -121,6 +155,7 @@ export default function SocialButtons({ onSuccess }) {
           Continue with Facebook
         </button>
       )}
+      </div>
     </div>
   );
 }

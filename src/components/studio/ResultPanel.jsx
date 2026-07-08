@@ -354,10 +354,10 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs text-app-faint">{t("studio.retexQuick")}:</span>
                 {[
-                  { label: t("studio.qHairBrown"), value: "brown hair" },
-                  { label: t("studio.qHairBlonde"), value: "blonde hair" },
-                  { label: t("studio.qClothesRed"), value: "red clothes" },
-                  { label: t("studio.qEyesBlue"), value: "blue eyes" },
+                  { label: t("studio.qHairBrown"), value: "only change the hair color to natural brown, keep the face, skin, outfit and all other colors exactly the same as the original" },
+                  { label: t("studio.qHairBlonde"), value: "only change the hair color to blonde, keep the face, skin, outfit and all other colors exactly the same as the original" },
+                  { label: t("studio.qClothesRed"), value: "only change the clothing color to red, keep the face, skin, hair and everything else exactly the same as the original" },
+                  { label: t("studio.qEyesBlue"), value: "only change the eye color to blue, keep the face, skin, hair, outfit and everything else exactly the same as the original" },
                 ].map((chip) => (
                   <button
                     key={chip.value}

@@ -194,7 +194,7 @@ export default function Navbar() {
                 <LogIn className="h-4 w-4" /> {t("nav.login")}
               </Link>
               <MagneticButton as="div">
-                <Link to="/register">
+                <Link to="/login">
                   <Button size="sm" icon={Sparkles}>
                     {t("nav.start")}
                   </Button>
@@ -254,7 +254,7 @@ export default function Navbar() {
                 </Link>
               )}
               {!(isAuthenticated && userIsStaff) && (
-                <Link to={isAuthenticated ? "/studio" : "/register"} className="mt-2">
+                <Link to={isAuthenticated ? "/studio" : "/login"} className="mt-2">
                   <Button className="w-full" icon={Sparkles}>
                     {t("nav.start")}
                   </Button>

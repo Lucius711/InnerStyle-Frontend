@@ -24,10 +24,6 @@ import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import Login from "@/pages/Login";
-import Register from "@/pages/Register";
-import ForgotPassword from "@/pages/ForgotPassword";
-import ResetPassword from "@/pages/ResetPassword";
-import VerifyEmail from "@/pages/VerifyEmail";
 import Profile from "@/pages/Profile";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 
@@ -158,16 +154,11 @@ function AnimatedRoutes() {
         <Route path="/print-orders" element={<Navigate to="/print-history" replace />} />
 
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
-        <Route
-          path="/forgot-password"
-          element={<PageTransition><ForgotPassword /></PageTransition>}
-        />
-        <Route
-          path="/reset-password"
-          element={<PageTransition><ResetPassword /></PageTransition>}
-        />
-        <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+        {/* Email/password auth removed — sign-in is social-only. Redirect legacy routes. */}
+        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
+        <Route path="/reset-password" element={<Navigate to="/login" replace />} />
+        <Route path="/verify-email" element={<Navigate to="/login" replace />} />
         {/* Standalone, chrome-free AR launcher (opened from the QR on a phone) */}
         <Route path="/ar/:taskId" element={<ErrorBoundary><ArView /></ErrorBoundary>} />
         <Route path="/wallet/vnpay-return" element={<PageTransition><PaymentReturn /></PageTransition>} />

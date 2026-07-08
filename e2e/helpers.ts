@@ -44,3 +44,30 @@ export async function mockAuth(
   await page.route("**/api/user/auth/**", route);
   await page.route("**/api/*/auth/**", route);
 }
+
+/** A broad catch-all so pages that fetch on mount don't hit the network (empty success). */
+export async function mockApi(page: Page) {
+  await page.route("**/api/**", (r) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(ok([])) })
+  );
+}
+
+export const USER = { id: "u1", email: "huy@example.com", fullName: "Huy", roles: ["USER"] };
+export const STAFF = { id: "s1", email: "staff@example.com", fullName: "Staff", roles: ["STAFF"] };
+
+/**
+ * Seed a JWT session + a catch-all API mock, and make the profile endpoints return `user`.
+ * The catch-all is registered first so the specific `/account/me` routes win (Playwright uses the
+ * most-recently-added matching route). Extra per-test routes registered after this also win.
+ */
+export async function authed(page: Page, user: unknown = USER) {
+  await page.addInitScript(() => {
+    localStorage.setItem("innerstyle.accessToken", "seeded-access");
+    localStorage.setItem("innerstyle.refreshToken", "seeded-refresh");
+  });
+  await mockApi(page);
+  const me = (r: Route) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(ok(user)) });
+  await page.route("**/api/user/account/me", me);
+  await page.route("**/api/staff/account/me", me);
+}
