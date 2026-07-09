@@ -34,6 +34,7 @@ import {
   Disc3,
   Save,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import SignaturePad from "@/components/three/SignaturePad";
@@ -250,6 +251,7 @@ const DEFAULT_BASE = {
   signatureStrokes: null, // hand-drawn signature (list of strokes) engraved on the underside
   signaturePenWidth: 0.045, // pen width as a fraction of the drawing box
   signatureRaised: false, // false = recessed (engraved), true = raised
+  signatureDepthRatio: 0.12, // relief depth as a fraction of base thickness (0.1-0.5); low = subtle
 };
 
 const BASE_PRESETS = [
@@ -495,10 +497,13 @@ function BaseTab({ base, setBase, onSave, saving, baked, onRemove, removing }) {
   ];
   // Model already has a base → only offer to remove it. After removal it reloads base-less and the
   // normal "add base" UI returns (no separate "replace" flow needed).
-  if (baked) {
+  if (baked && !base.enabled) {
     return (
       <div className="space-y-2 rounded-xl border border-app-line/10 bg-app-line/[0.03] p-3">
         <p className="text-xs leading-relaxed text-app-muted">{t("editor.baseExisting")}</p>
+        <Button size="sm" icon={Pencil} className="w-full" onClick={() => setBase({ enabled: true })}>
+          {t("editor.baseEdit")}
+        </Button>
         {onRemove && (
           <Button size="sm" icon={Trash2} variant="ghost" className="w-full" loading={removing} onClick={onRemove}>
             {t("editor.baseRemove")}
@@ -509,7 +514,16 @@ function BaseTab({ base, setBase, onSave, saving, baked, onRemove, removing }) {
   }
   return (
     <div className="space-y-4">
-      <Toggle checked={base.enabled} onChange={(v) => setBase({ enabled: v })} label={t("editor.baseEnable")} />
+      {baked ? (
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-app-muted">{t("editor.baseEditing")}</span>
+          <Button size="sm" variant="ghost" onClick={() => setBase({ enabled: false })}>
+            {t("editor.cancel")}
+          </Button>
+        </div>
+      ) : (
+        <Toggle checked={base.enabled} onChange={(v) => setBase({ enabled: v })} label={t("editor.baseEnable")} />
+      )}
       {base.enabled && (
         <>
           <div>
@@ -566,11 +580,17 @@ function BaseTab({ base, setBase, onSave, saving, baked, onRemove, removing }) {
               onChange={(strokes) => setBase({ signatureStrokes: strokes })}
             />
             {base.signatureStrokes && base.signatureStrokes.length > 0 && (
-              <Toggle
-                checked={base.signatureRaised}
-                onChange={(v) => setBase({ signatureRaised: v })}
-                label={t("editor.signatureRaised")}
-              />
+              <>
+                <Toggle
+                  checked={base.signatureRaised}
+                  onChange={(v) => setBase({ signatureRaised: v })}
+                  label={t("editor.signatureRaised")}
+                />
+                <Slider label={t("editor.signatureDepth")} min={0.1} max={0.5} step={0.02}
+                  value={base.signatureDepthRatio}
+                  onChange={(v) => setBase({ signatureDepthRatio: v })}
+                  format={(v) => v.toFixed(2)} />
+              </>
             )}
             <p className="text-[11px] leading-relaxed text-app-faint">{t("editor.signatureHint")}</p>
           </div>
@@ -578,7 +598,12 @@ function BaseTab({ base, setBase, onSave, saving, baked, onRemove, removing }) {
           <p className="text-[11px] leading-relaxed text-app-faint">{t("editor.baseHint")}</p>
           {onSave && (
             <Button size="sm" icon={Save} className="w-full" loading={saving} onClick={onSave}>
-              {t("editor.saveBase")}
+              {baked ? t("editor.baseUpdate") : t("editor.saveBase")}
+            </Button>
+          )}
+          {baked && onRemove && (
+            <Button size="sm" icon={Trash2} variant="ghost" className="w-full" loading={removing} onClick={onRemove}>
+              {t("editor.baseRemove")}
             </Button>
           )}
         </>
@@ -901,6 +926,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
         color: base.color,
         signatureStrokes: hasSig ? base.signatureStrokes : undefined,
         signaturePenWidth: hasSig ? base.signaturePenWidth : undefined,
+        signatureDepthRatio: hasSig ? base.signatureDepthRatio : undefined,
         signatureRaised: hasSig ? base.signatureRaised : undefined,
       });
       toast.success(t("editor.baseSavedTitle"), t("editor.baseSavedBody"));
@@ -1023,6 +1049,9 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
     const zip = new JSZip();
     const base = "innerstyle-edited";
     const texName = "texture_base_color.png";
+    // Always ship the colour map inside a textures/ folder next to the model, so the print shop has
+    // a colour reference even for formats that cannot carry colour themselves (STL, plain 3MF).
+    const texPath = "textures/" + texName;
 
     const modelBlob = modelData instanceof Blob ? modelData : new Blob([modelData], { type: modelType });
 
@@ -1040,7 +1069,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
       // MTL: one entry per material name, all pointing at the texture
       const mtlLines = ["# Generated by InnerStyle"];
       for (const name of usedMaterials.length > 0 ? usedMaterials : ["Material"]) {
-        mtlLines.push(`\nnewmtl ${name}`, `map_Kd ${texName}`, "Ka 1 1 1", "Kd 1 1 1");
+        mtlLines.push(`\nnewmtl ${name}`, `map_Kd ${texPath}`, "Ka 1 1 1", "Kd 1 1 1");
       }
       zip.file(`${base}.mtl`, mtlLines.join("\n"));
     } else {
@@ -1048,7 +1077,13 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
     }
 
     if (texBlob) {
-      zip.file(texName, texBlob);
+      zip.file(texPath, texBlob);
+      zip.file(
+        "textures/README.txt",
+        "texture_base_color.png la ban do mau (base color) cua model.\n"
+        + "Dung lam tham chieu mau khi in. Cac dinh dang STL/3MF khong nhung mau,\n"
+        + "hay dung OBJ (kem .mtl) hoac GLB de giu mau dung vi tri.\n"
+      );
     }
 
     const zipBlob = await zip.generateAsync({
@@ -1072,10 +1107,20 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
 
     // Patch blob URL — applied to materials that have no map so GLTFExporter can embed it.
     let patchedBlobUrl = null;
+    let restoreUpAxis = false;
 
     try {
       const texBlob = await getTextureBlob(s);
       const texBlobUrl = texBlob ? URL.createObjectURL(texBlob) : null;
+
+      // Slicers (Bambu/Prusa/Orca) use Z-up while three.js is Y-up, so print/mesh formats come out
+      // lying on their side. Rotate the scene +90deg about X (Y-up -> Z-up) so the model stands
+      // upright in the slicer. GLB/USDZ stay Y-up because their viewers expect that.
+      if (fmt === "stl" || fmt === "3mf" || fmt === "obj" || fmt === "ply") {
+        s.rotation.x += Math.PI / 2;
+        s.updateMatrixWorld(true);
+        restoreUpAxis = true;
+      }
 
       // For GLB/GLTF: ensure every material has a map so GLTFExporter embeds the texture.
       if (texBlobUrl && fmt === "glb") {
@@ -1122,6 +1167,10 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
       fail();
     } finally {
       applyRenderModeTo(s, scene.renderMode);
+      if (restoreUpAxis) {
+        s.rotation.x -= Math.PI / 2;
+        s.updateMatrixWorld(true);
+      }
       if (baseMesh) {
         s.remove(baseMesh);
         baseMesh.geometry.dispose();
