@@ -29,8 +29,13 @@ async function seedSession(page, user) {
 
 test.describe("Login (social-only)", () => {
   test("TC-E2E-009: login page renders the sign-in card with no password form", async ({ page }) => {
+    // Stub every mount-time request so nothing hits the live dev-server proxy and reloads the
+    // page mid-assertion (that shows up as `toHaveCount` → "Received: undefined").
+    await mockRest(page);
     await page.goto("/login");
     await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+    // Wait for the auth card to fully settle before asserting what's absent.
+    await expect(page.getByText("Continue with Google or Facebook", { exact: false })).toBeVisible();
     // The email/password form has been removed entirely.
     await expect(page.getByPlaceholder("you@example.com")).toHaveCount(0);
     await expect(page.getByPlaceholder("••••••••")).toHaveCount(0);

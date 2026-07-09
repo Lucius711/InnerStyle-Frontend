@@ -48,7 +48,7 @@ test.describe("Membership API", () => {
     await plansReq;
 
     await expect(page.getByRole("heading", { name: "Membership" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Pro" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Pro", exact: true })).toBeVisible();
     await expect(page.getByText("20", { exact: false }).first()).toBeVisible(); // creditsRemaining
   });
 
@@ -71,7 +71,9 @@ test.describe("Membership API", () => {
   test("TC-API-MEM-003: a failed /plans load shows an error toast", async ({ page }) => {
     await authed(page, USER);
     await mockMembership(page, { plansError: true });
-    await page.goto("/membership");
-    await expect(page.getByText("Couldn't load membership")).toBeVisible();
+    // The error is a toast that auto-dismisses after 4.5s. Return from goto as soon as navigation
+    // commits (don't wait for full `load`) so the assertion starts polling before the toast fades.
+    await page.goto("/membership", { waitUntil: "commit" });
+    await expect(page.getByText("Couldn't load membership").first()).toBeVisible();
   });
 });

@@ -59,7 +59,8 @@ test.describe("Staff orders API", () => {
     await listReq;
     await thumbReq;
 
-    await expect(page.getByText("PAID")).toBeVisible();
+    // Scope to the status badge (a <span>); "PAID" also appears as a filter button.
+    await expect(page.locator("span").filter({ hasText: /^PAID$/ })).toBeVisible();
     await expect(page.getByText("#ord-abcd")).toBeVisible(); // id.slice(0, 8)
   });
 
@@ -78,14 +79,18 @@ test.describe("Staff orders API", () => {
   test("TC-API-STF-003: PATCH /status advances the order", async ({ page }) => {
     await authed(page, STAFF);
     await mockStaff(page);
+    // Wait for the orders list to actually arrive before asserting the row rendered.
+    const listReq = page.waitForRequest((r) => /\/api\/staff\/orders\?/.test(r.url()) && r.method() === "GET");
     await page.goto("/staff");
+    await listReq;
     await expect(page.getByText("#ord-abcd")).toBeVisible();
 
     await page.getByRole("button", { name: /Set status/ }).click();
     const patch = page.waitForRequest(
       (r) => /\/api\/staff\/orders\/[^/]+\/status/.test(r.url()) && r.method() === "PATCH"
     );
-    await page.getByRole("button", { name: "IN_PRODUCTION" }).click();
+    // Pick from the open dropdown menu; "IN_PRODUCTION" also exists as a filter button.
+    await page.locator(".glass-menu").getByRole("button", { name: "IN_PRODUCTION" }).click();
     const req = await patch;
     expect(req.postDataJSON()).toMatchObject({ status: "IN_PRODUCTION" });
     await expect(page.getByText("Status updated")).toBeVisible();
@@ -94,7 +99,9 @@ test.describe("Staff orders API", () => {
   test("TC-API-STF-004: Download triggers GET /model", async ({ page }) => {
     await authed(page, STAFF);
     await mockStaff(page);
+    const listReq = page.waitForRequest((r) => /\/api\/staff\/orders\?/.test(r.url()) && r.method() === "GET");
     await page.goto("/staff");
+    await listReq;
     await expect(page.getByText("#ord-abcd")).toBeVisible();
 
     const modelReq = page.waitForRequest(
@@ -107,7 +114,9 @@ test.describe("Staff orders API", () => {
   test("TC-API-STF-005: printability check then auto-fix (GET /printability, POST /repair)", async ({ page }) => {
     await authed(page, STAFF);
     await mockStaff(page);
+    const listReq = page.waitForRequest((r) => /\/api\/staff\/orders\?/.test(r.url()) && r.method() === "GET");
     await page.goto("/staff");
+    await listReq;
     await expect(page.getByText("#ord-abcd")).toBeVisible();
 
     const checkReq = page.waitForRequest(

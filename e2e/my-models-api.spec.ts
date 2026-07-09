@@ -47,7 +47,7 @@ test.describe("My models API", () => {
     const filtered = page.waitForRequest(
       (r) => r.url().includes("/api/common/3d/tasks") && new URL(r.url()).searchParams.get("status") === "SUCCEEDED"
     );
-    await page.getByRole("button", { name: "Ready" }).click(); // the "Ready" (SUCCEEDED) filter chip
+    await page.getByRole("button", { name: "Ready", exact: true }).click(); // the "Ready" (SUCCEEDED) filter chip
     await filtered;
   });
 
@@ -57,14 +57,14 @@ test.describe("My models API", () => {
     await page.goto("/my-3d-printing");
     await expect(page.getByText("Ready").first()).toBeVisible();
 
-    await page.getByRole("button", { name: "Options" }).click(); // the card "..." menu
-    await page.getByRole("button", { name: "Delete" }).click(); // menu → Delete
+    await page.getByRole("button", { name: "Options", exact: true }).click(); // the card "..." menu
+    await page.getByRole("button", { name: "Delete", exact: true }).click(); // menu → Delete
     await expect(page.getByText("Delete this model?")).toBeVisible();
 
     const del = page.waitForRequest(
       (r) => r.url().includes("/api/common/3d/tasks/task-1") && r.method() === "DELETE"
     );
-    await page.getByRole("button", { name: "Delete" }).click(); // dialog → confirm
+    await page.getByRole("button", { name: "Delete", exact: true }).click(); // dialog → confirm
     await del;
     await expect(page.getByText("Model deleted")).toBeVisible();
   });

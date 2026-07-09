@@ -14,6 +14,8 @@ import { ok, authed, USER } from "./helpers";
 test.describe("Generate & edit a 3D model", () => {
   test("TC-E2E-170: text → 3D generate, then edit with Refine", async ({ page }) => {
     await authed(page, USER);
+    // Suppress the first-visit guided tour; its overlay intercepts clicks.
+    await page.addInitScript(() => localStorage.setItem("innerstyle-studio-tour-seen", "1"));
 
     const pending = { id: "prev-1", status: "IN_PROGRESS", taskType: "TEXT_TO_3D_PREVIEW" };
     const ready = {

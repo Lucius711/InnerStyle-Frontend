@@ -14,7 +14,7 @@
 ```
 Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Ready' }) resolved to 2 elements:
     1) <button type="button" class="focus-ring relative flex-1 rounded-xl px-3 py-2 text-sm font-medium transition-colors text-app-muted hover:text-app-text">…</button> aka getByRole('button', { name: 'Ready', exact: true })
-    2) <div tabindex="0" role="button" class="group glass relative cursor-pointer overflow-hidden rounded-2xl text-left transition-shadow hover:shadow-glow">…</div> aka getByRole('button', { name: 'Ready Options Refine 4s ago' })
+    2) <div tabindex="0" role="button" class="group glass relative cursor-pointer overflow-hidden rounded-2xl text-left transition-shadow hover:shadow-glow">…</div> aka getByRole('button', { name: 'Ready Options Refine 5s ago' })
 
 Call log:
   - waiting for getByRole('button', { name: 'Ready' })
@@ -29,132 +29,131 @@ Error: page.waitForRequest: Test ended.
 
 ```yaml
 - generic [ref=e2]:
-  - img "InnerStyle" [ref=e4]
-  - banner [ref=e5]:
-    - navigation [ref=e6]:
-      - link "InnerStyle" [ref=e7]:
+  - banner [ref=e3]:
+    - navigation [ref=e4]:
+      - link "InnerStyle" [ref=e5] [cursor=pointer]:
         - /url: /
-        - img "InnerStyle" [ref=e8]
-      - generic [ref=e9]:
-        - link "How it works" [ref=e10]:
+        - img "InnerStyle" [ref=e6]
+      - generic [ref=e7]:
+        - link "How it works" [ref=e8] [cursor=pointer]:
           - /url: /#how
-        - link "Features" [ref=e11]:
+        - link "Features" [ref=e9] [cursor=pointer]:
           - /url: /#features
-        - link "Showcase" [ref=e12]:
+        - link "Showcase" [ref=e10] [cursor=pointer]:
           - /url: /#showcase
-      - generic [ref=e13]:
-        - button "Change language" [ref=e15] [cursor=pointer]:
-          - img [ref=e16]
-          - generic [ref=e19]: EN
-        - button "Switch to dark mode" [ref=e20] [cursor=pointer]:
-          - img [ref=e22]
-        - link "Start creating" [ref=e29]:
+      - generic [ref=e11]:
+        - button "Change language" [ref=e13] [cursor=pointer]:
+          - img [ref=e14]
+          - generic [ref=e18]: EN
+        - button "Switch to dark mode" [ref=e19] [cursor=pointer]:
+          - img [ref=e21]
+        - link "Start creating" [ref=e32] [cursor=pointer]:
           - /url: /studio
-          - button "Start creating" [ref=e30] [cursor=pointer]:
-            - img [ref=e31]
+          - button "Start creating" [ref=e33]:
+            - img [ref=e34]
             - text: Start creating
-        - button "Account" [ref=e34] [cursor=pointer]:
-          - generic [ref=e35]: H
-          - img [ref=e36]
-  - generic [ref=e40]:
-    - generic [ref=e41]:
-      - generic [ref=e42]: H
-      - generic [ref=e43]:
-        - heading "Huy" [level=1] [ref=e44]
-        - paragraph [ref=e45]: huy@example.com
-    - generic [ref=e46]:
-      - link "Personal info" [ref=e47]:
+        - button "Account" [ref=e41] [cursor=pointer]:
+          - generic [ref=e42]: H
+          - img [ref=e43]
+  - generic [ref=e47]:
+    - generic [ref=e48]:
+      - generic [ref=e49]: H
+      - generic [ref=e50]:
+        - heading "Huy" [level=1] [ref=e51]
+        - paragraph [ref=e52]: huy@example.com
+    - generic [ref=e53]:
+      - link "Personal info" [ref=e54] [cursor=pointer]:
         - /url: /profile
-        - img [ref=e48]
+        - img [ref=e55]
         - text: Personal info
-      - link "My 3D models" [ref=e51]:
+      - link "My 3D models" [ref=e58] [cursor=pointer]:
         - /url: /my-3d-printing
-        - img [ref=e52]
+        - img [ref=e59]
         - text: My 3D models
-      - link "Print history" [ref=e62]:
+      - link "Print history" [ref=e72] [cursor=pointer]:
         - /url: /print-history
-        - img [ref=e63]
+        - img [ref=e73]
         - text: Print history
-    - generic [ref=e68]:
-      - generic [ref=e69]:
-        - generic [ref=e70]:
-          - heading "My 3D models" [level=2] [ref=e71]
-          - paragraph [ref=e72]: Everything you've generated — open any model to view in 3D, download, or continue the pipeline.
-        - button "Refresh" [ref=e73] [cursor=pointer]:
-          - img [ref=e74]
+    - generic [ref=e78]:
+      - generic [ref=e79]:
+        - generic [ref=e80]:
+          - heading "My 3D models" [level=2] [ref=e81]
+          - paragraph [ref=e82]: Everything you've generated — open any model to view in 3D, download, or continue the pipeline.
+        - button "Refresh" [ref=e83] [cursor=pointer]:
+          - img [ref=e84]
           - text: Refresh
-      - generic [ref=e80]:
-        - button "All" [ref=e81] [cursor=pointer]: All
-        - button "Ready" [ref=e83] [cursor=pointer]
-        - button "Generating" [ref=e84] [cursor=pointer]
-        - button "Failed" [ref=e85] [cursor=pointer]
-      - button "Ready Options Refine 4s ago" [ref=e88] [cursor=pointer]:
-        - generic [ref=e89]:
-          - generic [ref=e91]: Ready
-          - button "Options" [ref=e93]:
-            - img [ref=e94]
-        - generic [ref=e98]:
-          - paragraph [ref=e99]: Refine
-          - paragraph [ref=e100]:
-            - img [ref=e101]
-            - text: 4s ago
-  - contentinfo [ref=e104]:
-    - generic [ref=e105]:
-      - generic [ref=e106]:
-        - generic [ref=e107]:
-          - link "InnerStyle" [ref=e108]:
+      - generic [ref=e90]:
+        - button "All" [ref=e91] [cursor=pointer]: All
+        - button "Ready" [ref=e93] [cursor=pointer]
+        - button "Generating" [ref=e94] [cursor=pointer]
+        - button "Failed" [ref=e95] [cursor=pointer]
+      - button "Ready Options Refine 5s ago" [ref=e98] [cursor=pointer]:
+        - generic [ref=e99]:
+          - generic [ref=e101]: Ready
+          - button "Options" [ref=e103]:
+            - img [ref=e104]
+        - generic [ref=e108]:
+          - paragraph [ref=e109]: Refine
+          - paragraph [ref=e110]:
+            - img [ref=e111]
+            - text: 5s ago
+  - contentinfo [ref=e114]:
+    - generic [ref=e115]:
+      - generic [ref=e116]:
+        - generic [ref=e117]:
+          - link "InnerStyle" [ref=e118] [cursor=pointer]:
             - /url: /
-            - img "InnerStyle" [ref=e109]
-          - paragraph [ref=e110]: Turn a single 2D image or one line of text into a textured, rigged and animated 3D model — powered by the MeshyAI pipeline.
-        - generic [ref=e111]:
-          - generic [ref=e112]:
-            - heading "Product" [level=4] [ref=e113]
-            - list [ref=e114]:
-              - listitem [ref=e115]:
-                - link "Studio" [ref=e116]:
+            - img "InnerStyle" [ref=e119]
+          - paragraph [ref=e120]: Turn a single 2D image or one line of text into a textured, rigged and animated 3D model — powered by the MeshyAI pipeline.
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - heading "Product" [level=4] [ref=e123]
+            - list [ref=e124]:
+              - listitem [ref=e125]:
+                - link "Studio" [ref=e126] [cursor=pointer]:
                   - /url: /studio
-              - listitem [ref=e117]:
-                - link "How it works" [ref=e118]:
+              - listitem [ref=e127]:
+                - link "How it works" [ref=e128] [cursor=pointer]:
                   - /url: /#how
-              - listitem [ref=e119]:
-                - link "Features" [ref=e120]:
+              - listitem [ref=e129]:
+                - link "Features" [ref=e130] [cursor=pointer]:
                   - /url: /#features
-          - generic [ref=e121]:
-            - heading "Pipeline" [level=4] [ref=e122]
-            - list [ref=e123]:
-              - listitem [ref=e124]:
-                - link "Image to 3D" [ref=e125]:
+          - generic [ref=e131]:
+            - heading "Pipeline" [level=4] [ref=e132]
+            - list [ref=e133]:
+              - listitem [ref=e134]:
+                - link "Image to 3D" [ref=e135] [cursor=pointer]:
                   - /url: /studio
-              - listitem [ref=e126]:
-                - link "Text to 3D" [ref=e127]:
+              - listitem [ref=e136]:
+                - link "Text to 3D" [ref=e137] [cursor=pointer]:
                   - /url: /studio
-              - listitem [ref=e128]:
-                - link "Rig & Animate" [ref=e129]:
+              - listitem [ref=e138]:
+                - link "Rig & Animate" [ref=e139] [cursor=pointer]:
                   - /url: /studio
-          - generic [ref=e130]:
-            - heading "Resources" [level=4] [ref=e131]
-            - list [ref=e132]:
-              - listitem [ref=e133]:
-                - link "MeshyAI Docs" [ref=e134]:
+          - generic [ref=e140]:
+            - heading "Resources" [level=4] [ref=e141]
+            - list [ref=e142]:
+              - listitem [ref=e143]:
+                - link "MeshyAI Docs" [ref=e144] [cursor=pointer]:
                   - /url: /
-              - listitem [ref=e135]:
-                - link "API Reference" [ref=e136]:
+              - listitem [ref=e145]:
+                - link "API Reference" [ref=e146] [cursor=pointer]:
                   - /url: /
-              - listitem [ref=e137]:
-                - link "Support" [ref=e138]:
+              - listitem [ref=e147]:
+                - link "Support" [ref=e148] [cursor=pointer]:
                   - /url: /
-      - generic [ref=e139]:
-        - paragraph [ref=e140]: © 2026 InnerStyle. Built on MeshyAI.
-        - generic [ref=e141]:
-          - link "social link" [ref=e142]:
+      - generic [ref=e149]:
+        - paragraph [ref=e150]: © 2026 InnerStyle. Built on MeshyAI.
+        - generic [ref=e151]:
+          - link "social link" [ref=e152] [cursor=pointer]:
             - /url: "#"
-            - img [ref=e143]
-          - link "social link" [ref=e146]:
+            - img [ref=e153]
+          - link "social link" [ref=e156] [cursor=pointer]:
             - /url: "#"
-            - img [ref=e147]
-          - link "social link" [ref=e149]:
+            - img [ref=e157]
+          - link "social link" [ref=e159] [cursor=pointer]:
             - /url: "#"
-            - img [ref=e150]
+            - img [ref=e160]
 ```
 
 # Test source

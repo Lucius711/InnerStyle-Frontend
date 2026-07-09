@@ -43,8 +43,16 @@ async function generateModel(page) {
   const create = page.waitForRequest(
     (r) => r.url().includes("/api/common/3d/image-to-3d") && r.method() === "POST"
   );
+  // The poll response is what flips the task to SUCCEEDED and renders the ResultPanel. Wait for it
+  // explicitly so the button assertion isn't racing the 3.5s poll interval — and so a failure here
+  // clearly points at the poll (rather than a generic "button not found").
+  const polled = page.waitForResponse(
+    (r) => /\/api\/common\/3d\/tasks\/img-1/.test(r.url()),
+    { timeout: 15000 }
+  );
   await page.getByRole("button", { name: "Generate 3D model" }).click();
   await create;
+  await polled;
   await expect(page.getByRole("button", { name: "Rig for animation" })).toBeVisible({ timeout: 15000 });
 }
 
