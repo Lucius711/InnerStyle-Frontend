@@ -67,6 +67,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
     <form onSubmit={submit} className="space-y-4">
       <Field label="Username">
         <TextInput
+          data-testid="auth-username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="yourname"
@@ -79,6 +80,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
       {isRegister && (
         <Field label="Full name" hint="optional">
           <TextInput
+            data-testid="auth-fullname"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             placeholder="Nguyen Van A"
@@ -90,6 +92,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
       <Field label="Password">
         <div className="relative">
           <TextInput
+            data-testid="auth-password"
             type={showPassword ? "text" : "password"}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -99,6 +102,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
           />
           <button
             type="button"
+            data-testid="auth-toggle-password"
             onClick={() => setShowPassword((s) => !s)}
             className="focus-ring absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-app-faint transition-colors hover:text-app-text"
             aria-label={showPassword ? "Hide password" : "Show password"}
@@ -110,6 +114,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
 
       <Button
         type="submit"
+        data-testid="auth-submit"
         size="lg"
         className="w-full"
         loading={busy}
@@ -122,6 +127,7 @@ export default function PasswordAuthForm({ mode = "login", onModeChange, onSucce
         {isRegister ? "Already have an account?" : "Don't have an account?"}{" "}
         <button
           type="button"
+          data-testid="auth-switch-mode"
           onClick={() => switchMode(isRegister ? "login" : "register")}
           className="font-semibold text-brand-violet hover:underline"
         >
