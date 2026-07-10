@@ -1245,11 +1245,13 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
   return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-app-bg/80 p-3 backdrop-blur-sm sm:p-6">
       <div className="flex h-[92vh] w-full min-w-0 w-[98vw] flex-col overflow-hidden rounded-2xl border border-app-line/10 bg-app-surface shadow-card">
-      <div className="flex items-center justify-between gap-3 border-b border-app-line/10 px-5 py-3">
-        <h3 className="font-display text-lg font-semibold text-app-text">{t("editor.title")}</h3>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" icon={RotateCcw} onClick={resetAll}>
-            {t("editor.resetAll")}
+      <div className="flex items-center justify-between gap-2 border-b border-app-line/10 px-3 py-3 sm:px-5">
+        <h3 className="min-w-0 truncate font-display text-base font-semibold text-app-text sm:text-lg">{t("editor.title")}</h3>
+        {/* On mobile the action labels are hidden (icon-only) so the whole row — including the
+            close button — always fits; full labels return from the `sm` breakpoint up. */}
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          <Button variant="secondary" size="sm" icon={RotateCcw} onClick={resetAll} title={t("editor.resetAll")}>
+            <span className="hidden sm:inline">{t("editor.resetAll")}</span>
           </Button>
           <Button
             variant="secondary"
@@ -1258,13 +1260,15 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
             loading={savingModel}
             disabled={savingModel || exporting}
             onClick={saveEditsToModel}
+            title={t("editor.saveModel")}
           >
-            {savingModel ? t("editor.savingModel") : t("editor.saveModel")}
+            <span className="hidden sm:inline">{savingModel ? t("editor.savingModel") : t("editor.saveModel")}</span>
           </Button>
           <div className="relative" ref={fmtRef}>
             <Button size="sm" icon={exporting ? Loader2 : Download} loading={exporting}
-              onClick={() => setFmtOpen((o) => !o)}>
-              {t("editor.export")} <ChevronDown className="ml-1 h-4 w-4" />
+              onClick={() => setFmtOpen((o) => !o)} title={t("editor.export")}>
+              <span className="hidden sm:inline">{t("editor.export")} </span>
+              <ChevronDown className="h-4 w-4 sm:ml-1" />
             </Button>
             {fmtOpen && !exporting && (
               <div className="glass-menu absolute right-0 z-10 mt-2 w-40 rounded-xl p-1.5 shadow-card">
@@ -1286,14 +1290,16 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+      {/* Mobile: a single vertically-scrolling sheet (canvas → lab panel → controls). Desktop
+          (lg): the classic 3-column layout with each column scrolling independently. */}
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
         {leftPanel && (
-          <div className="hidden shrink-0 overflow-y-auto border-app-line/10 bg-app-surface/40 lg:block lg:w-72 lg:border-r xl:w-80">
+          <div className="order-2 shrink-0 overflow-y-auto border-b border-app-line/10 bg-app-surface/40 lg:order-none lg:w-72 lg:border-b-0 lg:border-r xl:w-80">
             {leftPanel}
           </div>
         )}
         <div
-          className="relative h-[46vh] w-full shrink-0 lg:h-auto lg:min-h-0 lg:min-w-0 lg:flex-1"
+          className="relative order-1 h-[46vh] w-full shrink-0 lg:order-none lg:h-auto lg:min-h-0 lg:min-w-0 lg:flex-1"
           style={{ background: scene.bg || "radial-gradient(ellipse at center,#1b2030,#070810)" }}
         >
           <Canvas shadows camera={{ position: [0, 0.4, 4], fov: 40 }} dpr={[1, 2]}
@@ -1322,7 +1328,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
           </span>
         </div>
 
-        <aside className="flex min-h-0 w-full min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden border-t border-app-line/10 bg-app-surface/40 lg:w-[340px] lg:flex-none lg:border-l lg:border-t-0">
+        <aside className="order-3 flex min-h-0 w-full min-w-0 flex-none flex-col overflow-visible overflow-x-hidden border-t border-app-line/10 bg-app-surface/40 lg:order-none lg:w-[340px] lg:flex-none lg:overflow-y-auto lg:border-l lg:border-t-0">
           {/* Parts manager */}
           <div className="border-b border-app-line/10 p-4">
             <span className="mb-2 block text-xs font-medium uppercase tracking-wide text-app-faint">

@@ -193,7 +193,7 @@ function LabSidePanel({ task, onBack, onAr, onEdit, editing, t }) {
   };
 
   return (
-    <div className="flex h-full flex-col gap-4 overflow-y-auto p-4">
+    <div className="flex h-full max-lg:h-auto flex-col gap-4 overflow-y-auto p-4">
       <button
         type="button"
         onClick={onBack}
