@@ -1,16 +1,21 @@
+import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import AuthShell from "@/components/auth/AuthShell";
+import PasswordAuthForm from "@/components/auth/PasswordAuthForm";
 import SocialButtons from "@/components/auth/SocialButtons";
 import { isStaff } from "@/components/auth/StaffRoute";
 
 /**
- * Sign-in is social-only (Google / Facebook). Accounts are created/linked on first social login;
- * there is no email + password flow.
+ * Sign in with a username + password, or continue with Google / Facebook. Creating an account
+ * does not sign you in — after registering you're returned to the sign-in form.
  */
-export default function Login() {
+export default function Login({ initialMode = "login" }) {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state && location.state.from) || "/studio";
+
+  const [mode, setMode] = useState(initialMode); // "login" | "register"
+  const registering = mode === "register";
 
   const handleSuccess = (account) => {
     // Staff land on their fulfilment dashboard; everyone else on their intended page.
@@ -19,9 +24,14 @@ export default function Login() {
 
   return (
     <AuthShell
-      title="Sign in"
-      subtitle="Continue with Google or Facebook to access your studio, wallet and 3D library."
+      title={registering ? "Create account" : "Sign in"}
+      subtitle={
+        registering
+          ? "Pick a username and password to get started — no email needed."
+          : "Use your username and password, or continue with a social account."
+      }
     >
+      <PasswordAuthForm mode={mode} onModeChange={setMode} onSuccess={handleSuccess} />
       <SocialButtons onSuccess={handleSuccess} />
     </AuthShell>
   );

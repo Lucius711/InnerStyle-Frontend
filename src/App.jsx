@@ -154,8 +154,8 @@ function AnimatedRoutes() {
         <Route path="/print-orders" element={<Navigate to="/print-history" replace />} />
 
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        {/* Email/password auth removed — sign-in is social-only. Redirect legacy routes. */}
-        <Route path="/register" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<PageTransition><Login initialMode="register" /></PageTransition>} />
+        {/* No email flows (username + password auth). Redirect legacy routes. */}
         <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
         <Route path="/reset-password" element={<Navigate to="/login" replace />} />
         <Route path="/verify-email" element={<Navigate to="/login" replace />} />

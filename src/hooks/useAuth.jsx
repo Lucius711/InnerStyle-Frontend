@@ -43,6 +43,17 @@ export function AuthProvider({ children }) {
     return data.user;
   }, []);
 
+  // Creates the account but does not sign the user in — they log in afterwards.
+  const register = useCallback(async ({ username, password, fullName }) => {
+    return authApi.register({ username, password, fullName });
+  }, []);
+
+  const passwordLogin = useCallback(async ({ username, password }) => {
+    const data = await authApi.login({ username, password });
+    setUser(data.user);
+    return data.user;
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
@@ -53,6 +64,8 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated: !!user,
     social,
+    register,
+    passwordLogin,
     logout,
     refreshUser: loadUser,
   };

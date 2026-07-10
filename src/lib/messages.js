@@ -1,6 +1,14 @@
 // Maps stable backend message codes to friendly text. Falls back to the raw message.
 const MAP = {
-  "auth.invalidCredentials": "Incorrect email or password.",
+  "auth.invalidCredentials": "Incorrect username or password.",
+  "auth.accountInactive": "This account is not active.",
+  "user.usernameExists": "This username is already taken.",
+  "username.required": "Please enter a username.",
+  "username.invalidLength": "Username must be 3–50 characters.",
+  "username.invalidFormat": "Use only letters, numbers, dot or underscore.",
+  "password.required": "Please enter a password.",
+  "password.invalidLength": "Password must be 6–100 characters.",
+  "fullName.invalidLength": "Full name must be 2–255 characters.",
   "auth.emailNotVerified": "Please verify your email before signing in.",
   "auth.accountLocked": "Too many attempts. Your account is temporarily locked.",
   "auth.accountDisabled": "This account has been suspended.",

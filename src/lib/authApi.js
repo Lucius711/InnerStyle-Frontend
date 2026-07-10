@@ -11,6 +11,25 @@ export const authApi = {
     return data;
   },
 
+  // Local sign-up with username + password. Does NOT start a session — the user signs in
+  // afterwards. Returns { user } (tokens are ignored on purpose).
+  register: async ({ username, password, fullName }) => {
+    return request("/api/user/auth/register", {
+      method: "POST",
+      body: { username, password, fullName },
+    });
+  },
+
+  // Local sign-in with username + password.
+  login: async ({ username, password }) => {
+    const data = await request("/api/user/auth/login", {
+      method: "POST",
+      body: { username, password },
+    });
+    tokenStore.set(data);
+    return data;
+  },
+
   logout: async () => {
     const refreshToken = tokenStore.refresh;
     try {
