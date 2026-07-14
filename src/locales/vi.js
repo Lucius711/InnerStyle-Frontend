@@ -708,6 +708,8 @@ export const vi = {
       },
       apiKeyMissing: "Chưa cấu hình API key của MeshyAI",
       upstreamError: "Yêu cầu tới MeshyAI thất bại",
+      inputRejected:
+        "MeshyAI không xử lý được mô hình này. Để gắn xương, hãy dùng một mô hình nhân vật (người) rõ ràng, không có đế/chân đế — bạn không bị trừ phí cho lần thử này.",
       webhook: {
         unauthorized: "Chữ ký webhook không hợp lệ",
         received: "Đã xử lý webhook",

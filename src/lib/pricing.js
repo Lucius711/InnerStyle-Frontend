@@ -5,8 +5,10 @@ import { request } from "@/lib/http";
 export const vnd = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
 
 /**
- * 3D-print sell prices by figurine height (cm). Display only — the backend (app.print.prices)
- * is the source of truth and re-prices the order server-side. Keep in sync with application.yml.
+ * 3D-print sell prices by figurine height (cm). FALLBACK ONLY (finding n2): the backend
+ * (app.print.prices) is the single source of truth, exposed at GET /api/common/print/pricing and
+ * re-priced on every order server-side. Prefer loadPrintPricing() below; this constant is only
+ * used offline / before the fetch resolves.
  */
 export const PRINT_SIZES = [
   { cm: 8, price: 649000 },
@@ -14,7 +16,25 @@ export const PRINT_SIZES = [
   { cm: 15, price: 849000 },
 ];
 
-/** Suggested price for a size (cm), or undefined if not a known size. */
+let printPricingCache = null;
+
+/**
+ * Load the authoritative print sizes/prices from the backend once (source of truth). Falls back to
+ * the PRINT_SIZES constant if the request fails, so the UI still renders offline.
+ */
+export function loadPrintPricing() {
+  if (!printPricingCache) {
+    printPricingCache = request("/api/common/print/pricing")
+      .then((data) =>
+        (data?.sizes || []).map((s) => ({ cm: s.heightCm, price: Number(s.price) }))
+      )
+      .then((sizes) => (sizes.length ? sizes : PRINT_SIZES))
+      .catch(() => PRINT_SIZES);
+  }
+  return printPricingCache;
+}
+
+/** Suggested price for a size (cm), or undefined if not a known size (fallback list). */
 export function printPriceFor(cm) {
   return PRINT_SIZES.find((s) => s.cm === Number(cm))?.price;
 }

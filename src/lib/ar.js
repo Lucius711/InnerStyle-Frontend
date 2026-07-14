@@ -3,7 +3,7 @@
 // get Quick Look AR. Everything is loaded on demand from a CDN so the main bundle stays lean
 // and we don't touch the project's npm lockfile.
 
-import { apiBase } from "@/lib/http";
+import { apiBase, authedFetch } from "@/lib/http";
 
 const MODEL_VIEWER_SRC =
   "https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js";
@@ -103,10 +103,12 @@ export async function ensureUsdzUrl(taskId, glbUrl) {
   }
   try {
     const bytes = await glbToUsdzBytes(glbUrl);
-    const res = await fetch(`${apiBase}/api/common/3d/tasks/${taskId}/usdz`, {
+    // The USDZ write now requires auth + ownership (finding M1) — send the Bearer token.
+    const res = await authedFetch(`/api/common/3d/tasks/${taskId}/usdz`, {
       method: "PUT",
       headers: { "Content-Type": USDZ_CONTENT_TYPE },
-      body: bytes,
+      rawBody: bytes,
+      auth: true,
     });
     if (!res.ok) return null;
     return proxyUrl;

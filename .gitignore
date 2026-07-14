@@ -8,3 +8,13 @@ dist-ssr
 .DS_Store
 *.log
 .vite
+
+# Build/test artifacts and Vite's transient config cache (finding m2)
+playwright-report
+test-results
+vite.config.js.timestamp-*.mjs
+# One-off local scratch scripts that should not ship
+_axis.mjs
+_t.mjs
+_test3mf.mjs
+chk.cjs

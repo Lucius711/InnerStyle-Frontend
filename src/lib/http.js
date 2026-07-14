@@ -7,22 +7,25 @@
 const BASE = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 const ACCESS_KEY = "innerstyle.accessToken";
-const REFRESH_KEY = "innerstyle.refreshToken";
+// Legacy key — the refresh token is no longer kept in JS-readable storage (finding M3).
+const LEGACY_REFRESH_KEY = "innerstyle.refreshToken";
 
+// The refresh token now lives ONLY in an HttpOnly cookie the browser sends automatically to
+// /api/user/auth/*, so XSS can no longer read the long-lived credential. Only the short-lived
+// access token is kept in localStorage. All auth requests use credentials:"include" so the
+// cookie is stored (from Set-Cookie) and sent back.
 export const tokenStore = {
   get access() {
     return localStorage.getItem(ACCESS_KEY);
   },
-  get refresh() {
-    return localStorage.getItem(REFRESH_KEY);
-  },
-  set({ accessToken, refreshToken }) {
+  set({ accessToken }) {
     if (accessToken) localStorage.setItem(ACCESS_KEY, accessToken);
-    if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+    // Defensive: purge any refresh token left in localStorage by an older build.
+    localStorage.removeItem(LEGACY_REFRESH_KEY);
   },
   clear() {
     localStorage.removeItem(ACCESS_KEY);
-    localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem(LEGACY_REFRESH_KEY);
   },
 };
 
@@ -64,12 +67,11 @@ export async function parse(res) {
 let refreshing = null;
 
 async function doRefresh() {
-  const rt = tokenStore.refresh;
-  if (!rt) throw new ApiError("No session", 401, null);
+  // No body: the HttpOnly refresh cookie is sent automatically via credentials:"include".
   const res = await fetch(`${BASE}/api/user/auth/refresh`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refreshToken: rt }),
+    credentials: "include",
   });
   const data = await parse(res);
   tokenStore.set(data);
@@ -84,10 +86,11 @@ export async function authedFetch(path, { method = "GET", headers = {}, rawBody,
   const send = async () => {
     const h = { ...headers };
     if (auth && tokenStore.access) h["Authorization"] = `Bearer ${tokenStore.access}`;
-    return fetch(`${BASE}${path}`, { method, headers: h, body: rawBody });
+    // credentials:"include" so the HttpOnly refresh cookie rides along on auth calls.
+    return fetch(`${BASE}${path}`, { method, headers: h, body: rawBody, credentials: "include" });
   };
   let res = await send();
-  if (res.status === 401 && auth && tokenStore.refresh) {
+  if (res.status === 401 && auth) {
     try {
       refreshing = refreshing || doRefresh();
       await refreshing;

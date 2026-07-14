@@ -17,6 +17,7 @@ import ModelViewer from "@/components/three/ModelViewer";
 import ModelEditor from "@/components/three/ModelEditor";
 import ArPreview from "@/components/three/ArPreview";
 import DownloadSettings from "@/components/studio/DownloadSettings";
+import PipelinePanel from "@/components/studio/PipelinePanel";
 import { api } from "@/lib/api";
 import { useI18n } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
@@ -153,6 +154,8 @@ export default function CreativeLab() {
               onAr={() => setArOpen(true)}
               onEdit={applyPromptEdit}
               editing={editing}
+              actions={actions}
+              busyAction={busyAction}
               t={t}
             />
           }
@@ -174,7 +177,7 @@ export default function CreativeLab() {
 
 /* ------------------------------------------------- editor left panel */
 
-function LabSidePanel({ task, onBack, onAr, onEdit, editing, t }) {
+function LabSidePanel({ task, onBack, onAr, onEdit, editing, actions, busyAction, t }) {
   const [imgError, setImgError] = useState(false);
   const [editMode, setEditMode] = useState("retexture");
   const [prompt, setPrompt] = useState("");
@@ -250,6 +253,9 @@ function LabSidePanel({ task, onBack, onAr, onEdit, editing, t }) {
           <p className="mt-2 text-[11px] leading-relaxed text-app-faint">{t("lab.editHint")}</p>
         </div>
       )}
+
+      {/* Continue the pipeline — moved here from the Studio result panel. */}
+      <PipelinePanel task={task} actions={actions} busyAction={busyAction} />
 
       <p className="mt-auto shrink-0 pt-2 text-[11px] leading-relaxed text-app-faint">{t("lab.workbenchHint")}</p>
     </div>

@@ -711,6 +711,8 @@ export const en = {
       },
       apiKeyMissing: "The MeshyAI API key is not configured",
       upstreamError: "The MeshyAI request failed",
+      inputRejected:
+        "MeshyAI couldn't process this model. For rigging, use a clear single humanoid model (no base/stand) — you weren't charged for this attempt.",
       webhook: {
         unauthorized: "Invalid webhook signature",
         received: "Webhook processed",

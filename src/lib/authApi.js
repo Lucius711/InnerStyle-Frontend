@@ -31,12 +31,11 @@ export const authApi = {
   },
 
   logout: async () => {
-    const refreshToken = tokenStore.refresh;
+    // The refresh token rides in the HttpOnly cookie (finding M3); the backend reads + clears it.
     try {
       await request("/api/user/auth/logout", {
         method: "POST",
         auth: true,
-        body: { refreshToken },
       });
     } finally {
       tokenStore.clear();
