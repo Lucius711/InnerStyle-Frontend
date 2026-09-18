@@ -133,6 +133,9 @@ export const vi = {
     deleteConfirmTitle: "Xóa model này?",
     deleteConfirmMsg: "Model sẽ bị xóa khỏi thư viện của bạn. Không thể hoàn tác.",
     edit3d: "Chỉnh sửa 3D",
+    expiringToday: "Hết hạn hôm nay",
+    expiringInDays: "Còn {days} ngày",
+    expiringNotice: "{count} model sẽ hết hạn trong {days} ngày tới. Hãy tải về trước khi Meshy xóa chúng.",
   },
 
   profile: {
@@ -451,6 +454,7 @@ export const vi = {
       SUCCEEDED: "Sẵn sàng",
       FAILED: "Thất bại",
       CANCELED: "Đã hủy",
+    EXPIRED: "Đã hết hạn",
     },
     types: {
       IMAGE_TO_3D: "Ảnh → 3D",

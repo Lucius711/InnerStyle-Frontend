@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, MoreVertical, Trash2, PenLine } from "lucide-react";
 import { Badge } from "@/components/ui/primitives";
-import { STATUS_META } from "@/lib/constants";
+import { STATUS_META, EXPIRY_WARN_DAYS } from "@/lib/constants";
 import { api } from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 import { useT } from "@/hooks/useI18n";
@@ -12,6 +12,12 @@ import { useT } from "@/hooks/useI18n";
  * - `onDelete` → show "..." menu with delete option
  * - `onEdit`   → add "Edit 3D" option to the menu (only for SUCCEEDED tasks with a model)
  */
+/** Returns days until expiry (negative = already expired). Null if no expiresAt. */
+function daysUntilExpiry(expiresAt) {
+  if (!expiresAt) return null;
+  return Math.floor((new Date(expiresAt) - Date.now()) / 86400000);
+}
+
 export default function TaskCard({ task, onOpen, onDelete, onEdit }) {
   const t = useT();
   const meta = STATUS_META[task.status] || STATUS_META.PENDING;
@@ -20,6 +26,8 @@ export default function TaskCard({ task, onOpen, onDelete, onEdit }) {
   const menuRef = useRef(null);
   const thumb = task.thumbnailUrl && !imgError ? api.mediaUrl(task.thumbnailUrl) : null;
   const canEdit = onEdit && task.status === "SUCCEEDED" && task.modelUrls && Object.keys(task.modelUrls).length > 0;
+  const daysLeft = daysUntilExpiry(task.expiresAt);
+  const expiringSoon = daysLeft !== null && daysLeft >= 0 && daysLeft <= EXPIRY_WARN_DAYS;
 
   useEffect(() => {
     const onDoc = (e) => {
@@ -49,8 +57,13 @@ export default function TaskCard({ task, onOpen, onDelete, onEdit }) {
           className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-105"
         />
 
-        <div className="absolute left-2 top-2">
+        <div className="absolute left-2 top-2 flex flex-col gap-1">
           <Badge tone={meta.tone}>{t(`studio.status.${task.status}`)}</Badge>
+          {expiringSoon && (
+            <Badge tone="amber">
+              {daysLeft === 0 ? t("gallery.expiringToday") : t("gallery.expiringInDays", { days: daysLeft })}
+            </Badge>
+          )}
         </div>
 
         {(onDelete || canEdit) && (

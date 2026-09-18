@@ -133,6 +133,9 @@ export const en = {
     deleteConfirmTitle: "Delete this model?",
     deleteConfirmMsg: "This model will be removed from your library. This can't be undone.",
     edit3d: "Edit 3D",
+    expiringToday: "Expires today",
+    expiringInDays: "{days}d left",
+    expiringNotice: "{count} model(s) will expire within {days} days. Download them before Meshy removes them.",
   },
 
   profile: {
@@ -452,6 +455,7 @@ export const en = {
       SUCCEEDED: "Ready",
       FAILED: "Failed",
       CANCELED: "Canceled",
+    EXPIRED: "Expired",
     },
     types: {
       IMAGE_TO_3D: "Image → 3D",

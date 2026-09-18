@@ -59,4 +59,8 @@ export const STATUS_META = {
   SUCCEEDED: { label: "Ready", tone: "emerald" },
   FAILED: { label: "Failed", tone: "rose" },
   CANCELED: { label: "Canceled", tone: "slate" },
+  EXPIRED: { label: "Expired", tone: "slate" },
 };
+
+/** Tasks expiring within this many days show a warning banner. */
+export const EXPIRY_WARN_DAYS = 3;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Images, RefreshCw } from "lucide-react";
+import { Loader2, Images, RefreshCw, AlertTriangle } from "lucide-react";
 import Seo from "@/components/seo/Seo";
 import { Skeleton } from "@/components/ui/primitives";
 import Button from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import TaskCard from "@/components/studio/TaskCard";
 import TaskDetailModal from "@/components/studio/TaskDetailModal";
 import { Segmented } from "@/components/ui/FormControls";
 import { api } from "@/lib/api";
+import { EXPIRY_WARN_DAYS } from "@/lib/constants";
 import { useToast } from "@/hooks/useToast";
 import { useConfirm } from "@/hooks/useConfirm";
 import { useI18n } from "@/hooks/useI18n";
@@ -27,6 +28,7 @@ export default function MyModels() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState(null);
+  const [expiringCount, setExpiringCount] = useState(0);
 
   const filters = [
     { value: "", label: t("gallery.all") },
@@ -44,6 +46,14 @@ export default function MyModels() {
         setTasks((prev) => (append ? [...prev, ...content] : content));
         setLast(res.last !== false ? res.last : false);
         setPage(p);
+        // Count tasks expiring soon for the banner
+        const now = Date.now();
+        const warnMs = EXPIRY_WARN_DAYS * 86400000;
+        const expiring = (res.content || []).filter(
+          (tk) => tk.expiresAt && new Date(tk.expiresAt) - now < warnMs && new Date(tk.expiresAt) > now
+        ).length;
+        if (!append) setExpiringCount(expiring);
+        else setExpiringCount((c) => c + expiring);
       } catch (err) {
         toast.error(t("gallery.loadFail"), tServer(err.message));
       } finally {
@@ -94,6 +104,14 @@ export default function MyModels() {
       <div className="mt-6 max-w-md">
         <Segmented name="modelsFilter" options={filters} value={statusFilter} onChange={setStatusFilter} />
       </div>
+
+      {/* Expiring-soon notice */}
+      {expiringCount > 0 && (
+        <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{t("gallery.expiringNotice", { count: expiringCount, days: EXPIRY_WARN_DAYS })}</span>
+        </div>
+      )}
 
       {loading && tasks.length === 0 ? (
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
