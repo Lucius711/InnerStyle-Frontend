@@ -11,7 +11,11 @@ export const MODERATION_IMAGE_CODE = "moderation.imageBlocked";
 // Probability thresholds per nsfwjs class above which an image is rejected.
 // Only the strong signals (explicit nudity / sexual content) count. The "Sexy" class is
 // intentionally excluded — it fires on ordinary photos of clothed people (false positives).
-const NSFW_THRESHOLDS = { Porn: 0.7, Hentai: 0.8 };
+// Hentai is raised well above Porn: nsfwjs's Hentai class keys off "drawn/anime art style"
+// more than actual explicit content, so plain cartoon or anime images (a shirtless character,
+// ordinary fan art) can score 0.8-0.9 with nothing explicit in them. Genuinely explicit hentai
+// scores far higher (~0.95+), so this still catches it while letting normal cartoon art through.
+const NSFW_THRESHOLDS = { Porn: 0.7, Hentai: 0.95 };
 
 // Lowercased substrings that block a prompt. Keep broad but conservative.
 const BLOCKED_TERMS = [
