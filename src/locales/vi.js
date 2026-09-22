@@ -218,6 +218,7 @@ export const vi = {
     retexHint: "Muốn đổi màu đúng vùng (tóc/áo/mắt)? Dùng “Đổi texture” bằng prompt bên dưới để chính xác hơn.",
     tabMaterial: "Vật liệu",
     tabTransform: "Biến đổi",
+    tabSculpt: "Nắn hình",
     tabScene: "Cảnh",
     applyToAll: "Áp dụng cho tất cả phần",
     appliedAll: "Đã áp dụng cho tất cả phần",
@@ -274,6 +275,18 @@ export const vi = {
     signatureRaised: "Khắc nổi (thay vì khắc lõm)",
     signatureDepth: "Mức độ nổi/lõm",
     signatureHint: "Chữ ký của bạn được khắc dưới đáy đế khi lưu. Để trống nếu không cần.",
+    sculpt: {
+      mode: "Cọ nắn",
+      draw: "Đẩy ra",
+      pull: "Kéo vào",
+      smooth: "Làm mịn",
+      radius: "Kích thước cọ",
+      strength: "Độ mạnh",
+      hint: "Kéo chuột trên phần đã chọn để nắn hình.",
+      noSelection: "Chọn một phần trước để nắn hình.",
+      undo: "Hoàn tác nét vừa vẽ",
+      reset: "Đặt lại hình dạng",
+    },
   },
 
   hero: {

@@ -218,6 +218,7 @@ export const en = {
     retexHint: "Want accurate region color (hair/clothes/eyes)? Use “Re-texture” with a prompt below for better results.",
     tabMaterial: "Material",
     tabTransform: "Transform",
+    tabSculpt: "Sculpt",
     tabScene: "Scene",
     applyToAll: "Apply to all parts",
     appliedAll: "Applied to all parts",
@@ -274,6 +275,18 @@ export const en = {
     signatureRaised: "Raised (instead of engraved)",
     signatureDepth: "Relief depth",
     signatureHint: "Your signature is engraved on the underside of the base when you save. Leave blank for none.",
+    sculpt: {
+      mode: "Brush",
+      draw: "Push",
+      pull: "Pull",
+      smooth: "Smooth",
+      radius: "Brush size",
+      strength: "Strength",
+      hint: "Drag on the selected part to sculpt it.",
+      noSelection: "Select a part first to sculpt it.",
+      undo: "Undo last stroke",
+      reset: "Reset shape",
+    },
   },
 
   hero: {

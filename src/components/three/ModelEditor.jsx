@@ -1,7 +1,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as THREE from "three";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   OrbitControls,
   Bounds,
@@ -35,6 +35,7 @@ import {
   Save,
   Trash2,
   Pencil,
+  Paintbrush2,
 } from "lucide-react";
 import Button from "@/components/ui/Button";
 import SignaturePad from "@/components/three/SignaturePad";
@@ -108,6 +109,9 @@ function EditableModel({ url, baseColorUrl, registerScene, onParts, onMetrics, s
     c.traverse((o) => {
       if (!o.isMesh) return;
       o.frustumCulled = false;
+      o.geometry = o.geometry.clone();
+      if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+      o.userData.basePositions = o.geometry.attributes.position.array.slice();
       o.userData.baseScale = o.scale.clone();
       o.userData.baseRotation = o.rotation.clone();
       o.userData.basePosition = o.position.clone();
@@ -224,6 +228,134 @@ function EditableModel({ url, baseColorUrl, registerScene, onParts, onMetrics, s
       </Center>
     </Bounds>
   );
+}
+
+/* ------------------------------------------------------------------ sculpt */
+
+// Smooth 0..1 brush falloff (softer than linear near the edge — standard sculpt-brush curve).
+function falloff(t) {
+  const f = 1 - t;
+  return f * f * (3 - 2 * f);
+}
+
+/**
+ * Push/pull/smooth every vertex of `mesh` within `radius` (local units) of world-space
+ * `point`. Brute-force distance check over the position buffer — no spatial index: these
+ * are single figurine meshes (thousands, not millions, of vertices), so a plain loop stays
+ * well under a frame budget. Swap in three-mesh-bvh's shapecast if a mesh ever measures
+ * large enough to make this the bottleneck.
+ */
+function applyBrushStroke(mesh, point, mode, radius, strength) {
+  const pos = mesh.geometry.attributes.position;
+  const normal = mesh.geometry.attributes.normal;
+  const local = mesh.worldToLocal(point.clone());
+  const r2 = radius * radius;
+  const v = new THREE.Vector3();
+  const touched = [];
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    if (v.distanceToSquared(local) <= r2) touched.push(i);
+  }
+  if (!touched.length) return false;
+
+  if (mode === "smooth") {
+    const centroid = new THREE.Vector3();
+    touched.forEach((i) => centroid.add(v.fromBufferAttribute(pos, i)));
+    centroid.divideScalar(touched.length);
+    touched.forEach((i) => {
+      v.fromBufferAttribute(pos, i);
+      const w = falloff(Math.sqrt(v.distanceToSquared(local)) / radius) * strength;
+      v.lerp(centroid, Math.min(w, 0.5));
+      pos.setXYZ(i, v.x, v.y, v.z);
+    });
+  } else {
+    const dir = mode === "pull" ? -1 : 1;
+    const n = new THREE.Vector3();
+    touched.forEach((i) => {
+      v.fromBufferAttribute(pos, i);
+      n.fromBufferAttribute(normal, i).normalize();
+      const w = falloff(Math.sqrt(v.distanceToSquared(local)) / radius) * strength * dir;
+      v.addScaledVector(n, w);
+      pos.setXYZ(i, v.x, v.y, v.z);
+    });
+  }
+  pos.needsUpdate = true;
+  return true;
+}
+
+/**
+ * Drag-to-sculpt on `mesh`, blender-mini-sculpt style: pointerdown+move raycasts the mesh
+ * directly (bypasses the part-select onClick) and queues the hit point; a useFrame tick
+ * applies one brush stroke per animation frame so fast mouse moves don't pile up redundant
+ * geometry writes. Orbit is disabled for the duration of a stroke so dragging never spins
+ * the camera instead of sculpting.
+ */
+function SculptBrush({ enabled, mesh, mode, radius, strength, controlsRef, onStroke }) {
+  const { camera, gl } = useThree();
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const ndc = useMemo(() => new THREE.Vector2(), []);
+  const dragging = useRef(false);
+  const pending = useRef(null);
+
+  useFrame(() => {
+    if (!dragging.current || !pending.current || !mesh) return;
+    if (applyBrushStroke(mesh, pending.current, mode, radius, strength)) {
+      mesh.geometry.computeVertexNormals();
+    }
+    pending.current = null;
+  });
+
+  useEffect(() => {
+    if (!enabled || !mesh) return undefined;
+    const el = gl.domElement;
+
+    const hitOnMesh = (e) => {
+      const rect = el.getBoundingClientRect();
+      ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, camera);
+      return raycaster.intersectObject(mesh, false)[0] || null;
+    };
+
+    const onDown = (e) => {
+      const hit = hitOnMesh(e);
+      if (!hit) return;
+      dragging.current = true;
+      pending.current = hit.point;
+      if (controlsRef.current) controlsRef.current.enabled = false;
+      onStroke?.("start");
+      el.setPointerCapture(e.pointerId);
+    };
+    const onMove = (e) => {
+      if (!dragging.current) return;
+      const hit = hitOnMesh(e);
+      if (hit) pending.current = hit.point;
+    };
+    const onUp = (e) => {
+      if (!dragging.current) return;
+      dragging.current = false;
+      if (controlsRef.current) controlsRef.current.enabled = true;
+      onStroke?.("end");
+      try {
+        el.releasePointerCapture(e.pointerId);
+      } catch {
+        /* already released */
+      }
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointerleave", onUp);
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointerleave", onUp);
+    };
+  }, [enabled, mesh, mode, radius, strength, camera, gl, raycaster, ndc, controlsRef, onStroke]);
+
+  return null;
 }
 
 function CanvasLoader() {
@@ -453,6 +585,40 @@ function TransformTab({ c, set, onReset }) {
   );
 }
 
+function SculptTab({ sculptOn, setSculptOn, sculpt, setSculpt, onUndo, onReset }) {
+  const t = useT();
+  const modes = [
+    { value: "draw", label: t("editor.sculpt.draw") },
+    { value: "pull", label: t("editor.sculpt.pull") },
+    { value: "smooth", label: t("editor.sculpt.smooth") },
+  ];
+  return (
+    <div className="space-y-4">
+      <Toggle checked={sculptOn} onChange={setSculptOn} label={t("editor.sculpt.mode")} />
+      {sculptOn && (
+        <>
+          <Segmented name="sculptBrush" options={modes} value={sculpt.mode} onChange={(v) => setSculpt({ mode: v })} />
+          <div className="space-y-3 rounded-xl border border-app-line/10 bg-app-line/[0.03] p-3">
+            <Slider label={t("editor.sculpt.radius")} min={0.02} max={0.4} step={0.01}
+              value={sculpt.radius} onChange={(v) => setSculpt({ radius: v })} format={(v) => v.toFixed(2)} />
+            <Slider label={t("editor.sculpt.strength")} min={0.05} max={1} step={0.05}
+              value={sculpt.strength} onChange={(v) => setSculpt({ strength: v })} format={(v) => v.toFixed(2)} />
+          </div>
+          <p className="text-[11px] leading-relaxed text-app-faint">{t("editor.sculpt.hint")}</p>
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" icon={RotateCcw} className="flex-1" onClick={onUndo}>
+              {t("editor.sculpt.undo")}
+            </Button>
+            <Button variant="ghost" size="sm" icon={Trash2} className="flex-1" onClick={onReset}>
+              {t("editor.sculpt.reset")}
+            </Button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function SceneTab({ scene, setScene }) {
   const t = useT();
   const modes = [
@@ -677,6 +843,11 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
 
   const [tab, setTab] = useState("material");
   const [ctrl, setCtrl] = useState(DEFAULT_CTRL);
+  const controlsRef = useRef(null);
+  const [sculptOn, setSculptOn] = useState(false);
+  const [sculptState, setSculptState] = useState({ mode: "draw", radius: 0.12, strength: 0.35 });
+  const setSculpt = (patch) => setSculptState((s) => ({ ...s, ...patch }));
+  const sculptSnapshotRef = useRef({}); // meshUuid -> position array snapshot, for one-step undo
   const [hidden, setHidden] = useState([]);
   const [soloId, setSoloId] = useState(null);
   const [partColors, setPartColors] = useState({});
@@ -709,6 +880,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
       setHidden([]);
       setSoloId(null);
       setTab("material");
+      setSculptOn(false);
       setBaseState(DEFAULT_BASE);
       setMetrics(null);
       metricsRef.current = null;
@@ -785,6 +957,35 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
   const meshOf = (id) =>
     id && sceneRef.current ? sceneRef.current.getObjectByProperty("uuid", id) : null;
   const selectedMesh = meshOf(selectedId);
+
+  // Snapshot the selected mesh's vertex positions right before a sculpt stroke starts, so
+  // "Undo last stroke" can restore them; "Reset shape" instead goes all the way back to the
+  // geometry as loaded (userData.basePositions, captured once when the model is cloned).
+  const handleSculptStroke = useCallback((phase) => {
+    if (phase !== "start") return;
+    const mesh = meshOf(selectedId);
+    if (mesh) sculptSnapshotRef.current[mesh.uuid] = mesh.geometry.attributes.position.array.slice();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId]);
+
+  const undoSculpt = () => {
+    const mesh = meshOf(selectedId);
+    const snap = mesh && sculptSnapshotRef.current[mesh.uuid];
+    if (!mesh || !snap) return;
+    mesh.geometry.attributes.position.array.set(snap);
+    mesh.geometry.attributes.position.needsUpdate = true;
+    mesh.geometry.computeVertexNormals();
+    delete sculptSnapshotRef.current[mesh.uuid];
+  };
+
+  const resetSculpt = () => {
+    const mesh = meshOf(selectedId);
+    if (!mesh?.userData.basePositions) return;
+    mesh.geometry.attributes.position.array.set(mesh.userData.basePositions);
+    mesh.geometry.attributes.position.needsUpdate = true;
+    mesh.geometry.computeVertexNormals();
+    delete sculptSnapshotRef.current[mesh.uuid];
+  };
 
   // Sync control values from the newly selected mesh.
   useEffect(() => {
@@ -1312,6 +1513,9 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
             <Suspense fallback={<CanvasLoader />}>
               <EditableModel url={modelUrl} baseColorUrl={baseColorUrl} registerScene={registerScene} onParts={setParts}
                 onMetrics={handleMetrics} selectedId={selectedId} onSelect={setSelectedId} />
+              <SculptBrush enabled={sculptOn && !!selectedMesh} mesh={selectedMesh} mode={sculptState.mode}
+                radius={sculptState.radius} strength={sculptState.strength} controlsRef={controlsRef}
+                onStroke={handleSculptStroke} />
               <ModelBase base={base} metrics={metrics} />
               <ContactShadows position={[0, -1, 0]} opacity={0.5} scale={10} blur={2.6} far={4} />
               <Environment resolution={256} frames={1}>
@@ -1320,7 +1524,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
                 <Lightformer intensity={1.4} position={[6, 2, 2]} scale={[10, 3, 1]} color="#ffe9d6" />
               </Environment>
             </Suspense>
-            <OrbitControls makeDefault enablePan={false} minDistance={1.4} maxDistance={12}
+            <OrbitControls ref={controlsRef} makeDefault enablePan={false} minDistance={1.4} maxDistance={12}
               enableDamping dampingFactor={0.08} autoRotate={scene.autoRotate} autoRotateSpeed={1.1} />
           </Canvas>
           <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-app-bg/70 px-3 py-1.5 text-[11px] font-medium text-app-muted backdrop-blur-md">
@@ -1398,6 +1602,24 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
                 <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-app-line/15 px-4 py-8 text-center text-xs text-app-faint">
                   <MousePointerClick className="h-5 w-5" />
                   {t("editor.noSelection")}
+                </div>
+              )}
+            </EditorSection>
+
+            <EditorSection icon={Paintbrush2} title={t("editor.tabSculpt")}>
+              {selectedMesh ? (
+                <SculptTab
+                  sculptOn={sculptOn}
+                  setSculptOn={setSculptOn}
+                  sculpt={sculptState}
+                  setSculpt={setSculpt}
+                  onUndo={undoSculpt}
+                  onReset={resetSculpt}
+                />
+              ) : (
+                <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-app-line/15 px-4 py-8 text-center text-xs text-app-faint">
+                  <MousePointerClick className="h-5 w-5" />
+                  {t("editor.sculpt.noSelection")}
                 </div>
               )}
             </EditorSection>
