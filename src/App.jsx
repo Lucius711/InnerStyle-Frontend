@@ -24,6 +24,7 @@ import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
 import ProfileLayout from "@/components/layout/ProfileLayout";
 import Login from "@/pages/Login";
+import OauthCallback from "@/pages/OauthCallback";
 import Profile from "@/pages/Profile";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
 
@@ -155,7 +156,8 @@ function AnimatedRoutes() {
         <Route path="/print-orders" element={<Navigate to="/print-history" replace />} />
 
         <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
-        <Route path="/register" element={<PageTransition><Login initialMode="register" /></PageTransition>} />
+        <Route path="/oauth/callback" element={<OauthCallback />} />
+        <Route path="/register" element={<Navigate to="/login" replace />} />
         {/* No email flows (username + password auth). Redirect legacy routes. */}
         <Route path="/forgot-password" element={<Navigate to="/login" replace />} />
         <Route path="/reset-password" element={<Navigate to="/login" replace />} />

@@ -5,9 +5,10 @@ import { tokenStore } from "@/lib/http";
 const AuthContext = createContext(null);
 
 /**
- * Session provider. Loads the current user on mount (if a token exists) and exposes
- * social / logout helpers. Sign-in is social-only. Listens for "innerstyle:logout" emitted by
- * the HTTP layer when a refresh fails.
+ * Session provider. Loads the current user on mount (if a token exists) and exposes a
+ * logout helper. Sign-in is Google-only, handled entirely by the backend redirect flow
+ * (see OauthCallback). Listens for "innerstyle:logout" emitted by the HTTP layer when a
+ * refresh fails.
  */
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -17,14 +18,16 @@ export function AuthProvider({ children }) {
     if (!tokenStore.access) {
       setUser(null);
       setLoading(false);
-      return;
+      return null;
     }
     try {
       const me = await authApi.me();
       setUser(me);
+      return me;
     } catch {
       tokenStore.clear();
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -37,23 +40,6 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("innerstyle:logout", onLogout);
   }, [loadUser]);
 
-  const social = useCallback(async (provider, token) => {
-    const data = await authApi.socialLogin(provider, token);
-    setUser(data.user);
-    return data.user;
-  }, []);
-
-  // Creates the account but does not sign the user in — they log in afterwards.
-  const register = useCallback(async ({ username, password, fullName }) => {
-    return authApi.register({ username, password, fullName });
-  }, []);
-
-  const passwordLogin = useCallback(async ({ username, password }) => {
-    const data = await authApi.login({ username, password });
-    setUser(data.user);
-    return data.user;
-  }, []);
-
   const logout = useCallback(async () => {
     await authApi.logout();
     setUser(null);
@@ -63,9 +49,6 @@ export function AuthProvider({ children }) {
     user,
     loading,
     isAuthenticated: !!user,
-    social,
-    register,
-    passwordLogin,
     logout,
     refreshUser: loadUser,
   };
