@@ -138,6 +138,25 @@ export const vi = {
     expiringNotice: "{count} model sẽ hết hạn trong {days} ngày tới. Hãy tải về trước khi Meshy xóa chúng.",
   },
 
+  membership: {
+    title: "G\u00f3i th\u00e0nh vi\u00ean",
+    printOrders: "\u0110\u01a1n in",
+    refresh: "L\u00e0m m\u1edbi",
+    loadFail: "Kh\u00f4ng th\u1ec3 t\u1ea3i g\u00f3i th\u00e0nh vi\u00ean",
+    planCredits: "G\u00f3i {plan} \u00b7 credit c\u00f2n l\u1ea1i",
+    perMonth: "/ {count} m\u1ed7i th\u00e1ng",
+    renews: "Gia h\u1ea1n {date}",
+    free: "Mi\u1ec5n ph\u00ed",
+    perMo: "/th\u00e1ng",
+    creditsPerMonth: "{count} credit / th\u00e1ng",
+    currentPlan: "G\u00f3i hi\u1ec7n t\u1ea1i",
+    payNow: "Thanh to\u00e1n",
+    defaultPlan: "G\u00f3i m\u1eb7c \u0111\u1ecbnh",
+    paymentFailed: "Thanh to\u00e1n th\u1ea5t b\u1ea1i",
+    noPaymentInfo: "Kh\u00f4ng nh\u1eadn \u0111\u01b0\u1ee3c th\u00f4ng tin thanh to\u00e1n.",
+    startPaymentFail: "Kh\u00f4ng th\u1ec3 b\u1eaft \u0111\u1ea7u thanh to\u00e1n",
+  },
+
   profile: {
     title: "Hồ sơ của tôi",
     subtitle: "Thông tin cá nhân, sản phẩm 3D và lịch sử đặt in 3D.",

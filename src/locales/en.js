@@ -138,6 +138,25 @@ export const en = {
     expiringNotice: "{count} model(s) will expire within {days} days. Download them before Meshy removes them.",
   },
 
+  membership: {
+    title: "Membership",
+    printOrders: "Print orders",
+    refresh: "Refresh",
+    loadFail: "Couldn't load membership",
+    planCredits: "Plan {plan} \u00b7 credits remaining",
+    perMonth: "/ {count} per month",
+    renews: "Renews {date}",
+    free: "Free",
+    perMo: "/mo",
+    creditsPerMonth: "{count} credits / month",
+    currentPlan: "Current plan",
+    payNow: "Pay now",
+    defaultPlan: "Default plan",
+    paymentFailed: "Payment failed",
+    noPaymentInfo: "No payment info returned.",
+    startPaymentFail: "Couldn't start payment",
+  },
+
   profile: {
     title: "My profile",
     subtitle: "Personal info, 3D models and print order history.",
