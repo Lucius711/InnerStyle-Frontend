@@ -263,10 +263,10 @@ function StudioLighting() {
   return (
     <SafeBoundary fallback={null}>
       <Environment resolution={256} frames={1}>
-        <Lightformer intensity={3.0} position={[0, 5, 2]} scale={[12, 4, 1]} />
-        <Lightformer intensity={2.0} position={[-6, 2, 2]} scale={[10, 3, 1]} color="#cfe0ff" />
-        <Lightformer intensity={2.0} position={[6, 2, 2]} scale={[10, 3, 1]} color="#ffe9d6" />
-        <Lightformer intensity={2.6} position={[0, 3, -8]} scale={[12, 6, 1]} />
+        <Lightformer intensity={1.8} position={[0, 5, 2]} scale={[12, 4, 1]} />
+        <Lightformer intensity={1.2} position={[-6, 2, 2]} scale={[10, 3, 1]} color="#cfe0ff" />
+        <Lightformer intensity={1.2} position={[6, 2, 2]} scale={[10, 3, 1]} color="#ffe9d6" />
+        <Lightformer intensity={1.5} position={[0, 3, -8]} scale={[12, 6, 1]} />
       </Environment>
     </SafeBoundary>
   );
@@ -356,13 +356,13 @@ export default function ModelViewer({ url, thumbnailUrl, baseColorUrl, className
                 alpha: true,
                 preserveDrawingBuffer: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.65,
+                toneMappingExposure: 1.05,
               }}
             >
-              <ambientLight intensity={1.05} />
-              <directionalLight position={[4, 6, 5]} intensity={1.9} castShadow shadow-mapSize={[1024, 1024]} />
-              <directionalLight position={[-5, 3, -4]} intensity={0.85} />
-              <hemisphereLight args={["#ffffff", "#3a4156", 0.6]} />
+              <ambientLight intensity={0.45} />
+              <directionalLight position={[4, 6, 5]} intensity={1.1} castShadow shadow-mapSize={[1024, 1024]} />
+              <directionalLight position={[-5, 3, -4]} intensity={0.5} />
+              <hemisphereLight args={["#ffffff", "#3a4156", 0.35]} />
 
               <Suspense fallback={<CanvasLoader />}>
                 <Model url={url} baseColorUrl={baseColorUrl} mode={mode} clip={clip} playing={playing} onReady={handleReady} />
