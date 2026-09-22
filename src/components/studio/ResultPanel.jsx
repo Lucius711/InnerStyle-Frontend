@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Download,
@@ -32,8 +33,9 @@ const MODEL_TYPES = [
 export default function ResultPanel({ task, actions = {}, busyAction }) {
   const t = useT();
   const toast = useToast();
+  const navigate = useNavigate();
   const [printing, setPrinting] = useState("");
-  const [shippingProvider, setShippingProvider] = useState(""); // open dialog for this provider
+  const [shippingOpen, setShippingOpen] = useState(false);
   // Bumped after a base is baked server-side so the viewer reloads the updated mesh.
   const [modelVersion, setModelVersion] = useState(0);
 
@@ -43,8 +45,11 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
     setPrinting(payload.provider);
     try {
       const res = await printApi.placeOrder({ taskId: task.id, ...payload });
-      if (res.payUrl) {
-        window.location.href = res.payUrl; // redirect to VNPay / MoMo
+      const pay = res.payment || {};
+      if (pay.qrCode) {
+        navigate("/wallet/payos-qr", { state: { ...pay, returnTo: window.location.pathname } });
+      } else if (pay.payUrl) {
+        window.location.href = pay.payUrl;
       } else {
         toast.error(t("studio.printFailTitle"), "No payment URL returned.");
         setPrinting("");
@@ -135,38 +140,29 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         )}
       </div>
 
-      {/* Order a physical 3D print — pay directly via VNPay / MoMo */}
+      {/* Order a physical 3D print — pay directly via payOS */}
       {task.modelUrls && Object.keys(task.modelUrls).length > 0 && (
         <div className="rounded-2xl border border-brand-violet/20 bg-brand-violet/5 p-4">
           <p className="flex items-center gap-2 text-sm font-medium text-app-text">
             <Printer className="h-4 w-4 text-brand-violet" /> {t("studio.print3dTitle")}
           </p>
           <p className="mt-1 text-xs text-app-faint">{t("studio.print3dHint")}</p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3">
             <Button
               size="sm"
-              loading={printing === "VNPAY"}
-              onClick={() => setShippingProvider("VNPAY")}
+              loading={!!printing}
+              onClick={() => setShippingOpen(true)}
             >
-              VNPay
-            </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              loading={printing === "MOMO"}
-              onClick={() => setShippingProvider("MOMO")}
-            >
-              MoMo
+              {t("studio.print3dCta")}
             </Button>
           </div>
         </div>
       )}
 
       <ShippingDialog
-        open={!!shippingProvider}
-        provider={shippingProvider}
+        open={shippingOpen}
         submitting={!!printing}
-        onClose={() => setShippingProvider("")}
+        onClose={() => setShippingOpen(false)}
         onSubmit={submitShipping}
       />
 

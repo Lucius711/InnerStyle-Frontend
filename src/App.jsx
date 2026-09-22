@@ -36,6 +36,7 @@ const MyModels = lazy(() => import("@/pages/MyModels"));
 const PrintOrders = lazy(() => import("@/pages/PrintOrders"));
 const Membership = lazy(() => import("@/pages/Membership"));
 const PaymentReturn = lazy(() => import("@/pages/PaymentReturn"));
+const PaymentQr = lazy(() => import("@/pages/PaymentQr"));
 const ArView = lazy(() => import("@/pages/ArView"));
 
 function ScrollToTop() {
@@ -161,8 +162,8 @@ function AnimatedRoutes() {
         <Route path="/verify-email" element={<Navigate to="/login" replace />} />
         {/* Standalone, chrome-free AR launcher (opened from the QR on a phone) */}
         <Route path="/ar/:taskId" element={<ErrorBoundary><ArView /></ErrorBoundary>} />
-        <Route path="/wallet/vnpay-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
-        <Route path="/wallet/momo-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
+        <Route path="/wallet/payos-qr" element={<PageTransition><PaymentQr /></PageTransition>} />
+        <Route path="/wallet/payos-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
         <Route
           path="*"
           element={

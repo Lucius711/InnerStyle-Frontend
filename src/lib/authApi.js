@@ -117,7 +117,7 @@ export const membershipApi = {
 
   operationCredits: () => request("/api/common/membership/operation-credits"),
 
-  // Returns { orderCode, provider, amount, payUrl } — redirect to payUrl.
+  // Returns { orderCode, provider, amount, payUrl, qrCode } — render qrCode in-app (see PaymentQr.jsx).
   subscribe: ({ planCode, provider }) =>
     request("/api/user/membership/subscribe", {
       method: "POST",

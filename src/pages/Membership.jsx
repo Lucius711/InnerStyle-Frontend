@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Sparkles, Loader2, RefreshCw, Printer, Check } from "lucide-react";
 import Seo from "@/components/seo/Seo";
 import Button from "@/components/ui/Button";
@@ -10,6 +10,7 @@ import { friendly } from "@/lib/messages";
 
 export default function Membership() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [me, setMe] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,12 +34,19 @@ export default function Membership() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const buy = async (planCode, provider) => {
-    setBusy(`${planCode}-${provider}`);
+  // payOS only now — the QR page renders res.qrCode in-app instead of redirecting.
+  const buy = async (planCode) => {
+    setBusy(planCode);
     try {
-      const res = await membershipApi.subscribe({ planCode, provider });
-      if (res.payUrl) window.location.href = res.payUrl;
-      else toast.error("Payment failed", "No payment URL returned.");
+      const res = await membershipApi.subscribe({ planCode, provider: "PAYOS" });
+      if (res.qrCode) {
+        navigate("/wallet/payos-qr", { state: { ...res, returnTo: "/membership" } });
+      } else if (res.payUrl) {
+        window.location.href = res.payUrl;
+      } else {
+        toast.error("Payment failed", "No payment info returned.");
+        setBusy("");
+      }
     } catch (err) {
       toast.error("Couldn't start payment", friendly(err));
       setBusy("");
@@ -113,25 +121,14 @@ export default function Membership() {
                         Current plan
                       </Button>
                     ) : paid ? (
-                      <div className="space-y-2">
-                        <Button
-                          size="sm"
-                          className="w-full"
-                          loading={busy === `${p.code}-VNPAY`}
-                          onClick={() => buy(p.code, "VNPAY")}
-                        >
-                          Buy with VNPay
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="w-full"
-                          loading={busy === `${p.code}-MOMO`}
-                          onClick={() => buy(p.code, "MOMO")}
-                        >
-                          Buy with MoMo
-                        </Button>
-                      </div>
+                      <Button
+                        size="sm"
+                        className="w-full"
+                        loading={busy === p.code}
+                        onClick={() => buy(p.code)}
+                      >
+                        Pay now
+                      </Button>
                     ) : (
                       <Button variant="ghost" size="sm" className="w-full" disabled>
                         Default plan

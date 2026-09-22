@@ -31,8 +31,14 @@ async function mockMembership(page, over = {}) {
     r.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify(ok({ orderCode: "OC1", provider: "VNPAY", amount: 199000, payUrl: "/wallet/vnpay-return?e2e=1" })),
+      body: JSON.stringify(
+        ok({ orderCode: "OC1", provider: "PAYOS", amount: 199000, payUrl: "https://pay.payos.vn/e2e", qrCode: "00020101...e2e" })
+      ),
     })
+  );
+  // PaymentQr polls this on mount; keep it pending so the QR stays on screen for the assertion.
+  await page.route("**/api/common/payments/payos/return**", (r) =>
+    r.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(ok({ status: "PENDING" })) })
   );
 }
 
@@ -52,7 +58,7 @@ test.describe("Membership API", () => {
     await expect(page.getByText("20", { exact: false }).first()).toBeVisible(); // creditsRemaining
   });
 
-  test("TC-API-MEM-002: POST /subscribe fires with the plan + provider, then redirects to payUrl", async ({ page }) => {
+  test("TC-API-MEM-002: POST /subscribe fires with the plan + provider, then shows the payOS QR", async ({ page }) => {
     await authed(page, USER);
     await mockMembership(page);
     await page.goto("/membership");
@@ -60,12 +66,13 @@ test.describe("Membership API", () => {
     const subReq = page.waitForRequest(
       (r) => r.url().includes("/api/user/membership/subscribe") && r.method() === "POST"
     );
-    await page.getByRole("button", { name: "Buy with VNPay" }).click();
+    await page.getByRole("button", { name: "Pay now" }).click();
     const req = await subReq;
-    expect(req.postDataJSON()).toMatchObject({ planCode: "PRO", provider: "VNPAY" });
+    expect(req.postDataJSON()).toMatchObject({ planCode: "PRO", provider: "PAYOS" });
 
-    // payUrl redirect (backend returns the gateway URL; here a local stand-in).
-    await expect(page).toHaveURL(/\/wallet\/vnpay-return/);
+    // No redirect to a gateway page — the QR renders in-app.
+    await expect(page).toHaveURL(/\/wallet\/payos-qr/);
+    await expect(page.getByText("Scan with your banking app")).toBeVisible();
   });
 
   test("TC-API-MEM-003: a failed /plans load shows an error toast", async ({ page }) => {

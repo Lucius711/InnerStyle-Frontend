@@ -8,20 +8,18 @@ import { request } from "@/lib/http";
 const vnd = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" });
 
 /**
- * Landing page the gateway redirects the browser to after payment (VNPay / MoMo). It calls the
- * backend to verify the signed return params and credit the wallet (idempotent) — a reliable
- * fallback when the server-to-server IPN doesn't arrive (common in sandboxes).
+ * Landing page payOS redirects the browser to after payment. It calls the backend to verify
+ * the return (looked up server-side) and credit the account (idempotent) — a reliable fallback
+ * when the server-to-server webhook doesn't arrive (common in sandboxes).
  */
 export default function PaymentReturn() {
-  const { pathname, search } = useLocation();
-  const isMomo = pathname.includes("momo");
-  const provider = isMomo ? "momo" : "vnpay";
+  const { search } = useLocation();
 
   const [state, setState] = useState({ loading: true, success: false, amount: null });
 
   useEffect(() => {
     let active = true;
-    request(`/api/common/payments/${provider}/return${search}`)
+    request(`/api/common/payments/payos/return${search}`)
       .then((res) => {
         if (!active) return;
         setState({
@@ -36,7 +34,7 @@ export default function PaymentReturn() {
     return () => {
       active = false;
     };
-  }, [provider, search]);
+  }, [search]);
 
   return (
     <main className="flex min-h-[calc(100vh-6rem)] items-center justify-center px-4 py-24">

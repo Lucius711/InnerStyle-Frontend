@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/useToast";
  * map pin) before placing a 3D-print order. Calls `onSubmit(payload)` with everything the
  * backend needs; the parent then redirects to the payment gateway.
  */
-export default function ShippingDialog({ open, provider, submitting, onClose, onSubmit }) {
+export default function ShippingDialog({ open, submitting, onClose, onSubmit }) {
   const t = useT();
   const toast = useToast();
   const { user } = useAuth();
@@ -102,7 +102,7 @@ export default function ShippingDialog({ open, provider, submitting, onClose, on
       return;
     }
     onSubmit({
-      provider,
+      provider: "PAYOS",
       sizeCm: form.sizeCm,
       recipientName: form.recipientName.trim(),
       recipientEmail: form.recipientEmail.trim(),
@@ -250,7 +250,7 @@ export default function ShippingDialog({ open, provider, submitting, onClose, on
               </Field>
 
               <Button type="submit" className="w-full" loading={submitting} icon={submitting ? Loader2 : Truck}>
-                {t("shipping.confirm")} · {provider}
+                {t("shipping.confirm")} · PAYOS
               </Button>
             </form>
           </motion.div>

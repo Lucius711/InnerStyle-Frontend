@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 import { ok, mockApi } from "./helpers";
 
 /**
- * Payment-gateway return page (VNPay / MoMo). It verifies the signed return params with the
- * backend and shows a success/failure card based on the returned `status`.
+ * Payment-gateway return page (payOS). It verifies the return with the backend and
+ * shows a success/failure card based on the returned `status`.
  */
 test.describe("Payment return", () => {
   test("TC-E2E-150: SUCCESS status shows the success card", async ({ page }) => {
@@ -15,7 +15,7 @@ test.describe("Payment return", () => {
         body: JSON.stringify(ok({ status: "SUCCESS", amount: 199000 })),
       })
     );
-    await page.goto("/wallet/vnpay-return?vnp_ResponseCode=00");
+    await page.goto("/wallet/payos-return?code=00");
     await expect(page.getByRole("heading", { name: "Payment successful" })).toBeVisible();
   });
 
@@ -28,7 +28,7 @@ test.describe("Payment return", () => {
         body: JSON.stringify(ok({ status: "FAILED" })),
       })
     );
-    await page.goto("/wallet/momo-return?resultCode=1");
+    await page.goto("/wallet/payos-return?code=01");
     await expect(page.getByRole("heading", { name: "Payment not completed" })).toBeVisible();
   });
 });
