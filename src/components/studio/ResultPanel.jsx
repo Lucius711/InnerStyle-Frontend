@@ -121,6 +121,7 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         <PrintabilityCard
           checkFn={() => api.printability(task.id)}
           repairFn={() => api.repairModel(task.id)}
+          revertFn={() => api.revertModel(task.id)}
           onRepaired={() => setModelVersion(Date.now())}
         />
       )}

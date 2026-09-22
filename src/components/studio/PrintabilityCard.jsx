@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, ShieldAlert, Loader2, Wrench, Gauge } from "lucide-react";
+import { ShieldCheck, ShieldAlert, Loader2, Wrench, Gauge, RotateCcw } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
 import { useToast } from "@/hooks/useToast";
@@ -22,18 +22,23 @@ function Row({ label, value, bad }) {
  * 3D-print readiness panel (like Meshy's): on demand, analyses the model (watertight / volume /
  * holes / non-manifold) and offers a one-click auto-repair that fixes the model IN PLACE — the
  * existing download button then serves the repaired mesh (no separate file download here).
+ * A "revert" button appears once a pre-repair backup exists, restoring the model as it was
+ * before the auto-fix ran.
  *
  * Reusable via injected calls so it works for both a user's task and a staff order:
- *  - `checkFn()`   -> Promise<PrintabilityResponse>            (analyse)
- *  - `repairFn()`  -> Promise<{ before, after, task? }>        (repair in place)
- *  - `onRepaired()` (optional) -> refresh the model/viewer after an in-place repair.
+ *  - `checkFn()`   -> Promise<PrintabilityResponse>                          (analyse)
+ *  - `repairFn()`  -> Promise<{ before, after, task?, hasOriginalBackup? }>  (repair in place)
+ *  - `revertFn()`  -> Promise<{ before, after, task?, hasOriginalBackup? }>  (revert in place)
+ *  - `onRepaired()` (optional) -> refresh the model/viewer after an in-place repair or revert.
  */
-export default function PrintabilityCard({ checkFn, repairFn, onRepaired }) {
+export default function PrintabilityCard({ checkFn, repairFn, revertFn, onRepaired }) {
   const { t } = useI18n();
   const toast = useToast();
   const [report, setReport] = useState(null);
   const [checking, setChecking] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const [reverting, setReverting] = useState(false);
+  const [canRevert, setCanRevert] = useState(false);
 
   const check = async () => {
     setChecking(true);
@@ -58,6 +63,7 @@ export default function PrintabilityCard({ checkFn, repairFn, onRepaired }) {
         nonManifoldEdges: after.nonManifoldEdges,
         triangles: after.triangles,
       }));
+      if (res?.hasOriginalBackup) setCanRevert(true);
       onRepaired?.();
       toast.success(
         t("studio.fixedTitle"),
@@ -67,6 +73,27 @@ export default function PrintabilityCard({ checkFn, repairFn, onRepaired }) {
       toast.error(t("studio.fixFail"), friendly(err));
     } finally {
       setFixing(false);
+    }
+  };
+
+  const revert = async () => {
+    setReverting(true);
+    try {
+      const res = await revertFn();
+      const after = res?.after || res || {};
+      setReport((r) => ({
+        ...(r || {}),
+        watertight: after.watertight,
+        holes: after.holes,
+        nonManifoldEdges: after.nonManifoldEdges,
+        triangles: after.triangles,
+      }));
+      onRepaired?.();
+      toast.success(t("studio.revertedTitle"), t("studio.revertedBody"));
+    } catch (err) {
+      toast.error(t("studio.revertFail"), friendly(err));
+    } finally {
+      setReverting(false);
     }
   };
 
@@ -124,6 +151,18 @@ export default function PrintabilityCard({ checkFn, repairFn, onRepaired }) {
           )}
           {printable && (
             <p className="mt-3 text-center text-xs text-emerald-400">{t("studio.printableNote")}</p>
+          )}
+          {revertFn && canRevert && (
+            <Button
+              variant="secondary"
+              size="sm"
+              icon={reverting ? Loader2 : RotateCcw}
+              loading={reverting}
+              className="mt-2 w-full"
+              onClick={revert}
+            >
+              {t("studio.revertOriginal")}
+            </Button>
           )}
         </>
       )}

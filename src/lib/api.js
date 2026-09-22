@@ -156,6 +156,11 @@ export const api = {
   repairModel: (id) => request(`${PATH}/tasks/${id}/repair`, { method: "POST", auth: true }),
 
   /**
+   * Revert the model back to its pre-repair backup, if one exists. Returns { before, after, task }.
+   */
+  revertModel: (id) => request(`${PATH}/tasks/${id}/revert`, { method: "POST", auth: true }),
+
+  /**
    * Persist a custom base/stand into the model. The server bakes the base into the stored mesh
    * in place, so the streamed model, preview, and export ZIP all then include it. Returns the
    * updated task. `shape` is cylinder|square|hexagon; ratios are fractions; `color` is #RRGGBB.

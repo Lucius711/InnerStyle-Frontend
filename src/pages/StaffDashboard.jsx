@@ -366,6 +366,7 @@ export default function StaffDashboard() {
                     <PrintabilityCard
                       checkFn={() => staffApi.printability(o.id)}
                       repairFn={() => staffApi.repairModel(o.id)}
+                      revertFn={() => staffApi.revertModel(o.id)}
                     />
                   </div>
                 )}
