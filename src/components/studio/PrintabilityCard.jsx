@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ShieldCheck, ShieldAlert, Loader2, Wrench, Gauge, RotateCcw } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
@@ -31,14 +31,16 @@ function Row({ label, value, bad }) {
  *  - `revertFn()`  -> Promise<{ before, after, task?, hasOriginalBackup? }>  (revert in place)
  *  - `onRepaired()` (optional) -> refresh the model/viewer after an in-place repair or revert.
  */
-export default function PrintabilityCard({ checkFn, repairFn, revertFn, onRepaired }) {
+export default function PrintabilityCard({ checkFn, repairFn, revertFn, onRepaired, hasOriginalBackup = false }) {
   const { t } = useI18n();
   const toast = useToast();
   const [report, setReport] = useState(null);
   const [checking, setChecking] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [reverting, setReverting] = useState(false);
-  const [canRevert, setCanRevert] = useState(false);
+  // Shown only while the model is auto-fixed: seeded from the server, set on repair, cleared on revert.
+  const [canRevert, setCanRevert] = useState(hasOriginalBackup);
+  useEffect(() => setCanRevert(hasOriginalBackup), [hasOriginalBackup]);
 
   const check = async () => {
     setChecking(true);
@@ -88,6 +90,7 @@ export default function PrintabilityCard({ checkFn, repairFn, revertFn, onRepair
         nonManifoldEdges: after.nonManifoldEdges,
         triangles: after.triangles,
       }));
+      setCanRevert(false);
       onRepaired?.();
       toast.success(t("studio.revertedTitle"), t("studio.revertedBody"));
     } catch (err) {
@@ -152,19 +155,21 @@ export default function PrintabilityCard({ checkFn, repairFn, revertFn, onRepair
           {printable && (
             <p className="mt-3 text-center text-xs text-emerald-400">{t("studio.printableNote")}</p>
           )}
-          {revertFn && canRevert && (
-            <Button
-              variant="secondary"
-              size="sm"
-              icon={reverting ? Loader2 : RotateCcw}
-              loading={reverting}
-              className="mt-2 w-full"
-              onClick={revert}
-            >
-              {t("studio.revertOriginal")}
-            </Button>
-          )}
         </>
+      )}
+
+      {/* Outside the report block: a repaired model must be revertible without re-running the check. */}
+      {revertFn && canRevert && (
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={reverting ? Loader2 : RotateCcw}
+          loading={reverting}
+          className="mt-2 w-full"
+          onClick={revert}
+        >
+          {t("studio.revertOriginal")}
+        </Button>
       )}
 
       <p className="mt-2 text-[11px] leading-relaxed text-app-faint">{t("studio.printabilityNote")}</p>

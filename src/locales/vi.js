@@ -428,7 +428,7 @@ export const vi = {
     printable: "In được",
     notPrintable: "Cần sửa",
     printableNote: "Model đã kín — sẵn sàng in.",
-    printabilityNote: "Phân tích hình học để in 3D. Tự sửa sẽ làm model kín (watertight) và tải về bản STL in được (chỉ hình khối, không màu).",
+    printabilityNote: "Phân tích hình học để in 3D. Tự sửa sẽ làm model kín (watertight) ngay tại chỗ và giữ màu/texture; có thể khôi phục bản gốc.",
     watertight: "Kín (watertight)",
     volume: "Thể tích",
     holes: "Lỗ",

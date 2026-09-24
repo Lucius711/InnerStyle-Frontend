@@ -428,7 +428,7 @@ export const en = {
     printable: "Printable",
     notPrintable: "Needs repair",
     printableNote: "Mesh is watertight — ready to print.",
-    printabilityNote: "Geometry analysis for 3D printing. Auto-fix makes the mesh watertight and downloads a printable STL (geometry only, no color).",
+    printabilityNote: "Geometry analysis for 3D printing. Auto-fix makes the mesh watertight in place and keeps its color/texture; you can revert to the original.",
     watertight: "Watertight",
     volume: "Volume",
     holes: "Holes",

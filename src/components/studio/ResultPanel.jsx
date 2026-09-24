@@ -122,6 +122,7 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
           checkFn={() => api.printability(task.id)}
           repairFn={() => api.repairModel(task.id)}
           revertFn={() => api.revertModel(task.id)}
+          hasOriginalBackup={!!task.hasOriginalBackup}
           onRepaired={() => setModelVersion(Date.now())}
         />
       )}
