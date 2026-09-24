@@ -187,6 +187,8 @@ export const vi = {
       loadFail: "Không tải được đơn hàng",
       order: "Đơn",
       refresh: "Làm mới",
+      continuePay: "Tiếp tục thanh toán",
+      payFail: "Không mở được trang thanh toán",
     },
   },
 

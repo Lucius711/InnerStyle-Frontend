@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Printer, Loader2, RefreshCw } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Printer, Loader2, RefreshCw, CreditCard } from "lucide-react";
 import Seo from "@/components/seo/Seo";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
@@ -24,6 +25,26 @@ export default function PrintOrders() {
   const toast = useToast();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState("");
+  const navigate = useNavigate();
+
+  // Same hand-off as placing the order (ResultPanel): payOS QR page, else redirect to the link.
+  const continuePay = async (id) => {
+    setPaying(id);
+    try {
+      const pay = (await printApi.resumePayment(id)).payment || {};
+      if (pay.qrCode) {
+        navigate("/wallet/payos-qr", { state: { ...pay, returnTo: window.location.pathname } });
+      } else if (pay.payUrl) {
+        window.location.href = pay.payUrl;
+      } else {
+        throw new Error("No payment URL returned.");
+      }
+    } catch (err) {
+      toast.error(t("profile.prints.payFail"), friendly(err));
+      setPaying("");
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -84,7 +105,20 @@ export default function PrintOrders() {
                   {o.note ? ` · ${o.note}` : ""}
                 </p>
               </div>
-              <span className="shrink-0 font-semibold text-app-text">{vnd.format(o.amount)}</span>
+              <div className="flex shrink-0 items-center gap-3">
+                {o.status === "PENDING" && (
+                  <Button
+                    size="sm"
+                    icon={paying === o.id ? Loader2 : CreditCard}
+                    loading={paying === o.id}
+                    disabled={!!paying}
+                    onClick={() => continuePay(o.id)}
+                  >
+                    {t("profile.prints.continuePay")}
+                  </Button>
+                )}
+                <span className="font-semibold text-app-text">{vnd.format(o.amount)}</span>
+              </div>
             </li>
           ))}
         </ul>

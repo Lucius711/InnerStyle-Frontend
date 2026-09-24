@@ -40,6 +40,10 @@ export const printApi = {
 
   list: ({ page = 0, size = 10 } = {}) =>
     request(`/api/user/print/orders?page=${page}&size=${size}&sort=createdAt,desc`, { auth: true }),
+
+  // Continue paying a PENDING order: returns the same shape as placeOrder, reusing its payOS link.
+  resumePayment: (id) =>
+    request(`/api/user/print/orders/${id}/pay`, { method: "POST", auth: true }),
 };
 
 // Staff order-fulfilment API (requires ROLE_STAFF).

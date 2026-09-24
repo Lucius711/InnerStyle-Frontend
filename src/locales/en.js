@@ -187,6 +187,8 @@ export const en = {
       loadFail: "Couldn't load orders",
       order: "Order",
       refresh: "Refresh",
+      continuePay: "Continue payment",
+      payFail: "Couldn't open payment",
     },
   },
 
