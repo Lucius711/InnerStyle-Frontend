@@ -39,12 +39,19 @@ const Membership = lazy(() => import("@/pages/Membership"));
 const PaymentReturn = lazy(() => import("@/pages/PaymentReturn"));
 const PaymentQr = lazy(() => import("@/pages/PaymentQr"));
 const ArView = lazy(() => import("@/pages/ArView"));
+const Support = lazy(() => import("@/pages/Support"));
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
+    // "/#how" from another page (navbar/footer): land on the section, not the top.
+    const el = hash && document.getElementById(hash.slice(1));
+    if (el) {
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: "smooth" }));
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [pathname, hash]);
   return null;
 }
 
@@ -164,6 +171,7 @@ function AnimatedRoutes() {
         <Route path="/verify-email" element={<Navigate to="/login" replace />} />
         {/* Standalone, chrome-free AR launcher (opened from the QR on a phone) */}
         <Route path="/ar/:taskId" element={<ErrorBoundary><ArView /></ErrorBoundary>} />
+        <Route path="/support" element={<PageTransition><Support /></PageTransition>} />
         <Route path="/wallet/payos-qr" element={<PageTransition><PaymentQr /></PageTransition>} />
         <Route path="/wallet/payos-return" element={<PageTransition><PaymentReturn /></PageTransition>} />
         <Route

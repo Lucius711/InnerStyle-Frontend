@@ -1,35 +1,55 @@
 import { Link } from "react-router-dom";
-import { Github, Twitter, BookOpen } from "lucide-react";
+import { Mail, LifeBuoy, MessageCircle } from "lucide-react";
 import { useT } from "@/hooks/useI18n";
 import { useTheme } from "@/hooks/useTheme";
+import { Facebook, Instagram, TikTok, YouTube } from "@/components/layout/SocialIcons";
+
+// Shared by the footer and the Support page — replace with the real handles/inbox.
+export const CONTACT_EMAIL = "innerstyle.contact@gmail.com";
+export const MESHY_DOCS_URL = "https://docs.meshy.ai/en";
+export const MESHY_API_URL = "https://docs.meshy.ai/en/api";
+
+const socials = [
+  { label: "Facebook", icon: Facebook, href: "https://www.facebook.com/share/1QSWqkXfeu/?mibextid=wwXIfr" },
+  { label: "Instagram", icon: Instagram, href: "https://www.instagram.com/" },
+  { label: "TikTok", icon: TikTok, href: "https://www.tiktok.com/" },
+  { label: "YouTube", icon: YouTube, href: "https://www.youtube.com/" },
+];
 
 export default function Footer() {
   const t = useT();
   const { theme } = useTheme();
 
+  // `href` = plain anchor (in-page #hash or external); `to` = SPA route. React Router's <Link>
+  // doesn't scroll to a #hash, which is why "How it works" / "Features" did nothing before.
   const cols = [
     {
       title: t("footer.product"),
       links: [
         { label: t("footer.studio"), to: "/studio" },
-        { label: t("footer.how"), to: "/#how" },
-        { label: t("footer.features"), to: "/#features" },
+        { label: t("footer.how"), href: "/#how" },
+        { label: t("footer.features"), href: "/#features" },
       ],
     },
     {
       title: t("footer.pipeline"),
       links: [
         { label: t("footer.imageTo3d"), to: "/studio" },
-        { label: t("footer.textTo3d"), to: "/studio" },
-        { label: t("footer.rigAnimate"), to: "/studio" },
+        { label: t("footer.textTo3d"), to: "/studio" }
       ],
     },
     {
       title: t("footer.resources"),
       links: [
-        { label: t("footer.docs"), to: "/#" },
-        { label: t("footer.api"), to: "/#" },
-        { label: t("footer.support"), to: "/#" },
+        { label: t("footer.docs"), href: MESHY_DOCS_URL, external: true },
+        { label: t("footer.api"), href: MESHY_API_URL, external: true },
+      ],
+    },
+    {
+      title: t("footer.contact"),
+      links: [
+        { label: CONTACT_EMAIL, href: `mailto:${CONTACT_EMAIL}`, icon: Mail },
+        { label: t("footer.helpCenter"), to: "/support", icon: LifeBuoy }
       ],
     },
   ];
@@ -37,7 +57,7 @@ export default function Footer() {
   return (
     <footer className="relative mt-32 border-t border-app-line/10">
       <div className="mx-auto max-w-6xl px-6 py-14">
-        <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
+        <div className="flex flex-col gap-10 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-sm">
             <Link to="/" className="flex items-center">
               <img
@@ -56,7 +76,7 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
             {cols.map((col) => (
               <FooterCol key={col.title} title={col.title} links={col.links} />
             ))}
@@ -67,18 +87,21 @@ export default function Footer() {
           <p className="text-xs text-app-faint">
             {t("footer.rights", { year: new Date().getFullYear() })}
           </p>
-          <div className="flex items-center gap-2">
-            {[Github, Twitter, BookOpen].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="rounded-lg p-2 text-app-muted transition-colors hover:bg-app-line/5 hover:text-app-text"
-                aria-label="social link"
-              >
-                <Icon className="h-4 w-4" />
-              </a>
+          <ul className="flex items-center gap-5">
+            {socials.map(({ label, icon: Icon, href }) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
+                  className="flex text-app-muted transition-colors hover:text-app-text"
+                >
+                  <Icon size={18} />
+                </a>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </div>
     </footer>
@@ -86,22 +109,37 @@ export default function Footer() {
 }
 
 function FooterCol({ title, links }) {
+  const cls =
+    "inline-flex items-center gap-2 text-sm text-app-muted transition-colors hover:text-app-text";
   return (
     <div>
       <h4 className="text-xs font-semibold uppercase tracking-wider text-app-faint">
         {title}
       </h4>
       <ul className="mt-4 space-y-2.5">
-        {links.map((l, i) => (
-          <li key={i}>
-            <Link
-              to={l.to}
-              className="text-sm text-app-muted transition-colors hover:text-app-text"
-            >
-              {l.label}
-            </Link>
-          </li>
-        ))}
+        {links.map(({ label, to, href, external, icon: Icon }) => {
+          const body = (
+            <>
+              {Icon && <Icon className="h-4 w-4 shrink-0" />}
+              <span className="break-all">{label}</span>
+            </>
+          );
+          return (
+            <li key={label}>
+              {to ? (
+                <Link to={to} className={cls}>{body}</Link>
+              ) : (
+                <a
+                  href={href}
+                  className={cls}
+                  {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
+                  {body}
+                </a>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
