@@ -66,7 +66,7 @@ function triggerDownload(data, type, filename) {
 
 // Texture maps to bundle into the ZIP (proxy map name -> task.textureUrls[0] field).
 const TEXTURE_MAPS = [
-  ["base_color", "baseColor"],
+  ["base_color", "base_color"],
   ["metallic", "metallic"],
   ["normal", "normal"],
   ["roughness", "roughness"],

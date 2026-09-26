@@ -621,7 +621,7 @@ export const en = {
       vertices: "Vertices",
     },
     tex: {
-      baseColor: "Base color",
+      base_color: "Base color",
       metallic: "Metallic",
       normal: "Normal",
       roughness: "Roughness",

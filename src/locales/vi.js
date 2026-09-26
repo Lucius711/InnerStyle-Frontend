@@ -619,7 +619,7 @@ export const vi = {
       vertices: "Đỉnh",
     },
     tex: {
-      baseColor: "Màu nền",
+      base_color: "Màu nền",
       metallic: "Metallic",
       normal: "Normal",
       roughness: "Roughness",

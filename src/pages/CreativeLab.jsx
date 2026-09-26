@@ -114,7 +114,7 @@ export default function CreativeLab() {
   const previewUrl = task && previewFormat ? api.modelUrl(task.id, previewFormat) + suffix : null;
   const editUrl = task && webFormat ? api.modelUrl(task.id, webFormat) + suffix : null;
   const textures = (task?.textureUrls || []).filter(Boolean);
-  const baseColorUrl = textures[0]?.baseColor ? api.textureUrl(task.id, "base_color") : null;
+  const baseColorUrl = textures[0]?.base_color ? api.textureUrl(task.id, "base_color") : null;
 
   if (loadingTask) {
     return (

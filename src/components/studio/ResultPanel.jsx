@@ -81,7 +81,7 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
   const textures = (task.textureUrls || []).filter(Boolean);
   // Fallback base-color URL: applied in the viewer if the GLB ships textures externally
   // (Meshy CDN lacks CORS, so the embedded reference would otherwise render grey).
-  const baseColorUrl = textures[0]?.baseColor ? api.textureUrl(task.id, "base_color") : null;
+  const baseColorUrl = textures[0]?.base_color ? api.textureUrl(task.id, "base_color") : null;
   const animations = task.animationUrls ? Object.entries(task.animationUrls) : [];
 
   const isModel = MODEL_TYPES.includes(task.taskType);
@@ -185,18 +185,21 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         <div>
           <h4 className="mb-2.5 text-sm font-medium text-app-text">{t("studio.textureMaps")}</h4>
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {textures.flatMap((tex, ti) =>
-              Object.entries(tex)
-                .filter(([, v]) => v)
-                .map(([k, v]) => (
-                  <a key={`${ti}-${k}`} href={v} target="_blank" rel="noreferrer" className="group">
+            {/* Served via the backend texture proxy (R2-cached) — raw Meshy URLs are signed and expire.
+                The proxy only serves the first texture set, so only that one is shown. */}
+            {Object.entries(textures[0])
+              .filter(([, v]) => v)
+              .map(([k]) => {
+                const src = api.textureUrl(task.id, k);
+                return (
+                  <a key={k} href={src} target="_blank" rel="noreferrer" className="group">
                     <div className="aspect-square overflow-hidden rounded-xl border border-app-line/10 bg-app-elevated">
-                      <img src={v} alt={k} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      <img src={src} alt={k} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <span className="mt-1 block truncate text-center text-[10px] text-app-faint">{t(`studio.tex.${k}`)}</span>
                   </a>
-                ))
-            )}
+                );
+              })}
           </div>
         </div>
       )}
