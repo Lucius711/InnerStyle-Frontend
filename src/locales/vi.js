@@ -761,7 +761,65 @@ export const vi = {
 
   // Ánh xạ mã thông báo từ backend (API trả về mã thay vì văn bản đã dịch)
   // sang chuỗi hiển thị. Khóa trùng đúng mã của server, vd "meshy.task.notFound".
+  policy: {
+    title: "Điều khoản & Chính sách",
+    subtitle: "Vui lòng đọc hết nội dung bên dưới trước khi tiếp tục sử dụng InnerStyle.",
+    version: "Phiên bản {version}",
+    scrollHint: "Cuộn xuống cuối tài liệu để xác nhận.",
+    agree: "Tôi đã đọc và đồng ý với các điều khoản, chính sách của hệ thống.",
+    continue: "Tiếp tục",
+    saveFailed: "Không lưu được xác nhận, vui lòng thử lại.",
+    sections: [
+      {
+        title: "1. Điều khoản sử dụng",
+        body: [
+          "Khi đăng nhập và sử dụng InnerStyle, bạn đồng ý tuân thủ các điều khoản này. Nếu không đồng ý, vui lòng ngừng sử dụng dịch vụ.",
+          "InnerStyle cung cấp công cụ tạo, chỉnh sửa, xem trước (bao gồm AR) và tải về mô hình 3D từ ảnh hoặc mô tả văn bản, cùng dịch vụ đặt in 3D. Việc tạo mô hình sử dụng dịch vụ AI của bên thứ ba (MeshyAI).",
+          "Bạn chịu trách nhiệm về tài khoản của mình và mọi hoạt động diễn ra dưới tài khoản đó. Không chia sẻ quyền truy cập cho người khác.",
+          "Chúng tôi có thể cập nhật điều khoản khi cần. Khi có phiên bản mới, bạn sẽ được yêu cầu đọc và xác nhận lại trước khi tiếp tục sử dụng.",
+        ],
+      },
+      {
+        title: "2. Chính sách thanh toán",
+        body: [
+          "Các thao tác tạo và xử lý mô hình tiêu tốn credit theo bảng giá hiển thị trước khi bạn xác nhận. Credit đến từ gói thành viên bạn đăng ký.",
+          "Thanh toán gói thành viên và đơn in 3D được thực hiện qua cổng payOS (chuyển khoản/QR ngân hàng). InnerStyle không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.",
+          "Giao dịch chỉ được ghi nhận khi cổng thanh toán xác nhận thành công. Nếu tiền đã bị trừ mà đơn chưa cập nhật sau 15 phút, hãy liên hệ bộ phận hỗ trợ kèm mã đơn.",
+          "Nếu một tác vụ tạo mô hình thất bại hoặc bị huỷ, số credit của tác vụ đó sẽ được hoàn lại tự động.",
+        ],
+      },
+      {
+        title: "3. Chính sách đổi/trả",
+        body: [
+          "Credit và gói thành viên đã kích hoạt là sản phẩm số, không được hoàn tiền, trừ trường hợp lỗi phát sinh từ phía hệ thống.",
+          "Đơn in 3D được sản xuất theo mô hình riêng của bạn nên không hỗ trợ đổi/trả vì lý do thay đổi ý định.",
+          "Nếu sản phẩm in bị lỗi sản xuất, hư hỏng khi vận chuyển hoặc sai kích thước so với đơn đặt, vui lòng liên hệ trong vòng 7 ngày kể từ khi nhận hàng, kèm ảnh chụp sản phẩm. Chúng tôi sẽ in lại hoặc hoàn tiền sau khi xác minh.",
+          "Kết quả do AI tạo ra có thể không giống hoàn toàn ảnh/mô tả gốc; đây không được coi là lỗi sản phẩm. Hãy xem trước mô hình kỹ trước khi đặt in.",
+        ],
+      },
+      {
+        title: "4. Chính sách bảo mật",
+        body: [
+          "Khi bạn đăng nhập bằng Google, chúng tôi nhận họ tên, email và ảnh đại diện để tạo và nhận diện tài khoản.",
+          "Ảnh, mô tả và mô hình bạn tải lên được xử lý bởi InnerStyle và MeshyAI để tạo mô hình 3D, và được lưu trữ để bạn tiếp tục sử dụng. Địa chỉ giao hàng chỉ dùng để giao đơn in 3D.",
+          "Chúng tôi không bán dữ liệu cá nhân của bạn. Dữ liệu chỉ được chia sẻ với các bên cần thiết để cung cấp dịch vụ (xử lý AI, thanh toán, vận chuyển).",
+          "Bạn có thể xoá mô hình của mình bất cứ lúc nào, hoặc liên hệ bộ phận hỗ trợ để yêu cầu xoá tài khoản.",
+        ],
+      },
+      {
+        title: "5. Quy tắc sử dụng dịch vụ",
+        body: [
+          "Không tải lên hoặc tạo nội dung khiêu dâm, bạo lực, thù ghét, vi phạm pháp luật, hoặc nội dung bạn không có quyền sử dụng (bao gồm ảnh của người khác khi chưa được đồng ý và tài sản trí tuệ của bên thứ ba).",
+          "Hệ thống có thể tự động chặn ảnh/mô tả vi phạm. Tài khoản vi phạm nhiều lần có thể bị tạm khoá.",
+          "Không lạm dụng, can thiệp hoặc cố gắng vượt qua các giới hạn kỹ thuật của hệ thống.",
+          "Mọi thắc mắc về điều khoản, vui lòng liên hệ qua trang Hỗ trợ.",
+        ],
+      },
+    ],
+  },
+
   server: {
+    auth: { policy: { versionMismatch: "Phiên bản chính sách đã thay đổi, vui lòng tải lại trang và xác nhận lại." } },
     common: {
       serverError: "Lỗi máy chủ nội bộ",
       invalidReference: "Tham chiếu không hợp lệ",

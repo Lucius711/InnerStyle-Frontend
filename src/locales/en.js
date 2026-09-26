@@ -764,7 +764,65 @@ export const en = {
 
   // Maps backend message codes (returned by the API instead of localized text)
   // to display strings. Keyed exactly as the server code, e.g. "meshy.task.notFound".
+  policy: {
+    title: "Terms & Policies",
+    subtitle: "Please read everything below before you continue using InnerStyle.",
+    version: "Version {version}",
+    scrollHint: "Scroll to the end of the document to confirm.",
+    agree: "I have read and agree to the system's terms and policies.",
+    continue: "Continue",
+    saveFailed: "Could not save your confirmation, please try again.",
+    sections: [
+      {
+        title: "1. Terms of use",
+        body: [
+          "By signing in and using InnerStyle you agree to these terms. If you do not agree, please stop using the service.",
+          "InnerStyle provides tools to create, edit, preview (including AR) and download 3D models from images or text prompts, plus a 3D-printing order service. Model generation uses a third-party AI service (MeshyAI).",
+          "You are responsible for your account and all activity under it. Do not share access with others.",
+          "We may update these terms. When a new version is published you will be asked to read and accept it again before continuing.",
+        ],
+      },
+      {
+        title: "2. Payment policy",
+        body: [
+          "Generating and processing models costs credits according to the price shown before you confirm. Credits come from your membership plan.",
+          "Membership plans and 3D-print orders are paid through the payOS gateway (bank transfer / QR). InnerStyle never stores your card or bank-account details.",
+          "A payment is only recorded once the gateway confirms it. If you were charged but the order has not updated after 15 minutes, contact support with the order code.",
+          "If a generation task fails or is cancelled, its credits are refunded automatically.",
+        ],
+      },
+      {
+        title: "3. Return & refund policy",
+        body: [
+          "Activated credits and memberships are digital goods and are non-refundable, except for errors on our side.",
+          "3D-print orders are made to order from your own model, so they cannot be returned for a change of mind.",
+          "If a print has a manufacturing defect, was damaged in shipping, or has the wrong size, contact us within 7 days of delivery with photos. After verification we will reprint or refund it.",
+          "AI-generated results may not exactly match the source image or prompt; this is not a product defect. Preview your model carefully before ordering a print.",
+        ],
+      },
+      {
+        title: "4. Privacy policy",
+        body: [
+          "When you sign in with Google we receive your name, email and avatar to create and identify your account.",
+          "Images, prompts and models you upload are processed by InnerStyle and MeshyAI to generate 3D models, and stored so you can keep using them. Shipping addresses are used only to deliver print orders.",
+          "We do not sell your personal data. It is only shared with parties needed to provide the service (AI processing, payment, shipping).",
+          "You can delete your models at any time, or contact support to request account deletion.",
+        ],
+      },
+      {
+        title: "5. Service rules",
+        body: [
+          "Do not upload or generate sexual, violent, hateful or illegal content, or content you have no right to use (including photos of other people without consent and third-party intellectual property).",
+          "The system may automatically block violating images or prompts. Repeated violations may lead to account suspension.",
+          "Do not abuse, interfere with or try to bypass the system's technical limits.",
+          "For any questions about these terms, contact us via the Support page.",
+        ],
+      },
+    ],
+  },
+
   server: {
+    auth: { policy: { versionMismatch: "The policy version has changed. Please reload the page and accept again." } },
     common: {
       serverError: "Internal server error",
       invalidReference: "Invalid reference",

@@ -20,6 +20,7 @@ import { I18nProvider, useT } from "@/hooks/useI18n";
 import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import StaffRoute from "@/components/auth/StaffRoute";
+import PolicyGate from "@/components/auth/PolicyGate";
 import Button from "@/components/ui/Button";
 import Landing from "@/pages/Landing";
 import ProfileLayout from "@/components/layout/ProfileLayout";
@@ -211,6 +212,7 @@ function Shell() {
       {!bare && <Navbar />}
       <AnimatedRoutes />
       {!bare && <Footer />}
+      <PolicyGate />
     </>
   );
 }

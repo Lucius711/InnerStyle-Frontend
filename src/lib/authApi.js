@@ -26,6 +26,10 @@ export const authApi = {
       throw err;
     }
   },
+
+  // Accept the Terms & Policies version the user was shown (returns the updated profile).
+  acceptPolicy: (version) =>
+    request("/api/user/account/policy-acceptance", { method: "POST", body: { version }, auth: true }),
 };
 
 export const printApi = {
