@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Mail, LifeBuoy, MessageCircle } from "lucide-react";
-import { useT } from "@/hooks/useI18n";
+import { useI18n } from "@/hooks/useI18n";
 import { useTheme } from "@/hooks/useTheme";
 import { Facebook, Instagram, TikTok, YouTube } from "@/components/layout/SocialIcons";
 
@@ -17,7 +17,7 @@ const socials = [
 ];
 
 export default function Footer() {
-  const t = useT();
+  const { t, lang } = useI18n();
   const { theme } = useTheme();
 
   // `href` = plain anchor (in-page #hash or external); `to` = SPA route. React Router's <Link>
@@ -35,7 +35,11 @@ export default function Footer() {
       title: t("footer.pipeline"),
       links: [
         { label: t("footer.imageTo3d"), to: "/studio" },
-        { label: t("footer.textTo3d"), to: "/studio" }
+        { label: t("footer.textTo3d"), to: "/studio" },
+        // Static SEO landing page (public/in-3d-ca-nhan-hoa/index.html) — plain href, not an SPA route.
+        lang === "vi"
+          ? { label: "In 3D cá nhân hóa", href: "/in-3d-ca-nhan-hoa/" }
+          : { label: "Personalized 3D printing", href: "/personalized-3d-printing/" }
       ],
     },
     {

@@ -31,7 +31,8 @@ function upsertCanonical(href) {
  */
 export default function Seo({ title, description, canonical, noindex = false, image }) {
   useEffect(() => {
-    const fullTitle = title ? `${SITE_NAME} · ${title}` : SITE_NAME;
+    // Keyword first, brand last — Google weights the start of the title and may truncate the end.
+    const fullTitle = title ? `${title} | ${SITE_NAME}` : SITE_NAME;
     const desc = description || DEFAULT_DESC;
     // Canonical must be a clean URL — never carry query strings (?utm=, ?v= cache-busters) or
     // #hash fragments, which would split indexing across duplicate URLs.

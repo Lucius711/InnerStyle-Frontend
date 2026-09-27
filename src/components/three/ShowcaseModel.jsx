@@ -42,6 +42,9 @@ function useInView(ref, rootMargin = "200px") {
   return inView;
 }
 
+/** 1 = default. Raise/lower by ~0.05 to tune brightness. */
+const SHOWCASE_EXPOSURE = 1.15;
+
 const isObj = (url) => /\.obj($|\?)/i.test(url || "");
 
 /** GLB / glTF — loads with color & textures intact. */
@@ -149,6 +152,10 @@ export default function ShowcaseModel({ url, fallback = null }) {
             camera={{ position: [0, 0, 3.2], fov: 40 }}
             gl={{ antialias: true, alpha: true, powerPreference: "low-power" }}
             style={{ background: "transparent" }}
+            // Slightly brighter overall; ACES tone mapping (R3F default) rolls off highlights so it won't glare.
+            onCreated={({ gl }) => {
+              gl.toneMappingExposure = SHOWCASE_EXPOSURE;
+            }}
           >
             <ambientLight intensity={0.6} />
             <SoftLighting />
