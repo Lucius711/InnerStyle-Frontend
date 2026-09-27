@@ -10,8 +10,9 @@ export default function Landing() {
   return (
     <>
       <Seo
-        description="InnerStyle turns a single 2D image or a line of text into a textured, rigged and animated 3D model — personalized 3D generation powered by AI."
-        canonical="https://innerstyle.app/"
+        title="In 3D cá nhân hóa từ ảnh | Tạo mô hình 3D bằng AI"
+        description="In 3D cá nhân hóa từ một tấm ảnh: InnerStyle dùng AI tạo mô hình, figure 3D của riêng bạn, xem trước bằng AR và đặt in 3D giao tận nơi."
+        canonical="https://www.innerstyle.online/"
       />
       <Hero />
       <Stats />

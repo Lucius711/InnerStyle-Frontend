@@ -1,66 +1,35 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="vi" class="dark">
   <head>
     <meta charset="UTF-8" />
-    <!-- TEMP DEBUG: surface load/eval errors on devices with no console (e.g. iPhone). Remove later. -->
-    <script>
-      (function () {
-        function show(msg) {
-          try {
-            var d = document.getElementById("__err__");
-            if (!d) {
-              d = document.createElement("pre");
-              d.id = "__err__";
-              d.style.cssText =
-                "position:fixed;inset:0;z-index:99999;margin:0;padding:16px;overflow:auto;" +
-                "background:#0b0b12;color:#ff8b8b;font:12px/1.5 monospace;white-space:pre-wrap;word-break:break-word";
-              (document.body || document.documentElement).appendChild(d);
-            }
-            d.textContent += msg + "\n\n";
-          } catch (e) {}
-        }
-        window.addEventListener("error", function (e) {
-          if (e && e.message) {
-            show("[error] " + e.message + (e.filename ? "\n@ " + e.filename + ":" + e.lineno + ":" + e.colno : ""));
-          } else if (e && e.target && (e.target.src || e.target.href)) {
-            show("[resource failed to load] " + (e.target.src || e.target.href));
-          }
-        }, true);
-        window.addEventListener("unhandledrejection", function (e) {
-          show("[promise] " + ((e && e.reason && (e.reason.message || e.reason)) || "unknown"));
-        });
-      })();
-    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b0b12" />
     <meta name="robots" content="index,follow" />
-    <meta
-      name="description"
-      content="InnerStyle turns a single 2D image or a line of text into a textured, rigged and animated 3D model — in minutes. Personalized 3D model generation powered by AI."
-    />
-    <title>InnerStyle</title>
-    <link rel="canonical" href="https://innerstyle.app/" />
+    <meta name="description" content="In 3D cá nhân hóa từ một tấm ảnh: InnerStyle dùng AI tạo mô hình, figure 3D của riêng bạn, xem trước bằng AR và đặt in 3D giao tận nơi." />
+    <title>InnerStyle – In 3D cá nhân hóa từ ảnh | Tạo mô hình 3D bằng AI</title>
+    <link rel="canonical" href="https://www.innerstyle.online/" />
 
     <!-- Open Graph -->
     <meta property="og:site_name" content="InnerStyle" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="InnerStyle" />
+    <meta property="og:title" content="InnerStyle – In 3D cá nhân hóa từ ảnh | Tạo mô hình 3D bằng AI" />
+    <meta property="og:locale" content="vi_VN" />
     <meta
       property="og:description"
-      content="Turn images & text prompts into textured, rigged, animated 3D models with an AI pipeline."
+      content="In 3D cá nhân hóa từ một tấm ảnh: InnerStyle dùng AI tạo mô hình, figure 3D của riêng bạn, xem trước bằng AR và đặt in 3D giao tận nơi."
     />
-    <meta property="og:url" content="https://innerstyle.app/" />
-    <meta property="og:image" content="https://innerstyle.app/og-cover.png" />
+    <meta property="og:url" content="https://www.innerstyle.online/" />
+    <meta property="og:image" content="https://www.innerstyle.online/og-cover.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="InnerStyle" />
+    <meta name="twitter:title" content="InnerStyle – In 3D cá nhân hóa từ ảnh | Tạo mô hình 3D bằng AI" />
     <meta
       name="twitter:description"
-      content="Turn images & text prompts into textured, rigged, animated 3D models with an AI pipeline."
+      content="In 3D cá nhân hóa từ một tấm ảnh: InnerStyle dùng AI tạo mô hình, figure 3D của riêng bạn, xem trước bằng AR và đặt in 3D giao tận nơi."
     />
-    <meta name="twitter:image" content="https://innerstyle.app/og-cover.png" />
+    <meta name="twitter:image" content="https://www.innerstyle.online/og-cover.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -76,25 +45,25 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "https://innerstyle.app/#organization",
+            "@id": "https://www.innerstyle.online/#organization",
             "name": "InnerStyle",
-            "url": "https://innerstyle.app/",
-            "logo": "https://innerstyle.app/og-cover.png"
+            "url": "https://www.innerstyle.online/",
+            "logo": "https://www.innerstyle.online/og-cover.png"
           },
           {
             "@type": "WebSite",
-            "@id": "https://innerstyle.app/#website",
+            "@id": "https://www.innerstyle.online/#website",
             "name": "InnerStyle",
-            "url": "https://innerstyle.app/",
-            "publisher": { "@id": "https://innerstyle.app/#organization" },
-            "inLanguage": ["en", "vi"]
+            "url": "https://www.innerstyle.online/",
+            "publisher": { "@id": "https://www.innerstyle.online/#organization" },
+            "inLanguage": ["vi", "en"]
           },
           {
             "@type": "SoftwareApplication",
             "name": "InnerStyle",
             "applicationCategory": "MultimediaApplication",
             "operatingSystem": "Web",
-            "description": "InnerStyle turns 2D images and text prompts into textured, rigged, animated 3D models using an AI pipeline.",
+            "description": "In 3D cá nhân hóa từ một tấm ảnh: InnerStyle dùng AI tạo mô hình, figure 3D của riêng bạn, xem trước bằng AR và đặt in 3D giao tận nơi.",
             "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" }
           }
         ]
@@ -109,25 +78,25 @@
     -->
     <div id="root">
       <main style="max-width:720px;margin:0 auto;padding:96px 24px;color:#e8e8ef;font-family:Inter,system-ui,sans-serif">
-        <h1 style="font-size:2.25rem;line-height:1.15;font-weight:700">InnerStyle — Turn a photo into a living 3D character</h1>
+        <h1 style="font-size:2.25rem;line-height:1.15;font-weight:700">In 3D cá nhân hóa — biến ảnh của bạn thành mô hình 3D</h1>
         <p style="margin-top:16px;color:#9aa0b4;font-size:1.05rem;line-height:1.6">
-          Just one photo or a line of text. InnerStyle creates a complete 3D character — with color,
-          shape, poses and movement — ready to use in games, videos, AR or 3D printing.
+          Chỉ cần một tấm ảnh hoặc một câu mô tả. InnerStyle dùng AI tạo nhân vật 3D hoàn chỉnh — có màu sắc,
+          hình khối, tạo dáng và cử động — rồi in 3D thành figure giao tận nơi.
         </p>
         <p style="margin-top:24px">
-          <a href="/studio" style="color:#7c5cff;font-weight:600">Start creating — free</a>
+          <a href="/studio" style="color:#7c5cff;font-weight:600">Bắt đầu tạo — miễn phí</a>
         </p>
         <ul style="margin-top:24px;color:#9aa0b4;line-height:1.8;list-style:disc;padding-left:20px">
-          <li>Image to 3D — turn a single image into a textured 3D model</li>
-          <li>Text to 3D — generate a 3D model from a text prompt</li>
-          <li>Rigging &amp; animation — auto-rig and animate your character</li>
-          <li>AR preview — view your model in your room</li>
-          <li>3D printing — order a physical print of your creation</li>
+          <li>Dịch vụ in 3D theo yêu cầu — figure 8, 12 hoặc 15 cm, giao tận nơi</li>
+          <li>Ảnh sang 3D — tạo mô hình 3D có texture từ một tấm ảnh</li>
+          <li>Chữ sang 3D — tạo mô hình 3D từ câu mô tả</li>
+          <li>Rigging &amp; hoạt ảnh — tự gắn khung xương và tạo chuyển động</li>
+          <li>Xem trước AR — đặt mô hình vào phòng của bạn</li>
         </ul>
         <noscript>
           <p style="margin-top:24px;color:#9aa0b4">
-            InnerStyle needs JavaScript to run the 3D studio. Please enable JavaScript to create,
-            preview and order your models.
+            InnerStyle cần JavaScript để chạy studio 3D. Hãy bật JavaScript để tạo,
+            xem trước và đặt in mô hình.
           </p>
         </noscript>
       </main>

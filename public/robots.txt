@@ -16,4 +16,4 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /verify-email
 
-Sitemap: https://innerstyle.app/sitemap.xml
+Sitemap: https://www.innerstyle.online/sitemap.xml

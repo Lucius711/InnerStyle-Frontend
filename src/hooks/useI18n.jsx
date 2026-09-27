@@ -19,11 +19,12 @@ const I18nContext = createContext(null);
 const STORAGE_KEY = "innerstyle-lang";
 
 function getInitialLang() {
-  if (typeof window === "undefined") return "en";
+  if (typeof window === "undefined") return "vi";
   const stored = window.localStorage.getItem(STORAGE_KEY);
   if (stored && DICTS[stored]) return stored;
-  const nav = (window.navigator.language || "en").toLowerCase();
-  return nav.startsWith("vi") ? "vi" : "en";
+  // Default to Vietnamese (target market). Googlebot renders with navigator.language "en-US",
+  // so browser detection made Google index the English copy and miss VN keywords ("in 3D").
+  return "vi";
 }
 
 /** Resolve a dot-path (supports numeric indices) against an object. */
