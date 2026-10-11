@@ -51,7 +51,6 @@ export function usePipelineActions(onCreated) {
       chain("retexture", () =>
         api.retexture({ sourceTaskId: tk.id, targetFormats: ALL_FORMATS, ...opts })
       ),
-    onRepaint: (tk) => chain("retexture", () => api.repaint(tk.id)),
     onRig: (tk, opts) =>
       chain("rig", () => api.rig({ sourceTaskId: tk.id, heightMeters: 1.7, ...opts })),
     onAnimate: (tk, opts) => chain("animate", () => api.animate({ rigTaskId: tk.id, ...opts })),

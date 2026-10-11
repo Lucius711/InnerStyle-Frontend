@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   Printer,
   FlaskConical,
-  Paintbrush,
 } from "lucide-react";
 import ModelViewer from "@/components/three/ModelViewer";
 import PrintabilityCard from "@/components/studio/PrintabilityCard";
@@ -21,7 +20,6 @@ import { printApi } from "@/lib/authApi";
 import { useT } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
 import { friendly } from "@/lib/messages";
-import { useCostConfirm } from "@/hooks/useCostConfirm";
 
 const MODEL_TYPES = [
   "IMAGE_TO_3D",
@@ -36,7 +34,6 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
   const t = useT();
   const toast = useToast();
   const navigate = useNavigate();
-  const confirmCost = useCostConfirm();
   const [printing, setPrinting] = useState("");
   const [shippingOpen, setShippingOpen] = useState(false);
   // Bumped after a base is baked server-side so the viewer reloads the updated mesh.
@@ -128,23 +125,6 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
           hasOriginalBackup={!!task.hasOriginalBackup}
           onRepaired={() => setModelVersion(Date.now())}
         />
-      )}
-
-      {/* Holes the auto-fix patches get a flat colour; Meshy's AI repaints the model with real detail. */}
-      {canCheckPrintability && actions.onRepaint && (
-        <div className="space-y-1.5">
-          <Button
-            variant="outline"
-            icon={Paintbrush}
-            className="w-full"
-            loading={busyAction === "retexture"}
-            disabled={!!busyAction}
-            onClick={async () => (await confirmCost("RETEXTURE")) && actions.onRepaint(task)}
-          >
-            {t("studio.aiRepaint")}
-          </Button>
-          <p className="text-[11px] text-app-faint">{t("studio.aiRepaintHint")}</p>
-        </div>
       )}
 
       {/* Downloads */}

@@ -19,7 +19,6 @@ import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
 import { Field, SelectMenu } from "@/components/ui/FormControls";
 import PrintabilityCard from "@/components/studio/PrintabilityCard";
-import RepaintPanel from "@/components/studio/RepaintPanel";
 import { staffApi } from "@/lib/authApi";
 import { authedFetch } from "@/lib/http";
 import { vnd } from "@/lib/pricing";
@@ -69,7 +68,7 @@ const STATUS_TONE = {
 const NEXT_STATUSES = ["PAID", "IN_PRODUCTION", "SHIPPED", "COMPLETED", "CANCELLED"];
 
 // All download formats available (matches user DownloadSettings).
-const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "3mf", "usdz", "ply"];
+const DOWNLOAD_FORMATS = ["bundle", "glb", "obj", "stl", "3mf", "usdz", "ply"];
 
 function saveBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -127,7 +126,7 @@ export default function StaffDashboard() {
     load();
   }, [load]);
 
-  const getFormat = (orderId) => formatMap[orderId] || "glb";
+  const getFormat = (orderId) => formatMap[orderId] || "bundle";
   const setFormat = (orderId, fmt) => setFormatMap((m) => ({ ...m, [orderId]: fmt }));
 
   const download = async (order) => {
@@ -248,7 +247,7 @@ export default function StaffDashboard() {
                       <SelectMenu
                         value={fmt}
                         onChange={(v) => setFormat(o.id, v)}
-                        options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
+                        options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f === "bundle" ? t("studio.bundleFormat") : f.toUpperCase() }))}
                         searchable={false}
                       />
                     </div>
@@ -329,7 +328,6 @@ export default function StaffDashboard() {
                       repairFn={() => staffApi.repairModel(o.id)}
                       revertFn={() => staffApi.revertModel(o.id)}
                     />
-                    <RepaintPanel orderId={o.id} />
                   </div>
                 )}
               </li>

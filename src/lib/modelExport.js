@@ -6,7 +6,7 @@ import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
 import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
 import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
 import { USDZExporter } from "three/examples/jsm/exporters/USDZExporter.js";
-import { strToU8 } from "three/examples/jsm/libs/fflate.module.js";
+import { strToU8, strFromU8 } from "three/examples/jsm/libs/fflate.module.js";
 import { export3mf } from "@/lib/export3mf";
 import { bakeVertexColors } from "@/lib/meshColors";
 
@@ -105,9 +105,44 @@ async function applyBaseColor(scene, texFiles) {
  * per-triangle colours; PLY gets vertex colours. STL cannot carry colour (format limit).
  * @param {Uint8Array|ArrayBuffer} glbBytes source GLB
  * @param {Record<string, Uint8Array>} texFiles e.g. { "textures/base_color.png": bytes }
- * @param {string} fmt glb | obj | stl | 3mf | usdz | ply
+ * @param {string} fmt glb | obj | stl | 3mf | usdz | ply | bundle (print pack: glb + stl + 3mf + README)
  */
+const README = (colors) => `INNERSTYLE - GOI IN 3D / 3D PRINT PACK
+======================================
+
+FILE NAO DUNG CHO VIEC GI
+- model.stl  : in 1 mau (moi may in). In xong co the son tay theo model.glb.
+- model.3mf  : in nhieu mau (Bambu AMS / may nhieu mau), da chia san ${colors.length} vung mau.
+- model.glb  : model co day du mau - mo bang trinh xem 3D de lam mau khi son.
+- filament-colors.txt : mau cho tung o nhua khi in file 3MF.
+- textures/  : anh mau goc cua model.
+
+CACH IN (Bambu Studio / PrusaSlicer / Orca)
+1. Mo model.stl (1 mau) hoac model.3mf (nhieu mau). Model da dung thang, cao 100 mm.
+   Muon to/nho hon: chinh ty le (Scale) trong slicer.
+2. Bat support: Support -> Enable support, kieu "tree(auto)" (cho toc, tay, vay).
+3. In file 3MF nhieu mau: bam vao o mau cua tung filament, nhap ma trong filament-colors.txt.
+   Neu bao "G-code path goes beyond plate boundaries": keo thap xa nhua (khoi vuong) vao giua ban in.
+4. Slice -> xem tab Preview -> in. Nen in thu ban nho (4-5 cm) truoc.
+
+MAU CHO TUNG O NHUA (file 3MF)
+${colors.map((c, i) => `- Filament ${i + 1}: ${c}`).join("\n")}
+
+---
+WHICH FILE: model.stl = single colour (any printer, paint afterwards); model.3mf = multi-colour
+(AMS), see filament-colors.txt; model.glb = full-colour reference. Model stands upright, 100 mm tall.
+Enable tree(auto) supports. If a "beyond plate boundaries" error shows, move the prime tower inward.
+`;
+
+/** One ZIP with everything needed to print: STL, multi-colour 3MF, full-colour GLB, textures, README. */
+async function buildPrintBundle(glbBytes, texFiles) {
+  const [glb, stl, mf] = await Promise.all(["glb", "stl", "3mf"].map((f) => buildModelFiles(glbBytes, texFiles, f)));
+  const colors = strFromU8(mf["filament-colors.txt"]).match(/#[0-9A-F]{6}/g) || [];
+  return { ...glb, ...stl, ...mf, "README.txt": strToU8(README(colors)) };
+}
+
 export async function buildModelFiles(glbBytes, texFiles, fmt) {
+  if (fmt === "bundle") return buildPrintBundle(glbBytes, texFiles);
   const src = toU8(glbBytes);
   const gltf = await new GLTFLoader().parseAsync(src.slice().buffer, "");
   const scene = gltf.scene || gltf.scenes?.[0];
@@ -131,7 +166,14 @@ export async function buildModelFiles(glbBytes, texFiles, fmt) {
   } else if (fmt === "stl") {
     files["model.stl"] = toU8(new STLExporter().parse(scene, { binary: true }));
   } else if (fmt === "3mf") {
-    files["model.3mf"] = export3mf(scene).data;
+    const { data, colors } = export3mf(scene);
+    files["model.3mf"] = data;
+    // Slicers paint each region in its filament slot's colour, not the model's: say which spool goes where.
+    files["filament-colors.txt"] = strToU8(
+      "Bambu Studio / PrusaSlicer: set each filament slot to this colour (click the colour swatch, enter the hex code).\n" +
+        "Dat mau cho tung o filament theo bang duoi (bam vao o mau, nhap ma hex).\n\n" +
+        colors.map((c, i) => `Filament ${i + 1}: ${c}`).join("\n") + "\n"
+    );
   } else if (fmt === "usdz") {
     files["model.usdz"] = toU8(await new USDZExporter().parseAsync(scene));
   } else if (fmt === "ply") {

@@ -28,10 +28,7 @@ const MAP = {
   "validation.email.invalid": "Please enter a valid email address.",
   "validation.password.length": "Password must be 8–72 characters.",
   "common.serverError": "Something went wrong. Please try again.",
-  "staff.order.repaintNotReady": "The AI repaint isn't finished yet.",
-  "staff.order.repaintApplied": "A repaint is already applied. Undo it before repainting again.",
-  "staff.order.repaintNotApplied": "No repaint is applied to this order.",
-  "validation.style.required": "This model has no picture or prompt to repaint from.",
+  "validation.style.required": "Add a style prompt or a style image.",
 };
 
 export function friendly(err) {

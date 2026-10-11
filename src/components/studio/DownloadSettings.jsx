@@ -18,7 +18,7 @@ const UNITS = ["cm", "mm"];
 // Always-available download formats. GLB is the source; the rest are produced
 // in-browser from the GLB when the server didn't generate them natively.
 // 3MF is the standard slicer format (Bambu Studio, PrusaSlicer, Cura).
-const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "3mf", "usdz", "ply"];
+const DOWNLOAD_FORMATS = ["bundle", "glb", "obj", "stl", "3mf", "usdz", "ply"];
 
 
 function triggerDownload(data, type, filename) {
@@ -86,7 +86,8 @@ export default function DownloadSettings({ task }) {
     return !!tex0 && Object.values(tex0).some(Boolean);
   }, [task.textureUrls]);
 
-  const [format, setFormat] = useState("glb");
+  // Default: the print pack, so a new user downloads something they can print right away.
+  const [format, setFormat] = useState("bundle");
   const [resize, setResize] = useState(false);
   const [height, setHeight] = useState("10");
   const [unit, setUnit] = useState("cm");
@@ -244,10 +245,10 @@ export default function DownloadSettings({ task }) {
         <SelectMenu
           value={format}
           onChange={setFormat}
-          options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
+          options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f === "bundle" ? t("studio.bundleFormat") : f.toUpperCase() }))}
           searchable={false}
         />
-        {willConvert && format !== "glb" && (
+        {willConvert && format !== "glb" && format !== "bundle" && (
           <p className="mt-1.5 text-[11px] text-app-faint">{t("studio.convertNote")}</p>
         )}
         {format === "stl" && hasTextures && (
