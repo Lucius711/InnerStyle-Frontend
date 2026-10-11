@@ -13,6 +13,7 @@ import {
   Printer,
   Package,
   ChevronDown,
+  BarChart3,
 } from "lucide-react";
 import MagneticButton from "@/components/motion/MagneticButton";
 import Button from "@/components/ui/Button";
@@ -53,7 +54,10 @@ export default function Navbar() {
   const userIsStaff = Array.isArray(user?.roles) && user.roles.includes("STAFF");
   // Staff are operators, not customers: no model creation, model library,
   // print orders or membership — only order fulfilment.
-  const accountLinks = userIsStaff
+  const adminLinks = user?.roles?.includes("ADMIN")
+    ? [{ to: "/admin", icon: BarChart3, label: t("nav.admin") }]
+    : [];
+  const accountLinks = [...adminLinks, ...(userIsStaff
     ? [
         { to: "/staff", icon: Package, label: t("nav.staff") },
         { to: "/profile", icon: User, label: t("nav.profile") },
@@ -63,7 +67,7 @@ export default function Navbar() {
         { to: "/my-3d-printing", icon: Boxes, label: t("nav.myModels") },
         { to: "/print-history", icon: Printer, label: t("nav.printHistory") },
         { to: "/membership", icon: Wallet, label: t("nav.membership") },
-      ];
+      ])];
 
   const initial = (user?.fullName || user?.email || "?").charAt(0).toUpperCase();
 

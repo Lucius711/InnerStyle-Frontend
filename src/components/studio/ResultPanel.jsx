@@ -172,8 +172,8 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
         <div>
           <h4 className="mb-2.5 text-sm font-medium text-app-text">{t("studio.animationOutputs")}</h4>
           <div className="flex flex-wrap gap-2">
-            {animations.map(([name, url]) => (
-              <a key={name} href={url} target="_blank" rel="noreferrer" download>
+            {animations.map(([name]) => (
+              <a key={name} href={api.animationUrl(task.id, name)} target="_blank" rel="noreferrer" download>
                 <Button variant="outline" size="sm" icon={Download}>{name}</Button>
               </a>
             ))}

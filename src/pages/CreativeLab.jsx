@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -24,6 +24,12 @@ import { useToast } from "@/hooks/useToast";
 import { usePipelineActions } from "@/hooks/usePipelineActions";
 import { useTaskPolling } from "@/hooks/useTaskPolling";
 import { TERMINAL_STATUSES } from "@/lib/constants";
+
+// Rigged / animated models already have a skeleton; everything else is auto-rigged before editing
+// so the editor can split it into head / body / arms / legs from the bone weights.
+const ALREADY_RIGGED = ["RIG", "ANIMATE"];
+const needsRig = (task) =>
+  task?.status === "SUCCEEDED" && !ALREADY_RIGGED.includes(task.taskType) && Boolean(task.modelUrls?.glb || task.modelUrls?.gltf);
 
 function isViewable(task) {
   if (!task) return false;
@@ -67,10 +73,37 @@ export default function CreativeLab() {
   const editPoll = useTaskPolling();
   const { actions, busyAction } = usePipelineActions((next) => editPoll.start(next));
   const editing = busyAction != null || editPoll.isPolling;
+  // Auto-rig state: true while the rig task runs (editor waits), false once done or given up.
+  const [rigging, setRigging] = useState(false);
+  const rigTried = useRef(null);
+
+  useEffect(() => {
+    if (!needsRig(task) || rigTried.current === task.id) return;
+    rigTried.current = task.id;
+    setRigging(true);
+    api
+      .rig({ sourceTaskId: task.id, heightMeters: 1.7 })
+      .then((rigTask) => editPoll.start(rigTask))
+      .catch((err) => {
+        setRigging(false); // no credits / API error → edit the unrigged model instead
+        toast.error(t("lab.rigFailTitle"), tServer(err.message));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task]);
 
   useEffect(() => {
     const edited = editPoll.task;
     if (!edited || !TERMINAL_STATUSES.includes(edited.status)) return;
+    if (rigging) {
+      setRigging(false);
+      editPoll.reset();
+      if (edited.status === "SUCCEEDED" && isViewable(edited)) {
+        navigate(`/lab/${edited.id}`, { replace: true }); // keep editing the rigged copy
+      } else {
+        toast.error(t("lab.rigFailTitle"), t("lab.rigFailBody")); // e.g. not a humanoid
+      }
+      return;
+    }
     if (edited.status === "SUCCEEDED" && isViewable(edited)) {
       setTask(edited);
       setModelVersion(Date.now());
@@ -116,10 +149,13 @@ export default function CreativeLab() {
   const textures = (task?.textureUrls || []).filter(Boolean);
   const baseColorUrl = textures[0]?.base_color ? api.textureUrl(task.id, "base_color") : null;
 
-  if (loadingTask) {
+  if (loadingTask || rigging) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-7 w-7 animate-spin text-brand-violet" />
+        <div className="flex flex-col items-center gap-3 text-center">
+          <Loader2 className="h-7 w-7 animate-spin text-brand-violet" />
+          {rigging && <p className="text-sm text-app-muted">{t("lab.rigging")}</p>}
+        </div>
       </div>
     );
   }

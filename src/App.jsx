@@ -28,12 +28,14 @@ import Login from "@/pages/Login";
 import OauthCallback from "@/pages/OauthCallback";
 import Profile from "@/pages/Profile";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { trackVisit } from "@/lib/authApi";
 
 // Heavy / authenticated routes are code-split so the marketing Landing page doesn't ship
 // three.js, recharts, the studio forms, etc. in the initial bundle.
 const Studio = lazy(() => import("@/pages/Studio"));
 const CreativeLab = lazy(() => import("@/pages/CreativeLab"));
 const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
+const AdminTraffic = lazy(() => import("@/pages/AdminTraffic"));
 const MyModels = lazy(() => import("@/pages/MyModels"));
 const PrintOrders = lazy(() => import("@/pages/PrintOrders"));
 const Membership = lazy(() => import("@/pages/Membership"));
@@ -159,6 +161,18 @@ function AnimatedRoutes() {
           }
         />
 
+        {/* Admin traffic dashboard (ROLE_ADMIN only) */}
+        <Route
+          path="/admin"
+          element={
+            <PageTransition>
+              <StaffRoute role="ADMIN">
+                <AdminTraffic />
+              </StaffRoute>
+            </PageTransition>
+          }
+        />
+
         {/* Legacy routes now live inside the profile */}
         <Route path="/gallery" element={<Navigate to="/my-3d-printing" replace />} />
         <Route path="/print-orders" element={<Navigate to="/print-history" replace />} />
@@ -205,6 +219,14 @@ function NotFound() {
 function Shell() {
   const { pathname } = useLocation();
   const bare = pathname.startsWith("/ar/");
+  useEffect(() => {
+    // One visit per browser session; storage can throw in private mode, so best-effort.
+    try {
+      if (sessionStorage.getItem("innerstyle.visited")) return;
+      sessionStorage.setItem("innerstyle.visited", "1");
+    } catch {}
+    trackVisit().catch(() => {});
+  }, []);
   return (
     <>
       {!bare && <AnimatedBackground />}

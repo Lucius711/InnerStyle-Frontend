@@ -77,6 +77,12 @@ export const staffApi = {
   // then serves the repaired model). Returns { before, after, task }.
   repairModel: (id) => request(`/api/staff/orders/${id}/repair`, { method: "POST", auth: true }),
 
+  // AI repaint (Meshy Retexture, styled on the original look). All return { task, applied }.
+  startRepaint: (id) => request(`/api/staff/orders/${id}/repaint`, { method: "POST", auth: true }),
+  repaintStatus: (id) => request(`/api/staff/orders/${id}/repaint`, { auth: true }),
+  applyRepaint: (id) => request(`/api/staff/orders/${id}/repaint/apply`, { method: "POST", auth: true }),
+  undoRepaint: (id) => request(`/api/staff/orders/${id}/repaint/undo`, { method: "POST", auth: true }),
+
   // Revert the order model back to its pre-repair backup, if one exists. Returns { before, after, task }.
   revertModel: (id) => request(`/api/staff/orders/${id}/revert`, { method: "POST", auth: true }),
 
@@ -92,6 +98,14 @@ export const staffApi = {
     return { blob: await res.blob(), filename };
   },
 };
+
+// Admin traffic stats (requires ROLE_ADMIN). Returns [{ date: "YYYY-MM-DD", visits }], oldest first.
+export const adminApi = {
+  dailyVisits: (days = 14) => request(`/api/admin/visits/daily?days=${days}`, { auth: true }),
+};
+
+// Counts one site visit; the app calls it once per browser session.
+export const trackVisit = () => request("/api/common/visits", { method: "POST" });
 
 export const membershipApi = {
   me: () => request("/api/user/membership/me", { auth: true }),

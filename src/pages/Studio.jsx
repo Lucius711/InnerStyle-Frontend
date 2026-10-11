@@ -38,6 +38,8 @@ export default function Studio() {
   const [tourOpen, setTourOpen] = useState(false);
   const { task, status, isPolling, start, reset } = useTaskPolling(3500);
   const builtFor = useRef(null);
+  // Set when stage 2 (figurine build) couldn't be launched — stops the 100% spinner hanging forever.
+  const [chainError, setChainError] = useState(null);
 
   // Auto-open the walkthrough the first time someone visits the Studio.
   useEffect(() => {
@@ -65,6 +67,7 @@ export default function Studio() {
   };
 
   const handleCreated = (created) => {
+    setChainError(null);
     setStartedAt(Date.now());
     start(created);
   };
@@ -79,22 +82,14 @@ export default function Studio() {
   ];
 
   // The chibi figurine is a 2-stage flow: when the prototype succeeds, auto-launch the build.
-  const autoChaining = task?.taskType === "FIGURE_PROTOTYPE" && status === "SUCCEEDED";
+  const autoChaining = task?.taskType === "FIGURE_PROTOTYPE" && status === "SUCCEEDED" && !chainError;
 
   useEffect(() => {
     if (!task) return;
     if (status === "SUCCEEDED") {
       if (task.taskType === "FIGURE_PROTOTYPE" && builtFor.current !== task.id) {
         builtFor.current = task.id;
-        (async () => {
-          try {
-            const buildTask = await api.figurineBuild({ sourceTaskId: task.id });
-            toast.success(t("toast.figurineBuildTitle"), t("toast.chainBody"));
-            handleCreated(buildTask);
-          } catch (err) {
-            toast.error(t("toast.chainFailTitle"), tServer(err.message));
-          }
-        })();
+        launchBuild(task.id);
         return;
       }
       toast.success(t("toast.readyTitle"), t("toast.readyBody"));
@@ -104,6 +99,19 @@ export default function Studio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
+  async function launchBuild(prototypeId) {
+    setChainError(null);
+    try {
+      const buildTask = await api.figurineBuild({ sourceTaskId: prototypeId });
+      toast.success(t("toast.figurineBuildTitle"), t("toast.chainBody"));
+      handleCreated(buildTask);
+    } catch (err) {
+      const msg = tServer(err.message) || t("studio.failedBody");
+      toast.error(t("toast.chainFailTitle"), msg);
+      setChainError(msg);
+    }
+  }
+
   const isTerminal = status && TERMINAL_STATUSES.includes(status);
   const showWorkspace = Boolean(task);
   const showResult = isTerminal && !autoChaining;
@@ -112,6 +120,7 @@ export default function Studio() {
     reset();
     setStartedAt(null);
     builtFor.current = null;
+    setChainError(null);
   };
 
   const renderForm = () => {
@@ -163,6 +172,14 @@ export default function Studio() {
             <div className="glass min-h-[460px] rounded-3xl p-6" data-tour="result">
               {!showWorkspace ? (
                 <IdleState mode={mode} t={t} />
+              ) : chainError ? (
+                <div className="flex min-h-[420px] flex-col items-center justify-center gap-4 text-center">
+                  <p className="text-base font-medium text-app-text">{t("toast.chainFailTitle")}</p>
+                  <p className="max-w-sm text-sm text-app-muted">{chainError}</p>
+                  <Button size="sm" icon={RefreshCw} onClick={() => launchBuild(task.id)}>
+                    {t("studio.retryBuild")}
+                  </Button>
+                </div>
               ) : showResult ? (
                 <ResultPanel task={task} actions={actions} busyAction={busyAction} />
               ) : (

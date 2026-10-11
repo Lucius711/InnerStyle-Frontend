@@ -8,10 +8,10 @@ export function isStaff(user) {
 }
 
 /**
- * Guards staff-only routes: unauthenticated users go to /login; signed-in non-staff
+ * Guards role-only routes (STAFF by default, or `role`): unauthenticated users go to /login; signed-in non-staff
  * users are redirected home.
  */
-export default function StaffRoute({ children }) {
+export default function StaffRoute({ children, role = "STAFF" }) {
   const { user, isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
@@ -25,7 +25,7 @@ export default function StaffRoute({ children }) {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
-  if (!isStaff(user)) {
+  if (!user?.roles?.includes(role)) {
     return <Navigate to="/" replace />;
   }
   return children;

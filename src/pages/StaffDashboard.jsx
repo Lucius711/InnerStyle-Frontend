@@ -13,17 +13,13 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
-import { USDZExporter } from "three/examples/jsm/exporters/USDZExporter.js";
-import { export3mf } from "@/lib/export3mf";
-import { zipSync, unzipSync, strToU8 } from "three/examples/jsm/libs/fflate.module.js";
+import { zipSync, unzipSync } from "three/examples/jsm/libs/fflate.module.js";
+import { buildModelFiles } from "@/lib/modelExport";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
 import { Field, SelectMenu } from "@/components/ui/FormControls";
 import PrintabilityCard from "@/components/studio/PrintabilityCard";
+import RepaintPanel from "@/components/studio/RepaintPanel";
 import { staffApi } from "@/lib/authApi";
 import { authedFetch } from "@/lib/http";
 import { vnd } from "@/lib/pricing";
@@ -84,41 +80,6 @@ function saveBlob(blob, filename) {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
-}
-
-function toU8(data) {
-  if (data instanceof Uint8Array) return data;
-  if (data instanceof ArrayBuffer) return new Uint8Array(data);
-  if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-  if (typeof data === "string") return strToU8(data);
-  return new Uint8Array(data);
-}
-
-/** Convert a GLB blob to another format entirely in the browser. */
-async function convertFromGlb(glbBlob, fmt) {
-  const arrayBuffer = await glbBlob.arrayBuffer();
-  const loader = new GLTFLoader();
-  const gltf = await new Promise((resolve, reject) =>
-    loader.parse(arrayBuffer, "", resolve, reject)
-  );
-  const scene = gltf.scene || gltf.scenes?.[0];
-  scene.updateMatrixWorld(true);
-  if (fmt === "obj") return { data: new OBJExporter().parse(scene), type: "text/plain" };
-  if (fmt === "stl") return { data: new STLExporter().parse(scene, { binary: true }), type: "model/stl" };
-  if (fmt === "3mf") return export3mf(scene);
-  if (fmt === "usdz") return { data: await new USDZExporter().parseAsync(scene), type: "model/vnd.usdz+zip" };
-  if (fmt === "ply") {
-    return new Promise((resolve, reject) => {
-      try {
-        new PLYExporter().parse(
-          scene,
-          (res) => resolve({ data: res, type: "application/octet-stream" }),
-          { binary: true }
-        );
-      } catch (e) { reject(e); }
-    });
-  }
-  throw new Error("unsupported format");
 }
 
 /** Staff fulfilment dashboard — every customer order with contact, address and model download. */
@@ -182,22 +143,19 @@ export default function StaffDashboard() {
       const entries = unzipSync(new Uint8Array(await zipBlob.arrayBuffer()));
       const glbName = Object.keys(entries).find((n) => n.toLowerCase().endsWith(".glb"));
       if (!glbName) throw new Error(t("staff.downloadFail") || "No model found in archive");
-      const glbBlob = new Blob([entries[glbName]], { type: "model/gltf-binary" });
-
-      if (fmt === "glb") {
-        saveBlob(glbBlob, `innerstyle-${order.id.slice(0, 8)}.glb`);
-        return;
-      }
-
-      // Convert in-browser from GLB to the requested format.
-      const { data, type } = await convertFromGlb(glbBlob, fmt);
-      const converted = data instanceof Blob ? data : new Blob([toU8(data)], { type });
-      const files = { [`model.${fmt}`]: toU8(await converted.arrayBuffer()) };
-      const zipped = zipSync(files);
-      saveBlob(
-        new Blob([zipped], { type: "application/zip" }),
-        `innerstyle-${order.id.slice(0, 8)}.zip`
+      // The textures/ beside the GLB are the colour: Meshy GLBs often only link them by an
+      // expired URL, so they must travel with (and be embedded into) every export.
+      const texFiles = Object.fromEntries(
+        Object.entries(entries).filter(([n]) => n.toLowerCase().startsWith("textures/"))
       );
+      const files = await buildModelFiles(entries[glbName], texFiles, fmt);
+      const name = `innerstyle-${order.id.slice(0, 8)}`;
+      if (fmt === "glb") {
+        // Texture is embedded in the GLB itself, so a single file is enough.
+        saveBlob(new Blob([files["model.glb"]], { type: "model/gltf-binary" }), `${name}.glb`);
+      } else {
+        saveBlob(new Blob([zipSync(files)], { type: "application/zip" }), `${name}.zip`);
+      }
     } catch (err) {
       toast.error(t("staff.downloadFail"), friendly(err));
     } finally {
@@ -294,6 +252,9 @@ export default function StaffDashboard() {
                         searchable={false}
                       />
                     </div>
+                    {fmt === "stl" && (
+                      <span className="text-[11px] text-amber-400">{t("studio.stlTextureNote")}</span>
+                    )}
                     <Button
                       size="sm"
                       variant="secondary"
@@ -368,6 +329,7 @@ export default function StaffDashboard() {
                       repairFn={() => staffApi.repairModel(o.id)}
                       revertFn={() => staffApi.revertModel(o.id)}
                     />
+                    <RepaintPanel orderId={o.id} />
                   </div>
                 )}
               </li>

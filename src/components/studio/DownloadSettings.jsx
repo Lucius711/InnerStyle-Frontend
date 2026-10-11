@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { OBJExporter } from "three/examples/jsm/exporters/OBJExporter.js";
-import { STLExporter } from "three/examples/jsm/exporters/STLExporter.js";
-import { PLYExporter } from "three/examples/jsm/exporters/PLYExporter.js";
-import { USDZExporter } from "three/examples/jsm/exporters/USDZExporter.js";
 import { Download, Crown, Lock } from "lucide-react";
-import { export3mf } from "@/lib/export3mf";
-import { zipSync, strToU8 } from "three/examples/jsm/libs/fflate.module.js";
+import { zipSync } from "three/examples/jsm/libs/fflate.module.js";
+import { buildModelFiles } from "@/lib/modelExport";
 import Button from "@/components/ui/Button";
 import { Field, Segmented, Toggle, TextInput, SelectMenu } from "@/components/ui/FormControls";
 import { api } from "@/lib/api";
@@ -25,32 +19,6 @@ const UNITS = ["cm", "mm"];
 // 3MF is the standard slicer format (Bambu Studio, PrusaSlicer, Cura).
 const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "3mf", "usdz", "ply"];
 
-
-/** Load the model's GLB and re-export it to another format entirely in the browser. */
-async function convertFromGlb(glbUrl, fmt) {
-  const loader = new GLTFLoader();
-  const gltf = await loader.loadAsync(glbUrl);
-  const scene = gltf.scene || gltf.scenes?.[0];
-  scene.updateMatrixWorld(true);
-  if (fmt === "obj") return { data: new OBJExporter().parse(scene), type: "text/plain" };
-  if (fmt === "stl") return { data: new STLExporter().parse(scene, { binary: true }), type: "model/stl" };
-  if (fmt === "3mf") return export3mf(scene);
-  if (fmt === "usdz") return { data: await new USDZExporter().parseAsync(scene), type: "model/vnd.usdz+zip" };
-  if (fmt === "ply") {
-    return new Promise((resolve, reject) => {
-      try {
-        new PLYExporter().parse(
-          scene,
-          (res) => resolve({ data: res, type: "application/octet-stream" }),
-          { binary: true }
-        );
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-  throw new Error("unsupported");
-}
 
 function triggerDownload(data, type, filename) {
   const blob = data instanceof Blob ? data : new Blob([data], { type });
@@ -78,14 +46,6 @@ function urlExt(url, fallback = "png") {
   return m ? m[1].toLowerCase() : fallback;
 }
 
-function toU8(data) {
-  if (data instanceof Uint8Array) return data;
-  if (data instanceof ArrayBuffer) return new Uint8Array(data);
-  if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-  if (typeof data === "string") return strToU8(data);
-  return new Uint8Array(data);
-}
-
 /** Fetch a task's texture maps (same-origin proxy) as ZIP entries: { "textures/<name>.<ext>": U8 }. */
 async function fetchTextureFiles(task) {
   const tex0 = (task.textureUrls || [])[0];
@@ -102,32 +62,6 @@ async function fetchTextureFiles(task) {
     }
   }
   return files;
-}
-
-/** Classic + PBR .mtl binding the exported maps (mirrors the server OBJ export). */
-function buildMtl(matName, texFiles) {
-  const find = (n) => Object.keys(texFiles).find((k) => k.startsWith(`textures/${n}`));
-  const base = find("base_color");
-  const metal = find("metallic");
-  const norm = find("normal");
-  const rough = find("roughness");
-  let s = "# InnerStyle export\n";
-  s += `newmtl ${matName}\n`;
-  s += "Ka 1.000 1.000 1.000\nKd 1.000 1.000 1.000\nKs 0.000 0.000 0.000\n";
-  if (base) s += `map_Kd ${base}\n`;
-  if (norm) s += `map_Bump ${norm}\nbump ${norm}\n`;
-  if (metal) s += `map_Pm ${metal}\n`;
-  if (rough) s += `map_Pr ${rough}\n`;
-  return s;
-}
-
-/** Drop stale mtllib/usemtl and bind a single material (mirrors the server's OBJ export). */
-function bindMtlToObj(objText, mtlFile, matName) {
-  const obj = objText.replace(/^\s*mtllib.*\r?\n?/gm, "").replace(/^\s*usemtl.*\r?\n?/gm, "");
-  const idx = obj.search(/^f\s/m);
-  const usemtl = `usemtl ${matName}\n`;
-  const body = idx >= 0 ? obj.slice(0, idx) + usemtl + obj.slice(idx) : usemtl + obj;
-  return `mtllib ${mtlFile}\n` + body;
 }
 
 /**
@@ -176,7 +110,9 @@ export default function DownloadSettings({ task }) {
   const serverHas = serverFormats.includes(format);
   const resizable = RESIZABLE.has(format) && serverHas;
   const canResize = resize && resizable && premium;
-  const willConvert = !serverHas && format !== "glb";
+  // GLB also goes through the browser: Meshy GLBs often only link their colour map by an
+  // expired URL, so the client embeds the shipped base_color map into it.
+  const willConvert = format === "glb" || !serverHas;
 
   // Picking a format that can't be resized (GLB/3MF/USDZ/PLY) clears any pending resize, so the
   // height value can't linger and silently do nothing — it only ever applies to STL/OBJ.
@@ -190,17 +126,9 @@ export default function DownloadSettings({ task }) {
       if (willConvert) {
         // Convert from GLB in the browser, then bundle the model together with its colour/texture
         // maps into a ZIP — so every format downloads as a ZIP that carries the colour files.
-        const { data } = await convertFromGlb(api.modelUrl(task.id, "glb"), format);
-        const texFiles = await fetchTextureFiles(task);
-        const files = { ...texFiles };
-        const matName = "innerstyle";
-        if (format === "obj" && Object.keys(texFiles).length > 0) {
-          const objText = typeof data === "string" ? data : new TextDecoder().decode(toU8(data));
-          files["model.obj"] = strToU8(bindMtlToObj(objText, "model.mtl", matName));
-          files["model.mtl"] = strToU8(buildMtl(matName, texFiles));
-        } else {
-          files[`model.${format}`] = toU8(data);
-        }
+        const [glbRes, texFiles] = await Promise.all([fetch(api.modelUrl(task.id, "glb")), fetchTextureFiles(task)]);
+        if (!glbRes.ok) throw new Error(`Model download failed (${glbRes.status})`);
+        const files = await buildModelFiles(await glbRes.arrayBuffer(), texFiles, format);
         const zipped = zipSync(files);
         triggerDownload(
           new Blob([zipped], { type: "application/zip" }),
@@ -316,7 +244,7 @@ export default function DownloadSettings({ task }) {
           options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
           searchable={false}
         />
-        {willConvert && (
+        {willConvert && format !== "glb" && (
           <p className="mt-1.5 text-[11px] text-app-faint">{t("studio.convertNote")}</p>
         )}
         {format === "stl" && hasTextures && (

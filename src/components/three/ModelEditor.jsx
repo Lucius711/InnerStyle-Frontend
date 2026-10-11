@@ -41,6 +41,7 @@ import Button from "@/components/ui/Button";
 import SignaturePad from "@/components/three/SignaturePad";
 import { Slider, Segmented, Toggle } from "@/components/ui/FormControls";
 import { export3mf } from "@/lib/export3mf";
+import { splitHumanoid, PART_KEYS } from "@/lib/splitHumanoid";
 import JSZip from "jszip";
 import { useT } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
@@ -99,6 +100,7 @@ function stdMaterialOf(mesh) {
 /* ------------------------------------------------------------------ scene */
 
 function EditableModel({ url, baseColorUrl, registerScene, onParts, onMetrics, selectedId, onSelect }) {
+  const t = useT();
   const { scene } = useGLTF(url, true, true);
 
   // Clone the cached scene + every material so edits never mutate the shared
@@ -175,7 +177,9 @@ function EditableModel({ url, baseColorUrl, registerScene, onParts, onMetrics, s
     registerScene(cloned);
     const parts = [];
     cloned.traverse((o) => {
-      if (o.isMesh) parts.push({ id: o.uuid, name: o.name || `Mesh ${parts.length + 1}` });
+      if (!o.isMesh) return;
+      const name = PART_KEYS.includes(o.name) ? t(`editor.part.${o.name}`) : o.name || `Mesh ${parts.length + 1}`;
+      parts.push({ id: o.uuid, name });
     });
     onParts(parts);
 
@@ -190,6 +194,7 @@ function EditableModel({ url, baseColorUrl, registerScene, onParts, onMetrics, s
       min: { x: box.min.x, y: box.min.y, z: box.min.z },
       center: { x: center.x, y: center.y, z: center.z },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cloned, registerScene, onParts, onMetrics]);
 
   // Highlight the selected mesh with a subtle emissive glow.
@@ -480,7 +485,7 @@ const PRESET_COLORS = [
   "#22c55e", "#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
 ];
 
-function MaterialTab({ c, set, onApplyAll, parts, partColors, setPartColor, selectedId, onSelectPart }) {
+function MaterialTab({ c, set, onApplyAll, parts, partColors, setPartColor, selectedId, onSelectPart, onAutoSplit }) {
   const t = useT();
   return (
     <div className="space-y-4">
@@ -506,6 +511,15 @@ function MaterialTab({ c, set, onApplyAll, parts, partColors, setPartColor, sele
       {/* Per-part colors — change any part directly */}
       <div className="space-y-1.5">
         <label className="block text-xs font-medium text-app-muted">{t("editor.partColors")}</label>
+        {parts.filter((p) => !/innerstyle_base/i.test(p.name || "")).length === 1 && (
+          <button
+            type="button"
+            onClick={() => onAutoSplit()}
+            className="w-full rounded-lg border border-dashed border-brand-violet/40 px-2 py-1.5 text-xs font-medium text-brand-violet transition-colors hover:bg-brand-violet/10"
+          >
+            {t("editor.autoSplit")}
+          </button>
+        )}
         {parts.map((p) => (
           <div
             key={p.id}
@@ -1067,6 +1081,53 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
     mesh.position.set(bp.x + next.ox, bp.y + next.oy, bp.z + next.oz);
   };
 
+  // Meshy returns ONE mesh — split it into head / torso / arms / legs so each can be
+  // recoloured, hidden or moved on its own.
+  const autoSplit = ({ silent = false } = {}) => {
+    const s = sceneRef.current;
+    if (!s) return;
+    const meshes = [];
+    s.traverse((o) => o.isMesh && !/innerstyle_base/i.test(o.name || "") && meshes.push(o));
+    if (meshes.length !== 1) return;
+    const src = meshes[0];
+    const pieces = splitHumanoid(src, stdMaterialOf(src));
+    if (!pieces) {
+      if (!silent) toast.error(t("editor.splitFailed"));
+      return;
+    }
+    splitWantedRef.current = true;
+    pieces.forEach(({ mesh }) => {
+      if (src.userData._origMap !== undefined && "map" in mesh.material) mesh.material.map = src.userData._origMap;
+      mesh.frustumCulled = false;
+      mesh.userData._origMap = src.userData._origMap;
+      mesh.userData.basePositions = mesh.geometry.attributes.position.array.slice();
+      mesh.userData.baseScale = (src.userData.baseScale || mesh.scale).clone();
+      mesh.userData.baseRotation = (src.userData.baseRotation || mesh.rotation).clone();
+      mesh.userData.basePosition = (src.userData.basePosition || mesh.position).clone();
+      src.parent.add(mesh);
+    });
+    src.removeFromParent();
+    setSelectedId(null);
+    setParts((prev) => [
+      ...prev.filter((p) => p.id !== src.uuid),
+      ...pieces.map(({ key, mesh }) => ({ id: mesh.uuid, name: t(`editor.part.${key}`) })),
+    ]);
+    if (!silent) toast.success(t("editor.splitDone"));
+  };
+
+  // Keep the model split across reloads (base baked on the server, model re-fetched…): whenever a
+  // freshly loaded model is back to one body mesh, split it again. Rigged models split on first
+  // load too, since their bone weights make the split reliable.
+  const splitWantedRef = useRef(false);
+  useEffect(() => {
+    const s = sceneRef.current;
+    if (!s) return;
+    const body = [];
+    s.traverse((o) => o.isMesh && !/innerstyle_base/i.test(o.name || "") && body.push(o));
+    if (body.length === 1 && (splitWantedRef.current || body[0].isSkinnedMesh)) autoSplit({ silent: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [parts]);
+
   const resetTransform = () => {
     set({ sx: 1, sy: 1, sz: 1, rx: 0, ry: 0, rz: 0, ox: 0, oy: 0, oz: 0 });
   };
@@ -1592,6 +1653,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
                 setPartColor={setPartColor}
                 selectedId={selectedId}
                 onSelectPart={setSelectedId}
+                onAutoSplit={autoSplit}
               />
             </EditorSection>
 

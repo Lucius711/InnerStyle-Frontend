@@ -14,8 +14,10 @@ import { authApi } from "@/lib/authApi";
  */
 export default function PolicyGate() {
   const { user, refreshUser } = useAuth();
+  // Customers only: an account that also holds ADMIN/STAFF is an operator and skips the gate.
+  const roles = Array.isArray(user?.roles) ? user.roles : [];
   const mustAccept =
-    !!user && Array.isArray(user.roles) && user.roles.includes("USER") && user.policyAccepted === false;
+    roles.includes("USER") && !roles.includes("ADMIN") && !roles.includes("STAFF") && user.policyAccepted === false;
   return mustAccept ? <PolicyDialog version={user.policyVersion} onAccepted={refreshUser} /> : null;
 }
 

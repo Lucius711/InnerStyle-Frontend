@@ -216,6 +216,9 @@ export const api = {
   modelUrl: (id, format = "glb") =>
     `${PREFIX}/tasks/${id}/model?format=${encodeURIComponent(format)}`,
 
+  /** R2-cached animation/rig output (never the expiring Meshy CDN link). */
+  animationUrl: (id, name) => `${PREFIX}/tasks/${id}/animation?name=${encodeURIComponent(name)}`,
+
   /** Public texture proxy URL (same-origin, so the viewer can apply maps the CDN won't CORS). */
   textureUrl: (id, map = "base_color") =>
     `${PREFIX}/tasks/${id}/texture?map=${encodeURIComponent(map)}`,
