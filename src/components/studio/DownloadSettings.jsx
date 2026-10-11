@@ -12,6 +12,7 @@ import { friendly } from "@/lib/messages";
 
 // Formats whose vertices the backend can resize (must match MeshTransformer.supportsResize).
 const RESIZABLE = new Set(["stl", "obj"]);
+const PRINT_FORMATS = new Set(["stl", "obj", "3mf", "ply"]);
 const UNITS = ["cm", "mm"];
 
 // Always-available download formats. GLB is the source; the rest are produced
@@ -111,8 +112,10 @@ export default function DownloadSettings({ task }) {
   const resizable = RESIZABLE.has(format) && serverHas;
   const canResize = resize && resizable && premium;
   // GLB also goes through the browser: Meshy GLBs often only link their colour map by an
-  // expired URL, so the client embeds the shipped base_color map into it.
-  const willConvert = format === "glb" || !serverHas;
+  // expired URL, so the client embeds the shipped base_color map into it. Print formats too
+  // (unless resized server-side): Meshy's native STL/OBJ are ~2 mm tall in a slicer, the
+  // browser export stands them up at a real print height (prepareForPrint).
+  const willConvert = format === "glb" || !serverHas || (PRINT_FORMATS.has(format) && !canResize);
 
   // Picking a format that can't be resized (GLB/3MF/USDZ/PLY) clears any pending resize, so the
   // height value can't linger and silently do nothing — it only ever applies to STL/OBJ.

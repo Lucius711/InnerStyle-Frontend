@@ -41,6 +41,7 @@ import Button from "@/components/ui/Button";
 import SignaturePad from "@/components/three/SignaturePad";
 import { Slider, Segmented, Toggle } from "@/components/ui/FormControls";
 import { export3mf } from "@/lib/export3mf";
+import { prepareForPrint } from "@/lib/modelExport";
 import { splitHumanoid, PART_KEYS } from "@/lib/splitHumanoid";
 import JSZip from "jszip";
 import { useT } from "@/hooks/useI18n";
@@ -1369,19 +1370,16 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
 
     // Patch blob URL — applied to materials that have no map so GLTFExporter can embed it.
     let patchedBlobUrl = null;
-    let restoreUpAxis = false;
+    let undoPrint = null;
 
     try {
       const texBlob = await getTextureBlob(s);
       const texBlobUrl = texBlob ? URL.createObjectURL(texBlob) : null;
 
-      // Slicers (Bambu/Prusa/Orca) use Z-up while three.js is Y-up, so print/mesh formats come out
-      // lying on their side. Rotate the scene +90deg about X (Y-up -> Z-up) so the model stands
-      // upright in the slicer. GLB/USDZ stay Y-up because their viewers expect that.
+      // Slicers are Z-up and read these formats as millimetres: stand the model up and give it a
+      // real print size (see prepareForPrint). GLB/USDZ stay Y-up because their viewers expect that.
       if (fmt === "stl" || fmt === "3mf" || fmt === "obj" || fmt === "ply") {
-        s.rotation.x += Math.PI / 2;
-        s.updateMatrixWorld(true);
-        restoreUpAxis = true;
+        undoPrint = prepareForPrint(s);
       }
 
       // For GLB/GLTF: ensure every material has a map so GLTFExporter embeds the texture.
@@ -1429,10 +1427,7 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
       fail();
     } finally {
       applyRenderModeTo(s, scene.renderMode);
-      if (restoreUpAxis) {
-        s.rotation.x -= Math.PI / 2;
-        s.updateMatrixWorld(true);
-      }
+      if (undoPrint) undoPrint();
       if (baseMesh) {
         s.remove(baseMesh);
         baseMesh.geometry.dispose();

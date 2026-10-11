@@ -11,7 +11,7 @@ const hex2 = (c) => c.toString(16).padStart(2, "0").toUpperCase();
  * (Bambu Studio, PrusaSlicer, Cura). three.js ships no 3MF exporter, so we build
  * the OPC zip package ourselves. Each triangle carries its texture colour through the 3MF
  * Materials extension (m:colorgroup), so multi-colour slicers can map it to filaments,
- * with coordinates kept raw and tagged as millimetres to match the STL/OBJ size.
+ * with coordinates in millimetres (callers run prepareForPrint first so the size is real).
  *
  * @param {THREE.Object3D} root a scene or mesh container
  * @returns {{ data: Uint8Array, type: string }} bytes + mime for download
