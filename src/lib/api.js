@@ -142,6 +142,8 @@ export const api = {
     return postJson("/retexture", clean(req));
   },
   rig: (req) => postJson("/rig", clean(req)),
+  /** AI-repaint my model in its original style (new RETEXTURE task; holes get real detail). */
+  repaint: (id) => request(`${PATH}/tasks/${id}/repaint`, { method: "POST", auth: true }),
   animate: (req) => postJson("/animate", clean(req)),
 
   getTask: (id) => request(`${PATH}/tasks/${id}`, { auth: true }),
