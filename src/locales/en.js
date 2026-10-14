@@ -98,6 +98,10 @@ export const en = {
     vsYesterday: "vs. yesterday",
     total: "Total in range",
     loadFail: "Couldn't load traffic",
+    activeToday: "Active users today",
+    activeAccounts: "Active accounts",
+    visits: "Visits",
+    activeUsers: "Active users",
   },
 
   staff: {
@@ -862,6 +866,7 @@ export const en = {
       },
       apiKeyMissing: "The MeshyAI API key is not configured",
       upstreamError: "The MeshyAI request failed",
+      planRequired: "3D generation is temporarily unavailable. Please try again later — you weren't charged for this attempt.",
       inputRejected:
         "MeshyAI couldn't process this model. For rigging, use a clear single humanoid model (no base/stand) — you weren't charged for this attempt.",
       webhook: {

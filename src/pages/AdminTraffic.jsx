@@ -15,11 +15,14 @@ export default function AdminTraffic() {
   const toast = useToast();
   const [days, setDays] = useState(14);
   const [rows, setRows] = useState(null);
+  const [accounts, setAccounts] = useState(null);
 
   const load = useCallback(async () => {
     setRows(null);
     try {
-      setRows(await adminApi.dailyVisits(days));
+      const [daily, active] = await Promise.all([adminApi.dailyVisits(days), adminApi.activeAccounts()]);
+      setRows(daily);
+      setAccounts(active);
     } catch (err) {
       setRows([]);
       toast.error(t("admin.loadFail"), friendly(err));
@@ -30,11 +33,12 @@ export default function AdminTraffic() {
     load();
   }, [load]);
 
-  const max = Math.max(1, ...(rows || []).map((r) => r.visits));
+  const max = Math.max(1, ...(rows || []).map((r) => Math.max(r.visits, r.activeUsers)));
   const total = (rows || []).reduce((s, r) => s + r.visits, 0);
   const today = rows?.at(-1)?.visits ?? 0;
   const yesterday = rows?.at(-2)?.visits ?? 0;
   const diff = today - yesterday;
+  const activeToday = rows?.at(-1)?.activeUsers ?? 0;
 
   return (
     <div className="mx-auto min-h-screen max-w-5xl px-5 pb-24 pt-28">
@@ -55,7 +59,7 @@ export default function AdminTraffic() {
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <Stat label={t("admin.today")} value={today} />
         <Stat
           label={t("admin.vsYesterday")}
@@ -63,6 +67,8 @@ export default function AdminTraffic() {
           tone={diff >= 0 ? "text-emerald-400" : "text-rose-400"}
         />
         <Stat label={t("admin.total")} value={total} />
+        <Stat label={t("admin.activeToday")} value={activeToday} tone="text-emerald-400" />
+        <Stat label={t("admin.activeAccounts")} value={accounts ?? "–"} />
       </div>
 
       <Card className="mt-6 p-6">
@@ -75,11 +81,18 @@ export default function AdminTraffic() {
             {rows.map((r, i) => (
               <li key={r.date} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
                 <span className="text-[10px] text-app-muted">{r.visits}</span>
-                <div
-                  className={`w-full rounded-t-md ${i === rows.length - 1 ? "bg-brand-violet" : "bg-brand-violet/40"}`}
-                  style={{ height: `${(r.visits / max) * 85}%`, minHeight: 2 }}
-                  title={`${r.date}: ${r.visits}`}
-                />
+                <div className="flex h-full w-full items-end gap-0.5">
+                  <div
+                    className={`flex-1 rounded-t-md ${i === rows.length - 1 ? "bg-brand-violet" : "bg-brand-violet/40"}`}
+                    style={{ height: `${(r.visits / max) * 85}%`, minHeight: 2 }}
+                    title={`${r.date}: ${r.visits} ${t("admin.visits")}`}
+                  />
+                  <div
+                    className="flex-1 rounded-t-md bg-emerald-400/70"
+                    style={{ height: `${(r.activeUsers / max) * 85}%`, minHeight: 2 }}
+                    title={`${r.date}: ${r.activeUsers} ${t("admin.activeUsers")}`}
+                  />
+                </div>
                 <span className="text-[10px] text-app-muted">{r.date.slice(5)}</span>
               </li>
             ))}

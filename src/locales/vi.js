@@ -98,6 +98,10 @@ export const vi = {
     vsYesterday: "So với hôm qua",
     total: "Tổng trong khoảng",
     loadFail: "Không tải được lưu lượng truy cập",
+    activeToday: "User hoạt động hôm nay",
+    activeAccounts: "Tài khoản đang hoạt động",
+    visits: "Lượt truy cập",
+    activeUsers: "User hoạt động",
   },
 
   staff: {
@@ -859,6 +863,7 @@ export const vi = {
       },
       apiKeyMissing: "Chưa cấu hình API key của MeshyAI",
       upstreamError: "Yêu cầu tới MeshyAI thất bại",
+      planRequired: "Dịch vụ tạo mô hình 3D tạm thời không khả dụng. Vui lòng thử lại sau — bạn không bị trừ phí cho lần thử này.",
       inputRejected:
         "MeshyAI không xử lý được mô hình này. Để gắn xương, hãy dùng một mô hình nhân vật (người) rõ ràng, không có đế/chân đế — bạn không bị trừ phí cho lần thử này.",
       webhook: {

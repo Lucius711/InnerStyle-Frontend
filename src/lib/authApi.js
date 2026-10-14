@@ -96,10 +96,11 @@ export const staffApi = {
 // Admin traffic stats (requires ROLE_ADMIN). Returns [{ date: "YYYY-MM-DD", visits }], oldest first.
 export const adminApi = {
   dailyVisits: (days = 14) => request(`/api/admin/visits/daily?days=${days}`, { auth: true }),
+  activeAccounts: () => request("/api/admin/visits/active-accounts", { auth: true }),
 };
 
 // Counts one site visit; the app calls it once per browser session.
-export const trackVisit = () => request("/api/common/visits", { method: "POST" });
+export const trackVisit = () => request("/api/common/visits", { method: "POST", auth: true });
 
 export const membershipApi = {
   me: () => request("/api/user/membership/me", { auth: true }),
