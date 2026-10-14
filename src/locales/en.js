@@ -98,10 +98,11 @@ export const en = {
     vsYesterday: "vs. yesterday",
     total: "Total in range",
     loadFail: "Couldn't load traffic",
-    activeToday: "Active users today",
+    online: "Online now",
+    newToday: "New accounts today",
     activeAccounts: "Active accounts",
     visits: "Visits",
-    activeUsers: "Active users",
+    newUsers: "New accounts",
   },
 
   staff: {

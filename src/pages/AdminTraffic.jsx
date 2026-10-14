@@ -16,13 +16,19 @@ export default function AdminTraffic() {
   const [days, setDays] = useState(14);
   const [rows, setRows] = useState(null);
   const [accounts, setAccounts] = useState(null);
+  const [online, setOnline] = useState(null);
 
   const load = useCallback(async () => {
     setRows(null);
     try {
-      const [daily, active] = await Promise.all([adminApi.dailyVisits(days), adminApi.activeAccounts()]);
+      const [daily, active, onl] = await Promise.all([
+        adminApi.dailyVisits(days),
+        adminApi.activeAccounts(),
+        adminApi.onlineUsers(),
+      ]);
       setRows(daily);
       setAccounts(active);
+      setOnline(onl);
     } catch (err) {
       setRows([]);
       toast.error(t("admin.loadFail"), friendly(err));
@@ -33,12 +39,12 @@ export default function AdminTraffic() {
     load();
   }, [load]);
 
-  const max = Math.max(1, ...(rows || []).map((r) => Math.max(r.visits, r.activeUsers)));
+  const max = Math.max(1, ...(rows || []).map((r) => Math.max(r.visits, r.newUsers)));
   const total = (rows || []).reduce((s, r) => s + r.visits, 0);
   const today = rows?.at(-1)?.visits ?? 0;
   const yesterday = rows?.at(-2)?.visits ?? 0;
   const diff = today - yesterday;
-  const activeToday = rows?.at(-1)?.activeUsers ?? 0;
+  const newToday = rows?.at(-1)?.newUsers ?? 0;
 
   return (
     <div className="mx-auto min-h-screen max-w-5xl px-5 pb-24 pt-28">
@@ -59,7 +65,7 @@ export default function AdminTraffic() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
         <Stat label={t("admin.today")} value={today} />
         <Stat
           label={t("admin.vsYesterday")}
@@ -67,7 +73,8 @@ export default function AdminTraffic() {
           tone={diff >= 0 ? "text-emerald-400" : "text-rose-400"}
         />
         <Stat label={t("admin.total")} value={total} />
-        <Stat label={t("admin.activeToday")} value={activeToday} tone="text-emerald-400" />
+        <Stat label={t("admin.online")} value={online ?? "–"} tone="text-emerald-400" />
+        <Stat label={t("admin.newToday")} value={newToday} tone="text-sky-400" />
         <Stat label={t("admin.activeAccounts")} value={accounts ?? "–"} />
       </div>
 
@@ -89,8 +96,8 @@ export default function AdminTraffic() {
                   />
                   <div
                     className="flex-1 rounded-t-md bg-emerald-400/70"
-                    style={{ height: `${(r.activeUsers / max) * 85}%`, minHeight: 2 }}
-                    title={`${r.date}: ${r.activeUsers} ${t("admin.activeUsers")}`}
+                    style={{ height: `${(r.newUsers / max) * 85}%`, minHeight: 2 }}
+                    title={`${r.date}: ${r.newUsers} ${t("admin.newUsers")}`}
                   />
                 </div>
                 <span className="text-[10px] text-app-muted">{r.date.slice(5)}</span>

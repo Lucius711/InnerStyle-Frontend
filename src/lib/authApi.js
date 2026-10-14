@@ -97,10 +97,14 @@ export const staffApi = {
 export const adminApi = {
   dailyVisits: (days = 14) => request(`/api/admin/visits/daily?days=${days}`, { auth: true }),
   activeAccounts: () => request("/api/admin/visits/active-accounts", { auth: true }),
+  onlineUsers: () => request("/api/admin/visits/online", { auth: true }),
 };
 
 // Counts one site visit; the app calls it once per browser session.
 export const trackVisit = () => request("/api/common/visits", { method: "POST", auth: true });
+
+// Presence ping while signed in; the backend counts users seen in the last 2 minutes as online.
+export const heartbeat = () => request("/api/common/visits/heartbeat", { method: "POST", auth: true });
 
 export const membershipApi = {
   me: () => request("/api/user/membership/me", { auth: true }),

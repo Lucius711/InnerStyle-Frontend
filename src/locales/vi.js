@@ -98,10 +98,11 @@ export const vi = {
     vsYesterday: "So với hôm qua",
     total: "Tổng trong khoảng",
     loadFail: "Không tải được lưu lượng truy cập",
-    activeToday: "User hoạt động hôm nay",
+    online: "Đang online",
+    newToday: "Tài khoản mới hôm nay",
     activeAccounts: "Tài khoản đang hoạt động",
     visits: "Lượt truy cập",
-    activeUsers: "User hoạt động",
+    newUsers: "Tài khoản mới",
   },
 
   staff: {

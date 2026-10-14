@@ -17,7 +17,7 @@ import { ToastProvider } from "@/hooks/useToast";
 import { ConfirmProvider } from "@/hooks/useConfirm";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { I18nProvider, useT } from "@/hooks/useI18n";
-import { AuthProvider } from "@/hooks/useAuth";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import StaffRoute from "@/components/auth/StaffRoute";
 import PolicyGate from "@/components/auth/PolicyGate";
@@ -28,7 +28,7 @@ import Login from "@/pages/Login";
 import OauthCallback from "@/pages/OauthCallback";
 import Profile from "@/pages/Profile";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
-import { trackVisit } from "@/lib/authApi";
+import { heartbeat, trackVisit } from "@/lib/authApi";
 
 // Heavy / authenticated routes are code-split so the marketing Landing page doesn't ship
 // three.js, recharts, the studio forms, etc. in the initial bundle.
@@ -219,14 +219,26 @@ function NotFound() {
 function Shell() {
   const { pathname } = useLocation();
   const bare = pathname.startsWith("/ar/");
+  const { user, loading } = useAuth();
+  const userId = user?.id;
   useEffect(() => {
-    // One visit per browser session; storage can throw in private mode, so best-effort.
+    // One visit per browser session *per identity*, so signing in re-logs the visit with the
+    // user id. Storage can throw in private mode, so best-effort.
+    if (loading) return;
+    const key = `innerstyle.visited:${userId ?? "guest"}`;
     try {
-      if (sessionStorage.getItem("innerstyle.visited")) return;
-      sessionStorage.setItem("innerstyle.visited", "1");
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, "1");
     } catch {}
     trackVisit().catch(() => {});
-  }, []);
+  }, [loading, userId]);
+  useEffect(() => {
+    if (!userId) return;
+    const ping = () => !document.hidden && heartbeat().catch(() => {});
+    ping();
+    const id = setInterval(ping, 60_000);
+    return () => clearInterval(id);
+  }, [userId]);
   return (
     <>
       {!bare && <AnimatedBackground />}
