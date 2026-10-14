@@ -102,6 +102,7 @@ export default function PrintOrders() {
                 </div>
                 <p className="mt-1 text-xs text-app-faint">
                   {new Date(o.createdAt).toLocaleString()}
+                  {o.sizeCm ? ` · ${o.sizeCm} cm` : ""}{o.material ? ` · ${o.material}` : ""}
                   {o.note ? ` · ${o.note}` : ""}
                 </p>
               </div>

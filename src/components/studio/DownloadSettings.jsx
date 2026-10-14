@@ -18,7 +18,7 @@ const UNITS = ["cm", "mm"];
 // Always-available download formats. GLB is the source; the rest are produced
 // in-browser from the GLB when the server didn't generate them natively.
 // 3MF is the standard slicer format (Bambu Studio, PrusaSlicer, Cura).
-const DOWNLOAD_FORMATS = ["bundle", "glb", "obj", "stl", "3mf", "usdz", "ply"];
+const DOWNLOAD_FORMATS = ["glb", "obj", "stl", "3mf", "usdz", "ply"];
 
 
 function triggerDownload(data, type, filename) {
@@ -71,7 +71,7 @@ async function fetchTextureFiles(task) {
  * resized server-side for STL/OBJ on premium); the rest are converted in-browser from GLB.
  */
 export default function DownloadSettings({ task }) {
-  const { t, tServer } = useI18n();
+  const { t } = useI18n();
   const toast = useToast();
 
   // Formats the backend actually has on file for this task.
@@ -87,7 +87,7 @@ export default function DownloadSettings({ task }) {
   }, [task.textureUrls]);
 
   // Default: the print pack, so a new user downloads something they can print right away.
-  const [format, setFormat] = useState("bundle");
+  const [format, setFormat] = useState("glb");
   const [resize, setResize] = useState(false);
   const [height, setHeight] = useState("10");
   const [unit, setUnit] = useState("cm");
@@ -155,7 +155,7 @@ export default function DownloadSettings({ task }) {
       const blob = await api.exportModel(task.id, { format, heightMm, origin });
       triggerDownload(blob, "application/zip", `innerstyle-model-${task.id.slice(0, 8)}.zip`);
     } catch (err) {
-      toast.error(t("studio.downloadFailTitle"), tServer(err.message) || friendly(err));
+      toast.error(t("studio.downloadFailTitle"), friendly(err));
     } finally {
       setBusy(false);
     }
@@ -245,10 +245,10 @@ export default function DownloadSettings({ task }) {
         <SelectMenu
           value={format}
           onChange={setFormat}
-          options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f === "bundle" ? t("studio.bundleFormat") : f.toUpperCase() }))}
+          options={DOWNLOAD_FORMATS.map((f) => ({ value: f, label: f.toUpperCase() }))}
           searchable={false}
         />
-        {willConvert && format !== "glb" && format !== "bundle" && (
+        {willConvert && format !== "glb" && (
           <p className="mt-1.5 text-[11px] text-app-faint">{t("studio.convertNote")}</p>
         )}
         {format === "stl" && hasTextures && (

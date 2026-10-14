@@ -61,6 +61,15 @@ export const vi = {
     email: "Email",
     size : "Kích cỡ",
     sizeHint : "Chọn kích cỡ phù hợp (8, 10, 15cm)",
+    material: "Loại nhựa",
+    materialHint: "Giá mẫu — cộng thêm vào giá theo kích cỡ",
+    materialBase: "Giá gốc",
+    materials: {
+      PLA: "Phổ biến, bền, bề mặt hơi có vân lớp",
+      PETG: "Dẻo dai, chịu nhiệt, bóng hơn PLA",
+      RESIN: "Siêu chi tiết, mịn — hợp mặt & tóc",
+    },
+    total: "Tạm tính",
     province: "Tỉnh / Thành phố",
     ward: "Phường / Xã",
     selectProvince: "Chọn tỉnh/thành",
@@ -844,13 +853,101 @@ export const vi = {
   },
 
   server: {
-    auth: { policy: { versionMismatch: "Phiên bản chính sách đã thay đổi, vui lòng tải lại trang và xác nhận lại." } },
+    user: {
+      notFound: "Không tìm thấy tài khoản.",
+    },
+    rateLimit: {
+      exceeded: "Bạn thao tác quá nhanh. Vui lòng đợi một chút rồi thử lại.",
+    },
+    membership: {
+      notFound: "Bạn chưa có gói thành viên.",
+      plan: {
+        notFound: "Không tìm thấy gói thành viên.",
+        notPayable: "Gói này miễn phí, không cần thanh toán.",
+      },
+    },
+    payment: {
+      orderCode: {
+        generationFailed: "Không tạo được mã thanh toán. Vui lòng thử lại.",
+      },
+      payos: {
+        createFailed: "Không tạo được thanh toán payOS. Vui lòng thử lại.",
+        notConfigured: "Cổng thanh toán payOS chưa được cấu hình.",
+        unavailable: "Cổng thanh toán payOS đang gián đoạn. Vui lòng thử lại sau.",
+      },
+    },
+    print: {
+      size: {
+        invalid: "Kích cỡ in không hợp lệ.",
+      },
+      material: {
+        invalid: "Loại nhựa không hợp lệ.",
+      },
+      task: {
+        notOwned: "Bạn chỉ có thể đặt in model của chính mình.",
+        notReady: "Model chưa tạo xong nên chưa thể đặt in.",
+      },
+      order: {
+        notFound: "Không tìm thấy đơn in.",
+        notPending: "Đơn in này không còn chờ thanh toán.",
+      },
+    },
+    staff: {
+      order: {
+        noModel: "Đơn này không có model để tải.",
+      },
+    },
+    storage: {
+      object: {
+        notFound: "Không tìm thấy file.",
+      },
+      unavailable: "Kho lưu trữ đang gián đoạn. Vui lòng thử lại sau.",
+    },
+    mesh: {
+      opFailed: "Xử lý model thất bại. Vui lòng thử lại.",
+      opTimeout: "Xử lý model quá lâu nên đã dừng. Hãy thử model nhỏ hơn.",
+      outOfMemory: "Model quá lớn để xử lý. Hãy thử model nhỏ hơn.",
+      repairFailed: "Không sửa được model để in.",
+      repairTimeout: "Sửa model quá lâu nên đã dừng. Vui lòng thử lại.",
+      toolMissing: "Công cụ xử lý model chưa được cài trên máy chủ.",
+    },
+    auth: {
+      policy: { versionMismatch: "Phiên bản chính sách đã thay đổi, vui lòng tải lại trang và xác nhận lại." },
+      forbidden: "Bạn không có quyền thực hiện thao tác này.",
+      unauthorized: "Vui lòng đăng nhập để tiếp tục.",
+      refresh: {
+        invalid: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      },
+      social: {
+        invalidToken: "Đăng nhập mạng xã hội không hợp lệ. Vui lòng thử lại.",
+        invalidAudience: "Đăng nhập mạng xã hội không hợp lệ cho ứng dụng này.",
+        tooManyNewAccounts: "Có quá nhiều tài khoản mới được tạo từ mạng này. Vui lòng thử lại sau.",
+        unconfigured: "Phương thức đăng nhập này chưa được bật.",
+        unsupportedProvider: "Phương thức đăng nhập không được hỗ trợ.",
+      },
+    },
     common: {
       serverError: "Lỗi máy chủ nội bộ",
       invalidReference: "Tham chiếu không hợp lệ",
     },
     meshy: {
+      base: {
+        none: "Model này không có đế để gỡ.",
+      },
+      model: {
+        empty: "File model trống hoặc không tải được.",
+      },
+      thumbnail: {
+        empty: "Ảnh xem trước trống hoặc không tải được.",
+      },
+      usdz: {
+        empty: "File USDZ trống hoặc không tải được.",
+      },
       task: {
+        expired: "Model này đã hết hạn lưu trữ và không còn tải được.",
+        purgedByMeshy: "Model đã bị MeshyAI xoá và không còn khả dụng.",
+        noModelToContinue: "Không có file model để tiếp tục thao tác.",
+        noOriginalBackup: "Không có bản gốc để khôi phục.",
         created: "Tạo tác vụ 3D thành công",
         found: "Lấy tác vụ 3D thành công",
         notFound: "Không tìm thấy tác vụ 3D",
@@ -872,11 +969,117 @@ export const vi = {
         received: "Đã xử lý webhook",
       },
     },
+    credit: { insufficient: "Không đủ credit. Vui lòng nạp thêm hoặc nâng cấp gói." },
     moderation: {
       imageBlocked: "Ảnh có nội dung nhạy cảm / khiêu dâm nên không thể dùng để tạo model.",
       textBlocked: "Mô tả chứa nội dung vi phạm tiêu chuẩn cộng đồng nên không thể tạo model.",
     },
     validation: {
+      model: {
+        required: "Cần tải lên file model.",
+        readFailed: "Không đọc được file model đã tải lên.",
+        unsupportedType: "Định dạng model không hỗ trợ (chỉ .glb, .gltf, .obj, .fbx, .stl).",
+      },
+      images: {
+        count: "Cần từ 1 đến 4 ảnh.",
+      },
+      taskId: {
+        required: "Thiếu model cần xử lý.",
+      },
+      sizeCm: {
+        required: "Vui lòng chọn kích cỡ.",
+      },
+      material: {
+        required: "Vui lòng chọn loại nhựa.",
+      },
+      provider: {
+        required: "Vui lòng chọn phương thức thanh toán.",
+        invalid: "Phương thức thanh toán không hợp lệ.",
+      },
+      planCode: {
+        required: "Vui lòng chọn gói.",
+        invalid: "Gói không hợp lệ.",
+      },
+      recipientName: {
+        required: "Vui lòng nhập họ tên người nhận.",
+        tooLong: "Họ tên tối đa 255 ký tự.",
+      },
+      recipientEmail: {
+        required: "Vui lòng nhập email.",
+        invalid: "Email không hợp lệ.",
+        tooLong: "Email tối đa 255 ký tự.",
+      },
+      recipientPhone: {
+        required: "Vui lòng nhập số điện thoại.",
+        invalid: "Số điện thoại không hợp lệ (8–20 chữ số).",
+      },
+      provinceCode: {
+        required: "Vui lòng chọn tỉnh/thành.",
+        tooLong: "Mã tỉnh/thành không hợp lệ.",
+      },
+      provinceName: {
+        required: "Vui lòng chọn tỉnh/thành.",
+        tooLong: "Tên tỉnh/thành quá dài.",
+      },
+      wardCode: {
+        required: "Vui lòng chọn phường/xã.",
+        tooLong: "Mã phường/xã không hợp lệ.",
+      },
+      wardName: {
+        required: "Vui lòng chọn phường/xã.",
+        tooLong: "Tên phường/xã quá dài.",
+      },
+      addressDetail: {
+        required: "Vui lòng nhập địa chỉ chi tiết.",
+        tooLong: "Địa chỉ chi tiết tối đa 500 ký tự.",
+      },
+      latitude: {
+        invalid: "Vị trí ghim trên bản đồ không hợp lệ.",
+      },
+      longitude: {
+        invalid: "Vị trí ghim trên bản đồ không hợp lệ.",
+      },
+      note: {
+        tooLong: "Ghi chú tối đa 500 ký tự.",
+      },
+      status: {
+        required: "Vui lòng chọn trạng thái.",
+        invalid: "Trạng thái đơn không hợp lệ.",
+      },
+      refreshToken: {
+        required: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+      },
+      policyVersion: {
+        required: "Thiếu phiên bản chính sách. Vui lòng tải lại trang.",
+      },
+      baseShape: {
+        invalid: "Kiểu đế phải là tròn, vuông hoặc lục giác.",
+      },
+      baseHeight: {
+        range: "Độ cao đế phải từ 0,01 đến 0,5.",
+      },
+      baseMargin: {
+        range: "Lề đế phải từ 0 đến 1.",
+      },
+      baseColor: {
+        invalid: "Màu đế phải là mã hex, ví dụ #A1B2C3.",
+      },
+      signatureText: {
+        size: "Chữ ký tối đa 40 ký tự.",
+        invalid: "Chữ ký chỉ được dùng chữ, số và . , ' & _ -",
+      },
+      signatureStrokes: {
+        size: "Chữ ký vẽ tay quá nhiều nét (tối đa 400).",
+      },
+      signatureStroke: {
+        size: "Một nét chữ ký quá dài.",
+      },
+      signaturePenWidth: {
+        range: "Độ dày nét phải từ 0,01 đến 0,2.",
+      },
+      signatureDepth: {
+        range: "Độ sâu chữ ký phải từ 0,1 đến 0,8.",
+      },
       content: { blocked: "Nội dung vi phạm tiêu chuẩn cộng đồng nên không thể tạo model." },
       image: {
         required: "Cần cung cấp ảnh (URL, data URI hoặc file upload)",

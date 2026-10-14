@@ -356,10 +356,10 @@ export default function ModelViewer({ url, thumbnailUrl, baseColorUrl, className
                 alpha: true,
                 preserveDrawingBuffer: true,
                 toneMapping: THREE.ACESFilmicToneMapping,
-                toneMappingExposure: 1.05,
+                toneMappingExposure: 1.35,
               }}
             >
-              <ambientLight intensity={0.45} />
+              <ambientLight intensity={0.6} />
               <directionalLight position={[4, 6, 5]} intensity={1.1} castShadow shadow-mapSize={[1024, 1024]} />
               <directionalLight position={[-5, 3, -4]} intensity={0.5} />
               <hemisphereLight args={["#ffffff", "#3a4156", 0.35]} />

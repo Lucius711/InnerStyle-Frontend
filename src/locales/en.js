@@ -61,6 +61,15 @@ export const en = {
     email: "Email",
     size: "Size",
     sizeHint: "Choose the appropriate size (8, 10, 15cm)",
+    material: "Plastic",
+    materialHint: "Sample prices — added on top of the size price",
+    materialBase: "Base price",
+    materials: {
+      PLA: "Common and durable, slight visible layer lines",
+      PETG: "Tough, heat-resistant, glossier than PLA",
+      RESIN: "Ultra-fine detail, smooth — best for faces & hair",
+    },
+    total: "Subtotal",
     province: "Province / City",
     ward: "Ward / Commune",
     selectProvince: "Select a province",
@@ -847,13 +856,101 @@ export const en = {
   },
 
   server: {
-    auth: { policy: { versionMismatch: "The policy version has changed. Please reload the page and accept again." } },
+    user: {
+      notFound: "Account not found.",
+    },
+    rateLimit: {
+      exceeded: "Too many requests. Please wait a moment and try again.",
+    },
+    membership: {
+      notFound: "You don't have a membership yet.",
+      plan: {
+        notFound: "Membership plan not found.",
+        notPayable: "This plan is free and can't be paid for.",
+      },
+    },
+    payment: {
+      orderCode: {
+        generationFailed: "Couldn't create a payment code. Please try again.",
+      },
+      payos: {
+        createFailed: "Couldn't create the payOS payment. Please try again.",
+        notConfigured: "The payOS gateway isn't configured.",
+        unavailable: "payOS is unavailable right now. Please try again later.",
+      },
+    },
+    print: {
+      size: {
+        invalid: "Invalid print size.",
+      },
+      material: {
+        invalid: "Invalid plastic type.",
+      },
+      task: {
+        notOwned: "You can only order prints of your own models.",
+        notReady: "This model isn't finished yet, so it can't be printed.",
+      },
+      order: {
+        notFound: "Print order not found.",
+        notPending: "This print order is no longer awaiting payment.",
+      },
+    },
+    staff: {
+      order: {
+        noModel: "This order has no model attached.",
+      },
+    },
+    storage: {
+      object: {
+        notFound: "File not found.",
+      },
+      unavailable: "Storage is unavailable right now. Please try again later.",
+    },
+    mesh: {
+      opFailed: "Model processing failed. Please try again.",
+      opTimeout: "Model processing timed out. Try a smaller model.",
+      outOfMemory: "The model is too large to process. Try a smaller one.",
+      repairFailed: "Couldn't repair the model for printing.",
+      repairTimeout: "Model repair timed out. Please try again.",
+      toolMissing: "The model-processing tool isn't installed on the server.",
+    },
+    auth: {
+      policy: { versionMismatch: "The policy version has changed. Please reload the page and accept again." },
+      forbidden: "You don't have permission to do that.",
+      unauthorized: "Please sign in to continue.",
+      refresh: {
+        invalid: "Your session has expired. Please sign in again.",
+      },
+      social: {
+        invalidToken: "Social sign-in failed. Please try again.",
+        invalidAudience: "This social sign-in isn't valid for this app.",
+        tooManyNewAccounts: "Too many new accounts from this network. Please try again later.",
+        unconfigured: "This sign-in method isn't enabled yet.",
+        unsupportedProvider: "Unsupported sign-in provider.",
+      },
+    },
     common: {
       serverError: "Internal server error",
       invalidReference: "Invalid reference",
     },
     meshy: {
+      base: {
+        none: "This model has no base to remove.",
+      },
+      model: {
+        empty: "The model file is empty or couldn't be loaded.",
+      },
+      thumbnail: {
+        empty: "The preview image is empty or couldn't be loaded.",
+      },
+      usdz: {
+        empty: "The USDZ file is empty or couldn't be loaded.",
+      },
       task: {
+        expired: "This model has expired and can no longer be downloaded.",
+        purgedByMeshy: "This model was removed by MeshyAI and is no longer available.",
+        noModelToContinue: "There's no model file to continue from.",
+        noOriginalBackup: "There's no original version to restore.",
         created: "3D task created successfully",
         found: "3D task retrieved successfully",
         notFound: "3D task not found",
@@ -875,11 +972,117 @@ export const en = {
         received: "Webhook processed",
       },
     },
+    credit: { insufficient: "Not enough credits. Please top up or upgrade your plan." },
     moderation: {
       imageBlocked: "This image looks explicit / NSFW and can't be used to create a model.",
       textBlocked: "Your description violates the community guidelines and can't be used.",
     },
     validation: {
+      model: {
+        required: "Please upload a model file.",
+        readFailed: "Couldn't read the uploaded model file.",
+        unsupportedType: "Unsupported model format (only .glb, .gltf, .obj, .fbx, .stl).",
+      },
+      images: {
+        count: "Provide 1 to 4 images.",
+      },
+      taskId: {
+        required: "The model is missing.",
+      },
+      sizeCm: {
+        required: "Please choose a size.",
+      },
+      material: {
+        required: "Please choose a plastic type.",
+      },
+      provider: {
+        required: "Please choose a payment method.",
+        invalid: "Invalid payment method.",
+      },
+      planCode: {
+        required: "Please choose a plan.",
+        invalid: "Invalid plan.",
+      },
+      recipientName: {
+        required: "Please enter the recipient's name.",
+        tooLong: "Name must be at most 255 characters.",
+      },
+      recipientEmail: {
+        required: "Please enter an email.",
+        invalid: "Invalid email address.",
+        tooLong: "Email must be at most 255 characters.",
+      },
+      recipientPhone: {
+        required: "Please enter a phone number.",
+        invalid: "Invalid phone number (8–20 digits).",
+      },
+      provinceCode: {
+        required: "Please choose a province/city.",
+        tooLong: "Invalid province code.",
+      },
+      provinceName: {
+        required: "Please choose a province/city.",
+        tooLong: "Province name is too long.",
+      },
+      wardCode: {
+        required: "Please choose a ward/commune.",
+        tooLong: "Invalid ward code.",
+      },
+      wardName: {
+        required: "Please choose a ward/commune.",
+        tooLong: "Ward name is too long.",
+      },
+      addressDetail: {
+        required: "Please enter the street address.",
+        tooLong: "Address must be at most 500 characters.",
+      },
+      latitude: {
+        invalid: "Invalid map location.",
+      },
+      longitude: {
+        invalid: "Invalid map location.",
+      },
+      note: {
+        tooLong: "Note must be at most 500 characters.",
+      },
+      status: {
+        required: "Please choose a status.",
+        invalid: "Invalid order status.",
+      },
+      refreshToken: {
+        required: "Your session has expired. Please sign in again.",
+      },
+      policyVersion: {
+        required: "Policy version is missing. Please reload the page.",
+      },
+      baseShape: {
+        invalid: "Base shape must be cylinder, square or hexagon.",
+      },
+      baseHeight: {
+        range: "Base height must be between 0.01 and 0.5.",
+      },
+      baseMargin: {
+        range: "Base margin must be between 0 and 1.",
+      },
+      baseColor: {
+        invalid: "Base colour must be a hex code, e.g. #A1B2C3.",
+      },
+      signatureText: {
+        size: "Signature must be at most 40 characters.",
+        invalid: "Signature may only use letters, numbers and . , ' & _ -",
+      },
+      signatureStrokes: {
+        size: "Hand-drawn signature has too many strokes (max 400).",
+      },
+      signatureStroke: {
+        size: "A signature stroke is too long.",
+      },
+      signaturePenWidth: {
+        range: "Pen width must be between 0.01 and 0.2.",
+      },
+      signatureDepth: {
+        range: "Signature depth must be between 0.1 and 0.8.",
+      },
       content: { blocked: "This content violates the community guidelines and can't be used." },
       image: {
         required: "An image (URL, data URI, or uploaded file) is required",

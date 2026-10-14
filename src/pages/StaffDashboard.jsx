@@ -236,7 +236,7 @@ export default function StaffDashboard() {
                         <span className="text-xs text-app-faint">#{o.id.slice(0, 8)}</span>
                       </div>
                       <p className="mt-1 text-xs text-app-faint">
-                        {new Date(o.createdAt).toLocaleString()} · {vnd.format(o.amount)}
+                        {new Date(o.createdAt).toLocaleString()} · {vnd.format(o.amount)}{o.sizeCm ? ` · ${o.sizeCm} cm` : ""}{o.material ? ` · ${o.material}` : ""}
                       </p>
                     </div>
                   </div>

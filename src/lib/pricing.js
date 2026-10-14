@@ -16,6 +16,16 @@ export const PRINT_SIZES = [
   { cm: 15, price: 849000 },
 ];
 
+/**
+ * Plastic options and their surcharge (VND) on top of the size price. FALLBACK ONLY, same as
+ * PRINT_SIZES: the backend (app.print.materials) is the source of truth and re-prices every order.
+ */
+export const PRINT_MATERIALS = [
+  { code: "PLA", name: "PLA", surcharge: 0 },
+  { code: "PETG", name: "PETG", surcharge: 50000 },
+  { code: "RESIN", name: "Resin", surcharge: 150000 },
+];
+
 let printPricingCache = null;
 
 /**

@@ -1,3 +1,6 @@
+import { en } from "@/locales/en";
+import { vi } from "@/locales/vi";
+
 // Maps stable backend message codes to friendly text. Falls back to the raw message.
 const MAP = {
   "auth.invalidCredentials": "Incorrect username or password.",
@@ -31,12 +34,25 @@ const MAP = {
   "validation.style.required": "Add a style prompt or a style image.",
 };
 
+/** Translate a backend code via the locale `server.*` dicts, in the language I18nProvider set on <html lang>. */
+function serverText(code) {
+  if (!code || typeof code !== "string") return undefined;
+  const get = (dict) => code.split(".").reduce((acc, key) => (acc == null ? undefined : acc[key]), dict.server);
+  const dict = typeof document !== "undefined" && document.documentElement.lang === "en" ? en : vi;
+  const val = get(dict) ?? get(en);
+  return typeof val === "string" ? val : undefined;
+}
+
 export function friendly(err) {
   const code = err && (err.message || "");
+  const translated = serverText(code);
+  if (translated) return translated;
   if (code && MAP[code]) return MAP[code];
   // Field validation envelope: surface the first field message if present.
   if (err && err.fields && typeof err.fields === "object") {
     const first = Object.values(err.fields)[0];
+    const firstText = serverText(first);
+    if (firstText) return firstText;
     if (first && MAP[first]) return MAP[first];
     if (first) return String(first);
   }

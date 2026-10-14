@@ -6,7 +6,7 @@ import Button from "@/components/ui/Button";
 import { Field, TextInput, TextArea, SelectMenu } from "@/components/ui/FormControls";
 import MapPicker from "@/components/maps/MapPicker";
 import { fetchProvinces, fetchWards } from "@/lib/locationApi";
-import { vnd, PRINT_SIZES, printPriceFor } from "@/lib/pricing";
+import { vnd, PRINT_SIZES, PRINT_MATERIALS, printPriceFor } from "@/lib/pricing";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
@@ -26,6 +26,7 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
     recipientEmail: "",
     recipientPhone: "",
     sizeCm: 12,
+    material: "PLA",
     provinceCode: "",
     wardCode: "",
     addressDetail: "",
@@ -104,6 +105,7 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
     onSubmit({
       provider: "PAYOS",
       sizeCm: form.sizeCm,
+      material: form.material,
       recipientName: form.recipientName.trim(),
       recipientEmail: form.recipientEmail.trim(),
       recipientPhone: form.recipientPhone.trim(),
@@ -195,6 +197,45 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
                     );
                   })}
                 </div>
+              </Field>
+
+              <Field label={t("shipping.material")} hint={t("shipping.materialHint")}>
+                <div className="grid grid-cols-3 gap-2">
+                  {PRINT_MATERIALS.map((m) => {
+                    const active = form.material === m.code;
+                    return (
+                      <button
+                        key={m.code}
+                        type="button"
+                        aria-pressed={active}
+                        onClick={() => setForm((f) => ({ ...f, material: m.code }))}
+                        className={
+                          "flex flex-col items-center rounded-xl border px-2 py-2.5 text-center transition-colors " +
+                          (active
+                            ? "border-brand-violet bg-brand-violet/10 text-app-text"
+                            : "border-app-line/15 text-app-muted hover:bg-app-line/5")
+                        }
+                      >
+                        <span className="text-sm font-semibold">{m.name}</span>
+                        <span className="mt-0.5 text-[11px] text-app-faint">
+                          {m.surcharge ? `+${vnd.format(m.surcharge)}` : t("shipping.materialBase")}
+                        </span>
+                        <span className="mt-1 text-[10px] leading-tight text-app-faint">
+                          {t(`shipping.materials.${m.code}`)}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-sm text-app-muted">
+                  {t("shipping.total")}:{" "}
+                  <span className="font-semibold text-app-text">
+                    {vnd.format(
+                      (printPriceFor(form.sizeCm) || 0) +
+                        (PRINT_MATERIALS.find((m) => m.code === form.material)?.surcharge || 0)
+                    )}
+                  </span>
+                </p>
               </Field>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
