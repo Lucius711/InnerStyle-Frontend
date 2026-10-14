@@ -147,7 +147,7 @@ function ProcessedModel({ scene, animations, baseColorUrl, mode, clip, playing, 
         mats.forEach((m) => {
           if (!m) return;
           m.side = THREE.DoubleSide;
-          if ("envMapIntensity" in m) m.envMapIntensity = 1.5;
+          if ("envMapIntensity" in m) m.envMapIntensity = 1.8;
           if (m.map) {
             m.map.anisotropy = 8;
             m.map.colorSpace = THREE.SRGBColorSpace;
@@ -156,7 +156,7 @@ function ProcessedModel({ scene, animations, baseColorUrl, mode, clip, playing, 
             // Lift dark base-color textures slightly so the model reads bright by default.
             m.emissive = m.color ? m.color.clone() : new THREE.Color("#ffffff");
             m.emissiveMap = m.map;
-            m.emissiveIntensity = 0.18;
+            m.emissiveIntensity = 0.35;
           }
           m.needsUpdate = true;
         });
