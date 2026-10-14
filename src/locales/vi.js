@@ -577,6 +577,7 @@ export const vi = {
       p4: "Đang hoàn thiện mô hình",
     },
     takesTime: "Thường mất 1–3 phút",
+    takesTimeFigure: "Thường mất 5–7 phút",
     retryBuild: "Thử dựng lại mô hình 3D",
     credits: "{n} tín dụng",
     modelReady: "Mô hình sẵn sàng",

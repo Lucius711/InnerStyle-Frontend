@@ -16,10 +16,15 @@ export default function TaskProgress({ task, startedAt }) {
 
   const status = task?.status || "PENDING";
   const meta = STATUS_META[status] || STATUS_META.PENDING;
-  const progress = Math.max(
+  const isFigure = task?.taskType?.startsWith("FIGURE_");
+  // Meshy reports coarse progress (figure tasks sit at 5% for minutes, then jump to 100%), so
+  // ease an elapsed-time estimate toward 90% and show whichever is higher; 100% only comes from Meshy.
+  const estimate = status === "SUCCEEDED" ? 0 : 90 * (1 - Math.exp(-elapsed / (isFigure ? 150 : 60)));
+  const progress = Math.round(Math.max(
     task?.progress || 0,
-    status === "PENDING" ? 3 : 0
-  );
+    status === "PENDING" ? 3 : 0,
+    estimate
+  ));
 
   const phases = [
     t("studio.phases.p0"),
@@ -123,7 +128,7 @@ export default function TaskProgress({ task, startedAt }) {
         >
           {phases[phaseIndex]}…
         </motion.p>
-        <p className="text-xs text-app-faint">{t("studio.takesTime")}</p>
+        <p className="text-xs text-app-faint">{t(isFigure ? "studio.takesTimeFigure" : "studio.takesTime")}</p>
 
         {/* stepped phase dots */}
         <div className="mt-1 flex items-center gap-1.5">

@@ -578,6 +578,7 @@ export const en = {
       p4: "Finalizing your model",
     },
     takesTime: "This usually takes 1–3 minutes",
+    takesTimeFigure: "This usually takes 5–7 minutes",
     retryBuild: "Retry building the 3D model",
     credits: "{n} credits",
     modelReady: "Model ready",
