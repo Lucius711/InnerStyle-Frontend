@@ -30,7 +30,7 @@ import { friendly } from "@/lib/messages";
  * Fetch a staff-authed image URL and return a blob: URL the browser can load.
  * Needed because <img> doesn't send Authorization headers.
  */
-function useAuthedImage(orderId) {
+function useAuthedImage(orderId, isPair = false) {
   const [blobUrl, setBlobUrl] = useState(null);
   useEffect(() => {
     if (!orderId) return;
@@ -39,7 +39,7 @@ function useAuthedImage(orderId) {
     // Go through authedFetch so a stale access token is transparently refreshed
     // (raw fetch here was the source of the 401s). 204/404 (no thumbnail) just
     // leaves the placeholder icon in place.
-    authedFetch(`/api/staff/orders/${orderId}/thumbnail`, { auth: true })
+    authedFetch(`/api/staff/orders/${orderId}/thumbnail${isPair ? "?pair=true" : ""}`, { auth: true })
       .then((r) => (r.ok ? r.blob() : null))
       .then((blob) => {
         if (!active || !blob || blob.size === 0) return;
@@ -51,7 +51,7 @@ function useAuthedImage(orderId) {
       active = false;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [orderId]);
+  }, [orderId, isPair]);
   return blobUrl;
 }
 
@@ -82,8 +82,8 @@ function saveBlob(blob, filename) {
 }
 
 /** Staff fulfilment dashboard — every customer order with contact, address and model download. */
-function OrderThumbnail({ orderId }) {
-  const blobUrl = useAuthedImage(orderId);
+function OrderThumbnail({ orderId, isPair = false }) {
+  const blobUrl = useAuthedImage(orderId, isPair);
   if (blobUrl) {
     return (
       <img
@@ -129,16 +129,16 @@ export default function StaffDashboard() {
   const getFormat = (orderId) => formatMap[orderId] || "bundle";
   const setFormat = (orderId, fmt) => setFormatMap((m) => ({ ...m, [orderId]: fmt }));
 
-  const download = async (order) => {
-    if (!order.sourceTaskId) return;
+  const download = async (order, isPair = false) => {
+    if (!(isPair ? order.pairTaskId : order.sourceTaskId)) return;
     const fmt = getFormat(order.id);
-    const key = order.id + fmt;
+    const key = order.id + fmt + (isPair ? "pair" : "");
     setBusyId(key);
     try {
       // The server streams a ZIP (model.glb + textures), not a raw GLB. Pull the
       // GLB entry out of the archive before saving/converting — otherwise the "PK"
       // zip bytes get fed to GLTFLoader/JSON.parse and blow up.
-      const { blob: zipBlob } = await staffApi.downloadModel(order.id, "glb");
+      const { blob: zipBlob } = await staffApi.downloadModel(order.id, "glb", isPair);
       const entries = unzipSync(new Uint8Array(await zipBlob.arrayBuffer()));
       const glbName = Object.keys(entries).find((n) => n.toLowerCase().endsWith(".glb"));
       if (!glbName) throw new Error(t("staff.downloadFail") || "No model found in archive");
@@ -148,7 +148,7 @@ export default function StaffDashboard() {
         Object.entries(entries).filter(([n]) => n.toLowerCase().startsWith("textures/"))
       );
       const files = await buildModelFiles(entries[glbName], texFiles, fmt);
-      const name = `innerstyle-${order.id.slice(0, 8)}`;
+      const name = `innerstyle-${order.id.slice(0, 8)}${isPair ? "-pair" : ""}`;
       if (fmt === "glb") {
         // Texture is embedded in the GLB itself, so a single file is enough.
         saveBlob(new Blob([files["model.glb"]], { type: "model/gltf-binary" }), `${name}.glb`);
@@ -230,6 +230,7 @@ export default function StaffDashboard() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
                     <OrderThumbnail orderId={o.sourceTaskId ? o.id : null} />
+                    {o.pairTaskId && <OrderThumbnail orderId={o.id} isPair />}
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <Badge tone={STATUS_TONE[o.status] || "violet"}>{o.status}</Badge>
@@ -237,6 +238,7 @@ export default function StaffDashboard() {
                       </div>
                       <p className="mt-1 text-xs text-app-faint">
                         {new Date(o.createdAt).toLocaleString()} · {vnd.format(o.amount)}{o.sizeCm ? ` · ${o.sizeCm} cm` : ""}{o.material ? ` · ${o.material}` : ""}
+                        {o.pairTaskId ? ` · ${t("staff.couple", { size: o.pairSizeCm })}` : ""}
                       </p>
                     </div>
                   </div>
@@ -264,6 +266,18 @@ export default function StaffDashboard() {
                     >
                       {t("staff.download") || "Tải xuống"}
                     </Button>
+                    {o.pairTaskId && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={busyId === o.id + fmt + "pair" ? Loader2 : Download}
+                        loading={busyId === o.id + fmt + "pair"}
+                        disabled={!!busyId}
+                        onClick={() => download(o, true)}
+                      >
+                        {t("staff.downloadPair")}
+                      </Button>
+                    )}
                     <StatusMenu
                       current={o.status}
                       busy={busyId === o.id + "status"}
@@ -327,6 +341,18 @@ export default function StaffDashboard() {
                       checkFn={() => staffApi.printability(o.id)}
                       repairFn={() => staffApi.repairModel(o.id)}
                       revertFn={() => staffApi.revertModel(o.id)}
+                    />
+                  </div>
+                )}
+                {o.pairTaskId && (
+                  <div className="mt-3">
+                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-app-faint">
+                      {t("staff.pairModel")}
+                    </p>
+                    <PrintabilityCard
+                      checkFn={() => staffApi.printability(o.id, true)}
+                      repairFn={() => staffApi.repairModel(o.id, true)}
+                      revertFn={() => staffApi.revertModel(o.id, true)}
                     />
                   </div>
                 )}

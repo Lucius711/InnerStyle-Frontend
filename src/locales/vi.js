@@ -71,6 +71,13 @@ export const vi = {
       RESIN: "Siêu chi tiết, mịn — hợp mặt & tóc",
     },
     total: "Tạm tính",
+    couple: "Mua bộ đôi (Couple Set)",
+    coupleHint: "In thêm 1 mô hình khác của bạn trong cùng đơn, giảm {percent}% tổng giá 2 bộ.",
+    couplePick: "Chọn mô hình thứ hai",
+    coupleNoModels: "Bạn chưa có mô hình nào khác đã tạo xong.",
+    pairSize: "Kích cỡ mô hình thứ hai",
+    coupleSaving: "Tiết kiệm {amount}",
+    pairRequired: "Vui lòng chọn mô hình thứ hai cho bộ đôi.",
     province: "Tỉnh / Thành phố",
     ward: "Phường / Xã",
     selectProvince: "Chọn tỉnh/thành",
@@ -145,6 +152,9 @@ export const vi = {
 
   staff: {
     title: "Xử lý đơn hàng",
+    couple: "Bộ đôi + {size} cm",
+    downloadPair: "Tải mô hình 2",
+    pairModel: "Mô hình 2 (bộ đôi)",
     subtitle: "Đơn in 3D của khách kèm thông tin liên hệ, địa chỉ và file mô hình.",
     refresh: "Làm mới",
     all: "Tất cả",
@@ -206,6 +216,9 @@ export const vi = {
     free: "Mi\u1ec5n ph\u00ed",
     perMo: "/th\u00e1ng",
     creditsPerMonth: "{count} credit / th\u00e1ng",
+    freeUsesLeft: "/ {limit} lượt tạo miễn phí còn lại",
+    freeUsesNote: "Dùng cho mọi dịch vụ, không gia hạn hằng tháng. Hết lượt thì nâng cấp Pro hoặc Max.",
+    freeUsesPlan: "{limit} lượt tạo miễn phí (trọn đời)",
     currentPlan: "G\u00f3i hi\u1ec7n t\u1ea1i",
     payNow: "Thanh to\u00e1n",
     defaultPlan: "G\u00f3i m\u1eb7c \u0111\u1ecbnh",
@@ -237,6 +250,7 @@ export const vi = {
       subtitle: "Tất cả model bạn đã tạo — mở để xem 3D, tải về hoặc xử lý tiếp pipeline.",
     },
     prints: {
+      couple: "Bộ đôi + {size} cm",
       title: "Lịch sử đặt in 3D",
       subtitle: "Các đơn in 3D bạn đã đặt.",
       empty: "Chưa có đơn in 3D nào.",
@@ -495,7 +509,7 @@ export const vi = {
     q1: "Tạo một mô hình 3D mất bao lâu?",
     a1: "Thường chỉ vài phút, tuỳ loại tác vụ (ảnh sang 3D, văn bản sang 3D, retexture, gắn xương…). Tiến độ hiển thị trực tiếp trong Studio, bạn có thể rời trang và quay lại sau.",
     q2: "Credit được tính như thế nào?",
-    a2: "Mỗi thao tác (tạo model, refine, retexture, gắn xương, tạo chuyển động…) tiêu tốn một số credit nhất định. Xem số credit còn lại và nâng cấp gói ở trang Gói thành viên.",
+    a2: "Mỗi thao tác (tạo model, refine, retexture, gắn xương, tạo chuyển động…) tiêu tốn một số credit nhất định. Tài khoản miễn phí có 3 lượt tạo dùng cho mọi thao tác. Gói Pro có 300 credit/tháng, gói Max có 800 credit/tháng. Xem số còn lại và nâng cấp ở trang Gói thành viên.",
     q3: "Tôi tải mô hình về được những định dạng nào?",
     a3: "GLB, FBX, OBJ, USDZ (xem AR trên iPhone) và STL (để in 3D). Có thể chọn chiều cao thực tế khi tải về bản in.",
     q4: "Vì sao mô hình của tôi hết hạn?",
@@ -846,7 +860,7 @@ export const vi = {
       {
         title: "2. Chính sách thanh toán",
         body: [
-          "Các thao tác tạo và xử lý mô hình tiêu tốn credit theo bảng giá hiển thị trước khi bạn xác nhận. Credit đến từ gói thành viên bạn đăng ký.",
+          "Các thao tác tạo và xử lý mô hình tiêu tốn credit theo bảng giá hiển thị trước khi bạn xác nhận. Credit đến từ gói thành viên bạn đăng ký. Tài khoản miễn phí dùng 3 lượt tạo thay cho credit, không gia hạn hằng tháng.",
           "Thanh toán gói thành viên và đơn in 3D được thực hiện qua cổng payOS (chuyển khoản/QR ngân hàng). InnerStyle không lưu thông tin thẻ hay tài khoản ngân hàng của bạn.",
           "Giao dịch chỉ được ghi nhận khi cổng thanh toán xác nhận thành công. Nếu tiền đã bị trừ mà đơn chưa cập nhật sau 15 phút, hãy liên hệ bộ phận hỗ trợ kèm mã đơn.",
           "Nếu một tác vụ tạo mô hình thất bại hoặc bị huỷ, số credit của tác vụ đó sẽ được hoàn lại tự động.",
@@ -907,6 +921,7 @@ export const vi = {
       },
     },
     print: {
+      couple: { sameModel: "Bộ đôi cần 2 mô hình khác nhau." },
       size: {
         invalid: "Kích cỡ in không hợp lệ.",
       },
@@ -999,7 +1014,10 @@ export const vi = {
         received: "Đã xử lý webhook",
       },
     },
-    credit: { insufficient: "Không đủ credit. Vui lòng nạp thêm hoặc nâng cấp gói." },
+    credit: {
+      insufficient: "Không đủ credit. Vui lòng nạp thêm hoặc nâng cấp gói.",
+      freeUsesExhausted: "Bạn đã dùng hết 3 lượt tạo miễn phí. Nâng cấp Pro hoặc Max để tạo tiếp.",
+    },
     moderation: {
       imageBlocked: "Ảnh có nội dung nhạy cảm / khiêu dâm nên không thể dùng để tạo model.",
       textBlocked: "Mô tả chứa nội dung vi phạm tiêu chuẩn cộng đồng nên không thể tạo model.",

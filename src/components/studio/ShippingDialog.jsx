@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Truck, Loader2 } from "lucide-react";
+import { X, Truck, Loader2, Heart } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Field, TextInput, TextArea, SelectMenu } from "@/components/ui/FormControls";
 import MapPicker from "@/components/maps/MapPicker";
 import { fetchProvinces, fetchWards } from "@/lib/locationApi";
-import { vnd, PRINT_SIZES, PRINT_MATERIALS, printPriceFor } from "@/lib/pricing";
+import { vnd, PRINT_SIZES, PRINT_MATERIALS, printPriceFor, couplePrice, COUPLE_DISCOUNT_PERCENT, loadCoupleDiscount } from "@/lib/pricing";
+import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
@@ -16,7 +17,7 @@ import { useToast } from "@/hooks/useToast";
  * map pin) before placing a 3D-print order. Calls `onSubmit(payload)` with everything the
  * backend needs; the parent then redirects to the payment gateway.
  */
-export default function ShippingDialog({ open, submitting, onClose, onSubmit }) {
+export default function ShippingDialog({ open, taskId, submitting, onClose, onSubmit }) {
   const t = useT();
   const toast = useToast();
   const { user } = useAuth();
@@ -27,6 +28,9 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
     recipientPhone: "",
     sizeCm: 12,
     material: "PLA",
+    couple: false,
+    pairTaskId: "",
+    pairSizeCm: 12,
     provinceCode: "",
     wardCode: "",
     addressDetail: "",
@@ -37,6 +41,26 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
   const [provinces, setProvinces] = useState([]);
   const [wards, setWards] = useState([]);
   const [loadingWards, setLoadingWards] = useState(false);
+  const [pairModels, setPairModels] = useState(null);
+  const [couplePercent, setCouplePercent] = useState(COUPLE_DISCOUNT_PERCENT);
+
+  useEffect(() => {
+    if (open) loadCoupleDiscount().then(setCouplePercent);
+  }, [open]);
+
+  // Couple Set: the buyer's other finished models, loaded the first time the toggle is switched on.
+  useEffect(() => {
+    if (!open || !form.couple || pairModels) return;
+    api
+      .listTasks({ status: "SUCCEEDED", size: 30 })
+      .then((res) => setPairModels((res?.content || []).filter((m) => m.id !== taskId)))
+      .catch(() => setPairModels([]));
+  }, [open, form.couple, pairModels, taskId]);
+
+  const unitPrice = (cm) =>
+    (printPriceFor(cm) || 0) + (PRINT_MATERIALS.find((m) => m.code === form.material)?.surcharge || 0);
+  const fullPrice = unitPrice(form.sizeCm) + (form.couple ? unitPrice(form.pairSizeCm) : 0);
+  const total = form.couple ? couplePrice(fullPrice, couplePercent) : fullPrice;
 
   // Prefill from the signed-in account.
   useEffect(() => {
@@ -98,6 +122,10 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
       toast.error(t("shipping.invalid"), t("shipping.contactRequired"));
       return;
     }
+    if (form.couple && !form.pairTaskId) {
+      toast.error(t("shipping.invalid"), t("shipping.pairRequired"));
+      return;
+    }
     if (!form.provinceCode || !form.wardCode || !form.addressDetail.trim()) {
       toast.error(t("shipping.invalid"), t("shipping.addressRequired"));
       return;
@@ -106,6 +134,7 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
       provider: "PAYOS",
       sizeCm: form.sizeCm,
       material: form.material,
+      ...(form.couple ? { pairTaskId: form.pairTaskId, pairSizeCm: form.pairSizeCm } : {}),
       recipientName: form.recipientName.trim(),
       recipientEmail: form.recipientEmail.trim(),
       recipientPhone: form.recipientPhone.trim(),
@@ -230,13 +259,91 @@ export default function ShippingDialog({ open, submitting, onClose, onSubmit }) 
                 <p className="mt-2 text-sm text-app-muted">
                   {t("shipping.total")}:{" "}
                   <span className="font-semibold text-app-text">
-                    {vnd.format(
-                      (printPriceFor(form.sizeCm) || 0) +
-                        (PRINT_MATERIALS.find((m) => m.code === form.material)?.surcharge || 0)
-                    )}
+                    {vnd.format(total)}
                   </span>
+                  {form.couple && (
+                    <span className="ml-2 text-xs text-emerald-400">
+                      {t("shipping.coupleSaving", { amount: vnd.format(fullPrice - total) })}
+                    </span>
+                  )}
                 </p>
               </Field>
+
+              {/* Couple Set: a second model printed in the same order, discounted */}
+              <div className="rounded-xl border border-app-line/15 p-3">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id="couple-set"
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-[#8b6cff]"
+                    checked={form.couple}
+                    onChange={(e) => setForm((f) => ({ ...f, couple: e.target.checked }))}
+                  />
+                  <span>
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-app-text">
+                      <Heart className="h-4 w-4 text-pink-400" /> {t("shipping.couple")}
+                    </span>
+                    <span className="text-xs text-app-faint">
+                      {t("shipping.coupleHint", { percent: couplePercent })}
+                    </span>
+                  </span>
+                </label>
+
+                {form.couple && (
+                  <div className="mt-3 space-y-3">
+                    <p className="text-xs text-app-muted">{t("shipping.couplePick")}</p>
+                    {!pairModels ? (
+                      <Loader2 className="h-4 w-4 animate-spin text-app-muted" />
+                    ) : pairModels.length === 0 ? (
+                      <p className="text-xs text-amber-400">{t("shipping.coupleNoModels")}</p>
+                    ) : (
+                      <div className="grid max-h-48 grid-cols-4 gap-2 overflow-y-auto sm:grid-cols-5">
+                        {pairModels.map((m) => {
+                          const active = form.pairTaskId === m.id;
+                          return (
+                            <button
+                              key={m.id}
+                              type="button"
+                              aria-pressed={active}
+                              aria-label={m.prompt || m.taskType}
+                              onClick={() => setForm((f) => ({ ...f, pairTaskId: m.id }))}
+                              className={
+                                "aspect-square overflow-hidden rounded-lg border-2 bg-app-line/5 " +
+                                (active ? "border-pink-400" : "border-transparent hover:border-app-line/30")
+                              }
+                            >
+                              {m.thumbnailUrl ? (
+                                <img src={api.mediaUrl(m.thumbnailUrl)} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <span className="text-[10px] text-app-faint">{m.taskType}</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <p className="text-xs text-app-muted">{t("shipping.pairSize")}</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {PRINT_SIZES.map((s) => (
+                        <button
+                          key={s.cm}
+                          type="button"
+                          aria-pressed={form.pairSizeCm === s.cm}
+                          onClick={() => setForm((f) => ({ ...f, pairSizeCm: s.cm }))}
+                          className={
+                            "rounded-xl border px-2 py-2 text-sm font-semibold transition-colors " +
+                            (form.pairSizeCm === s.cm
+                              ? "border-pink-400 bg-pink-400/10 text-app-text"
+                              : "border-app-line/15 text-app-muted hover:bg-app-line/5")
+                          }
+                        >
+                          {s.cm} cm
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label={t("shipping.province")}>

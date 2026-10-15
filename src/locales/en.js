@@ -71,6 +71,13 @@ export const en = {
       RESIN: "Ultra-fine detail, smooth — best for faces & hair",
     },
     total: "Subtotal",
+    couple: "Couple Set",
+    coupleHint: "Print one more of your models in the same order and get {percent}% off both.",
+    couplePick: "Choose the second model",
+    coupleNoModels: "You don't have another finished model yet.",
+    pairSize: "Second model's height",
+    coupleSaving: "You save {amount}",
+    pairRequired: "Please choose the second model for the Couple Set.",
     province: "Province / City",
     ward: "Ward / Commune",
     selectProvince: "Select a province",
@@ -145,6 +152,9 @@ export const en = {
 
   staff: {
     title: "Order fulfilment",
+    couple: "Couple Set + {size} cm",
+    downloadPair: "Download model 2",
+    pairModel: "Model 2 (Couple Set)",
     subtitle: "Incoming customer 3D-print orders with contact, address and model files.",
     refresh: "Refresh",
     all: "All",
@@ -206,6 +216,9 @@ export const en = {
     free: "Free",
     perMo: "/mo",
     creditsPerMonth: "{count} credits / month",
+    freeUsesLeft: "/ {limit} free generations left",
+    freeUsesNote: "Works for every service and does not renew monthly. Upgrade to Pro or Max for more.",
+    freeUsesPlan: "{limit} free generations (lifetime)",
     currentPlan: "Current plan",
     payNow: "Pay now",
     defaultPlan: "Default plan",
@@ -237,6 +250,7 @@ export const en = {
       subtitle: "Everything you've generated — open any model to view in 3D, download, or continue the pipeline.",
     },
     prints: {
+      couple: "Couple Set + {size} cm",
       title: "3D print order history",
       subtitle: "The 3D print orders you've placed.",
       empty: "No print orders yet.",
@@ -495,7 +509,7 @@ export const en = {
     q1: "How long does it take to generate a 3D model?",
     a1: "Usually a few minutes, depending on the task (image to 3D, text to 3D, retexture, rigging…). Progress shows live in the Studio — you can leave and come back.",
     q2: "How are credits charged?",
-    a2: "Each operation (generate, refine, retexture, rig, animate…) costs a set number of credits. See your balance and upgrade on the Membership page.",
+    a2: "Each operation (generate, refine, retexture, rig, animate…) costs a set number of credits. Free accounts get 3 generations to use on any operation. Pro includes 300 credits a month, Max 800. See what you have left and upgrade on the Membership page.",
     q3: "Which formats can I download?",
     a3: "GLB, FBX, OBJ, USDZ (AR on iPhone) and STL (for 3D printing). You can pick a real-world height when downloading a print file.",
     q4: "Why did my model expire?",
@@ -849,7 +863,7 @@ export const en = {
       {
         title: "2. Payment policy",
         body: [
-          "Generating and processing models costs credits according to the price shown before you confirm. Credits come from your membership plan.",
+          "Generating and processing models costs credits according to the price shown before you confirm. Credits come from your membership plan. Free accounts use 3 lifetime generations instead of credits.",
           "Membership plans and 3D-print orders are paid through the payOS gateway (bank transfer / QR). InnerStyle never stores your card or bank-account details.",
           "A payment is only recorded once the gateway confirms it. If you were charged but the order has not updated after 15 minutes, contact support with the order code.",
           "If a generation task fails or is cancelled, its credits are refunded automatically.",
@@ -910,6 +924,7 @@ export const en = {
       },
     },
     print: {
+      couple: { sameModel: "A Couple Set needs two different models." },
       size: {
         invalid: "Invalid print size.",
       },
@@ -1002,7 +1017,10 @@ export const en = {
         received: "Webhook processed",
       },
     },
-    credit: { insufficient: "Not enough credits. Please top up or upgrade your plan." },
+    credit: {
+      insufficient: "Not enough credits. Please top up or upgrade your plan.",
+      freeUsesExhausted: "You have used all 3 free generations. Upgrade to Pro or Max to keep creating.",
+    },
     moderation: {
       imageBlocked: "This image looks explicit / NSFW and can't be used to create a model.",
       textBlocked: "Your description violates the community guidelines and can't be used.",

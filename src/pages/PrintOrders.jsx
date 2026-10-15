@@ -103,6 +103,7 @@ export default function PrintOrders() {
                 <p className="mt-1 text-xs text-app-faint">
                   {new Date(o.createdAt).toLocaleString()}
                   {o.sizeCm ? ` · ${o.sizeCm} cm` : ""}{o.material ? ` · ${o.material}` : ""}
+                  {o.pairTaskId ? ` · ${t("profile.prints.couple", { size: o.pairSizeCm })}` : ""}
                   {o.note ? ` · ${o.note}` : ""}
                 </p>
               </div>

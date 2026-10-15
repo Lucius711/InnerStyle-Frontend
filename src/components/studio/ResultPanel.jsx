@@ -163,6 +163,7 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
 
       <ShippingDialog
         open={shippingOpen}
+        taskId={task.id}
         submitting={!!printing}
         onClose={() => setShippingOpen(false)}
         onSubmit={submitShipping}

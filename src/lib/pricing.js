@@ -26,6 +26,25 @@ export const PRINT_MATERIALS = [
   { code: "RESIN", name: "Resin", surcharge: 150000 },
 ];
 
+/** Couple Set discount (%) — FALLBACK ONLY until loadCoupleDiscount() answers; the server re-prices every order. */
+export const COUPLE_DISCOUNT_PERCENT = 13;
+
+/** Couple Set price: both figurines minus the discount, rounded to the nearest 1,000 VND (same rule as the server). */
+export const couplePrice = (full, percent = COUPLE_DISCOUNT_PERCENT) =>
+  Math.round((full * (100 - percent)) / 100 / 1000) * 1000;
+
+let coupleDiscountCache = null;
+
+/** Couple Set discount (%) from GET /api/common/print/pricing (app.print.couple-discount-percent), fetched once. */
+export function loadCoupleDiscount() {
+  if (!coupleDiscountCache) {
+    coupleDiscountCache = request("/api/common/print/pricing")
+      .then((data) => (Number.isFinite(data?.coupleDiscountPercent) ? data.coupleDiscountPercent : COUPLE_DISCOUNT_PERCENT))
+      .catch(() => COUPLE_DISCOUNT_PERCENT);
+  }
+  return coupleDiscountCache;
+}
+
 let printPricingCache = null;
 
 /**

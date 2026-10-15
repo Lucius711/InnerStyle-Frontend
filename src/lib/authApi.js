@@ -71,18 +71,23 @@ export const staffApi = {
     }),
 
   // Analyse the order model's 3D-print readiness (watertight / holes / non-manifold).
-  printability: (id) => request(`/api/staff/orders/${id}/printability`, { auth: true }),
+  // pair=true targets the Couple Set's second model (same for repair/revert).
+  printability: (id, pair = false) =>
+    request(`/api/staff/orders/${id}/printability${pair ? "?pair=true" : ""}`, { auth: true }),
 
   // Auto-repair the order model into a watertight, printable mesh, saved in place (the download
   // then serves the repaired model). Returns { before, after, task }.
-  repairModel: (id) => request(`/api/staff/orders/${id}/repair`, { method: "POST", auth: true }),
+  repairModel: (id, pair = false) =>
+    request(`/api/staff/orders/${id}/repair${pair ? "?pair=true" : ""}`, { method: "POST", auth: true }),
 
   // Revert the order model back to its pre-repair backup, if one exists. Returns { before, after, task }.
-  revertModel: (id) => request(`/api/staff/orders/${id}/revert`, { method: "POST", auth: true }),
+  revertModel: (id, pair = false) =>
+    request(`/api/staff/orders/${id}/revert${pair ? "?pair=true" : ""}`, { method: "POST", auth: true }),
 
   // Download the customer's 3D model file as a Blob (Bearer-authenticated).
-  downloadModel: async (id, format = "glb") => {
-    const res = await authedFetch(`/api/staff/orders/${id}/model?format=${format}`, {
+  // pair=true downloads the Couple Set's second model.
+  downloadModel: async (id, format = "glb", pair = false) => {
+    const res = await authedFetch(`/api/staff/orders/${id}/model?format=${format}${pair ? "&pair=true" : ""}`, {
       auth: true,
     });
     if (!res.ok) throw new Error(`Download failed (${res.status})`);
@@ -113,6 +118,8 @@ export const heartbeat = () => request("/api/common/visits/heartbeat", { method:
 
 export const membershipApi = {
   me: () => request("/api/user/membership/me", { auth: true }),
+
+  freeUses: () => request("/api/user/membership/free-uses", { auth: true }),
 
   plans: () => request("/api/common/membership/plans"),
 

@@ -14,6 +14,7 @@ export default function Membership() {
   const navigate = useNavigate();
   const t = useT();
   const [me, setMe] = useState(null);
+  const [quota, setQuota] = useState(null);
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState("");
@@ -21,8 +22,9 @@ export default function Membership() {
   const load = async () => {
     setLoading(true);
     try {
-      const [m, p] = await Promise.all([membershipApi.me(), membershipApi.plans()]);
+      const [m, p, q] = await Promise.all([membershipApi.me(), membershipApi.plans(), membershipApi.freeUses()]);
       setMe(m);
+      setQuota(q);
       setPlans(p || []);
     } catch (err) {
       toast.error(t("membership.loadFail"), friendly(err));
@@ -84,13 +86,25 @@ export default function Membership() {
               <Sparkles className="h-4 w-4" />{" "}
               {t("membership.planCredits", { plan: me?.planName })}
             </div>
-            <p className="mt-2 font-display text-4xl font-bold text-app-text">
-              {me ? me.creditsRemaining : "—"}
-              <span className="ml-2 text-base font-normal text-app-faint">
-                {t("membership.perMonth", { count: me?.monthlyCredits })}
-              </span>
-            </p>
-            {me?.periodEnd && (
+            {quota?.freePlan ? (
+              <>
+                <p className="mt-2 font-display text-4xl font-bold text-app-text">
+                  {Math.max(0, quota.limit - quota.used)}
+                  <span className="ml-2 text-base font-normal text-app-faint">
+                    {t("membership.freeUsesLeft", { limit: quota.limit })}
+                  </span>
+                </p>
+                <p className="mt-1 text-sm text-app-faint">{t("membership.freeUsesNote")}</p>
+              </>
+            ) : (
+              <p className="mt-2 font-display text-4xl font-bold text-app-text">
+                {me ? me.creditsRemaining : "—"}
+                <span className="ml-2 text-base font-normal text-app-faint">
+                  {t("membership.perMonth", { count: me?.monthlyCredits })}
+                </span>
+              </p>
+            )}
+            {me?.periodEnd && !quota?.freePlan && (
               <p className="mt-1 text-sm text-app-faint">
                 {t("membership.renews", {
                   date: new Date(me.periodEnd).toLocaleDateString(),
@@ -120,7 +134,9 @@ export default function Membership() {
                   </p>
                   <p className="mt-3 flex items-center gap-1.5 text-sm text-app-muted">
                     <Check className="h-4 w-4 text-emerald-400" />{" "}
-                    {t("membership.creditsPerMonth", { count: p.monthlyCredits })}
+                    {paid
+                      ? t("membership.creditsPerMonth", { count: p.monthlyCredits })
+                      : t("membership.freeUsesPlan", { limit: quota?.limit ?? 3 })}
                   </p>
 
                   <div className="mt-auto pt-5">
