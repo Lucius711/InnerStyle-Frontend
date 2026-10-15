@@ -932,6 +932,7 @@ export const en = {
         invalid: "Invalid plastic type.",
       },
       task: {
+        noModel: "This item has no 3D model yet, so it can't be printed.",
         notOwned: "You can only order prints of your own models.",
         notReady: "This model isn't finished yet, so it can't be printed.",
       },

@@ -53,7 +53,12 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
     if (!open || !form.couple || pairModels) return;
     api
       .listTasks({ status: "SUCCEEDED", size: 30 })
-      .then((res) => setPairModels((res?.content || []).filter((m) => m.id !== taskId)))
+      // Only finished 3D models can be printed — e.g. a chibi concept (FIGURE_PROTOTYPE) is just a 2D image.
+      .then((res) =>
+        setPairModels(
+          (res?.content || []).filter((m) => m.id !== taskId && m.modelUrls && Object.keys(m.modelUrls).length > 0)
+        )
+      )
       .catch(() => setPairModels([]));
   }, [open, form.couple, pairModels, taskId]);
 
@@ -305,7 +310,8 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
                               key={m.id}
                               type="button"
                               aria-pressed={active}
-                              aria-label={m.prompt || m.taskType}
+                              aria-label={t(`studio.types.${m.taskType}`)}
+                              title={t(`studio.types.${m.taskType}`)}
                               onClick={() => setForm((f) => ({ ...f, pairTaskId: m.id }))}
                               className={
                                 "aspect-square overflow-hidden rounded-lg border-2 bg-app-line/5 " +
@@ -315,7 +321,9 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
                               {m.thumbnailUrl ? (
                                 <img src={api.mediaUrl(m.thumbnailUrl)} alt="" className="h-full w-full object-cover" />
                               ) : (
-                                <span className="text-[10px] text-app-faint">{m.taskType}</span>
+                                <span className="px-1 text-[10px] leading-tight text-app-faint">
+                                  {t(`studio.types.${m.taskType}`)}
+                                </span>
                               )}
                             </button>
                           );

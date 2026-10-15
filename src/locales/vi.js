@@ -929,6 +929,7 @@ export const vi = {
         invalid: "Loại nhựa không hợp lệ.",
       },
       task: {
+        noModel: "Mục này chưa có mô hình 3D nên không in được.",
         notOwned: "Bạn chỉ có thể đặt in model của chính mình.",
         notReady: "Model chưa tạo xong nên chưa thể đặt in.",
       },
