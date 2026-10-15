@@ -104,6 +104,8 @@ export default function PrintOrders() {
                   {new Date(o.createdAt).toLocaleString()}
                   {o.sizeCm ? ` · ${o.sizeCm} cm` : ""}{o.material ? ` · ${o.material}` : ""}
                   {o.pairTaskId ? ` · ${t("profile.prints.couple", { size: o.pairSizeCm })}` : ""}
+                  {o.withLight ? ` · ${t("profile.prints.light")}` : ""}
+                  {o.withCard ? ` · ${t("profile.prints.card")}` : ""}
                   {o.note ? ` · ${o.note}` : ""}
                 </p>
               </div>

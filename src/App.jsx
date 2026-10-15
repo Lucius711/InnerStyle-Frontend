@@ -265,8 +265,8 @@ function Shell() {
 export default function App() {
   return (
     <ThemeProvider>
-      <SplashScreen />
       <I18nProvider>
+        <SplashScreen />
         <BrowserRouter>
           <ToastProvider>
             <AuthProvider>

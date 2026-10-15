@@ -45,6 +45,21 @@ export function loadCoupleDiscount() {
   return coupleDiscountCache;
 }
 
+/** LED light base add-on (VND) — FALLBACK ONLY until loadLightPrice() answers; the server re-prices every order. */
+export const LIGHT_PRICE = 50000;
+
+let lightPriceCache = null;
+
+/** LED light price from GET /api/common/print/pricing (app.print.light-price), fetched once. */
+export function loadLightPrice() {
+  if (!lightPriceCache) {
+    lightPriceCache = request("/api/common/print/pricing")
+      .then((data) => (data?.lightPrice != null && Number.isFinite(Number(data.lightPrice)) ? Number(data.lightPrice) : LIGHT_PRICE))
+      .catch(() => LIGHT_PRICE);
+  }
+  return lightPriceCache;
+}
+
 let printPricingCache = null;
 
 /**

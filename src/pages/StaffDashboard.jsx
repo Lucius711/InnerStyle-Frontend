@@ -325,6 +325,15 @@ export default function StaffDashboard() {
                   </div>
                 </div>
 
+                {(o.withLight || o.withCard) && (
+                  <div className="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-app-muted">
+                    <span className="font-medium text-app-text">{t("staff.extras")}:</span>{" "}
+                    {[o.withLight && t("staff.light"), o.withCard && t("staff.card")].filter(Boolean).join(" · ")}
+                    {o.withCard && o.cardMessage && (
+                      <p className="mt-1 whitespace-pre-wrap italic text-app-text">“{o.cardMessage}”</p>
+                    )}
+                  </div>
+                )}
                 {o.note && (
                   <p className="mt-2 text-xs text-app-faint">
                     <span className="font-medium text-app-muted">{t("staff.note")}:</span> {o.note}

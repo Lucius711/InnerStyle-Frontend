@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Truck, Loader2, Heart } from "lucide-react";
+import { X, Truck, Loader2, Heart, Lamp, Mail } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { Field, TextInput, TextArea, SelectMenu } from "@/components/ui/FormControls";
 import MapPicker from "@/components/maps/MapPicker";
 import { fetchProvinces, fetchWards } from "@/lib/locationApi";
-import { vnd, PRINT_SIZES, PRINT_MATERIALS, printPriceFor, couplePrice, COUPLE_DISCOUNT_PERCENT, loadCoupleDiscount } from "@/lib/pricing";
+import { vnd, PRINT_SIZES, PRINT_MATERIALS, printPriceFor, couplePrice, COUPLE_DISCOUNT_PERCENT, loadCoupleDiscount, LIGHT_PRICE, loadLightPrice } from "@/lib/pricing";
 import { api } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useT } from "@/hooks/useI18n";
@@ -31,6 +31,9 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
     couple: false,
     pairTaskId: "",
     pairSizeCm: 12,
+    withLight: false,
+    withCard: false,
+    cardMessage: "",
     provinceCode: "",
     wardCode: "",
     addressDetail: "",
@@ -43,9 +46,11 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
   const [loadingWards, setLoadingWards] = useState(false);
   const [pairModels, setPairModels] = useState(null);
   const [couplePercent, setCouplePercent] = useState(COUPLE_DISCOUNT_PERCENT);
+  const [lightPrice, setLightPrice] = useState(LIGHT_PRICE);
 
   useEffect(() => {
     if (open) loadCoupleDiscount().then(setCouplePercent);
+    if (open) loadLightPrice().then(setLightPrice);
   }, [open]);
 
   // Couple Set: the buyer's other finished models, loaded the first time the toggle is switched on.
@@ -65,7 +70,8 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
   const unitPrice = (cm) =>
     (printPriceFor(cm) || 0) + (PRINT_MATERIALS.find((m) => m.code === form.material)?.surcharge || 0);
   const fullPrice = unitPrice(form.sizeCm) + (form.couple ? unitPrice(form.pairSizeCm) : 0);
-  const total = form.couple ? couplePrice(fullPrice, couplePercent) : fullPrice;
+  // the light is added after the Couple Set discount, same as the server
+  const total = (form.couple ? couplePrice(fullPrice, couplePercent) : fullPrice) + (form.withLight ? lightPrice : 0);
 
   // Prefill from the signed-in account.
   useEffect(() => {
@@ -140,6 +146,9 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
       sizeCm: form.sizeCm,
       material: form.material,
       ...(form.couple ? { pairTaskId: form.pairTaskId, pairSizeCm: form.pairSizeCm } : {}),
+      withLight: form.withLight,
+      withCard: form.withCard,
+      cardMessage: form.withCard ? form.cardMessage.trim() || undefined : undefined,
       recipientName: form.recipientName.trim(),
       recipientEmail: form.recipientEmail.trim(),
       recipientPhone: form.recipientPhone.trim(),
@@ -268,7 +277,7 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
                   </span>
                   {form.couple && (
                     <span className="ml-2 text-xs text-emerald-400">
-                      {t("shipping.coupleSaving", { amount: vnd.format(fullPrice - total) })}
+                      {t("shipping.coupleSaving", { amount: vnd.format(fullPrice - couplePrice(fullPrice, couplePercent)) })}
                     </span>
                   )}
                 </p>
@@ -350,6 +359,53 @@ export default function ShippingDialog({ open, taskId, submitting, onClose, onSu
                       ))}
                     </div>
                   </div>
+                )}
+              </div>
+
+              {/* Gift extras, both optional: a paid LED light base and a free greeting card with a message */}
+              <div className="space-y-3 rounded-xl border border-app-line/15 p-3">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id="with-light"
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-[#8b6cff]"
+                    checked={form.withLight}
+                    onChange={(e) => setForm((f) => ({ ...f, withLight: e.target.checked }))}
+                  />
+                  <span>
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-app-text">
+                      <Lamp className="h-4 w-4 text-amber-400" /> {t("shipping.light")}
+                      <span className="text-xs font-medium text-app-muted">+{vnd.format(lightPrice)}</span>
+                    </span>
+                    <span className="text-xs text-app-faint">{t("shipping.lightHint")}</span>
+                  </span>
+                </label>
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input
+                    id="with-card"
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-[#8b6cff]"
+                    checked={form.withCard}
+                    onChange={(e) => setForm((f) => ({ ...f, withCard: e.target.checked }))}
+                  />
+                  <span>
+                    <span className="flex items-center gap-1.5 text-sm font-semibold text-app-text">
+                      <Mail className="h-4 w-4 text-pink-400" /> {t("shipping.card")}
+                      <span className="text-xs font-medium text-emerald-400">{t("shipping.free")}</span>
+                    </span>
+                    <span className="text-xs text-app-faint">{t("shipping.cardHint")}</span>
+                  </span>
+                </label>
+                {form.withCard && (
+                  <Field label={t("shipping.cardMessage")} hint={t("shipping.cardMessageHint", { count: form.cardMessage.length })}>
+                    <TextArea
+                      value={form.cardMessage}
+                      onChange={set("cardMessage")}
+                      maxLength={300}
+                      className="min-h-[80px]"
+                      placeholder={t("shipping.cardPlaceholder")}
+                    />
+                  </Field>
                 )}
               </div>
 
