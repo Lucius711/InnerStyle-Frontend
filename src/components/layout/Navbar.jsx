@@ -14,6 +14,7 @@ import {
   Package,
   ChevronDown,
   BarChart3,
+  Banknote,
 } from "lucide-react";
 import MagneticButton from "@/components/motion/MagneticButton";
 import Button from "@/components/ui/Button";
@@ -55,7 +56,10 @@ export default function Navbar() {
   // Staff are operators, not customers: no model creation, model library,
   // print orders or membership — only order fulfilment.
   const adminLinks = user?.roles?.includes("ADMIN")
-    ? [{ to: "/admin", icon: BarChart3, label: t("nav.admin") }]
+    ? [
+        { to: "/admin", icon: BarChart3, label: t("nav.admin") },
+        { to: "/admin/revenue", icon: Banknote, label: t("nav.revenue") },
+      ]
     : [];
   const accountLinks = [...adminLinks, ...(userIsStaff
     ? [

@@ -98,6 +98,11 @@ export const adminApi = {
   dailyVisits: (days = 14) => request(`/api/admin/visits/daily?days=${days}`, { auth: true }),
   activeAccounts: () => request("/api/admin/visits/active-accounts", { auth: true }),
   onlineUsers: () => request("/api/admin/visits/online", { auth: true }),
+  revenueSummary: () => request("/api/admin/revenue/summary", { auth: true }),
+  payments: (status, page = 0) =>
+    request(`/api/admin/revenue/payments?page=${page}&size=20${status ? `&status=${status}` : ""}`, { auth: true }),
+  reconcilePayment: (orderCode) =>
+    request(`/api/admin/revenue/payments/${encodeURIComponent(orderCode)}/reconcile`, { method: "POST", auth: true }),
 };
 
 // Counts one site visit; the app calls it once per browser session.

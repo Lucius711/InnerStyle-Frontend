@@ -19,6 +19,7 @@ export const vi = {
     printHistory: "Lịch sử in 3D",
     staff: "Trang nhân viên",
     admin: "Lưu lượng truy cập",
+    revenue: "Doanh thu",
   },
 
   lab: {
@@ -112,6 +113,34 @@ export const vi = {
     activeAccounts: "Tài khoản đang hoạt động",
     visits: "Lượt truy cập",
     newUsers: "Tài khoản mới",
+  },
+
+  revenue: {
+    title: "Doanh thu",
+    subtitle: "Các đơn thanh toán payOS trong hệ thống. Bấm “Đối soát” để kiểm tra lại một đơn với payOS.",
+    total: "Tổng doanh thu",
+    subscription: "Gói thành viên",
+    print: "Đơn in 3D",
+    paidCount: "Đơn đã thanh toán",
+    awaitingCount: "Đơn đang chờ",
+    all: "Tất cả",
+    empty: "Chưa có đơn thanh toán nào.",
+    loadFail: "Không tải được doanh thu",
+    orderCode: "Mã đơn",
+    purpose: "Loại",
+    customer: "Khách hàng",
+    amount: "Số tiền",
+    statusCol: "Trạng thái",
+    createdAt: "Tạo lúc",
+    paidAt: "Thanh toán lúc",
+    reconcile: "Đối soát",
+    reconciled: "payOS xác nhận đã thanh toán",
+    notPaid: "payOS chưa ghi nhận thanh toán",
+    reconcileFail: "Đối soát thất bại",
+    prev: "Trước",
+    next: "Sau",
+    purposes: { SUBSCRIPTION: "Gói", PRINT: "In 3D" },
+    statuses: { PENDING: "Mới tạo", PROCESSING: "Chờ thanh toán", SUCCEEDED: "Đã thanh toán", FAILED: "Thất bại" },
   },
 
   staff: {

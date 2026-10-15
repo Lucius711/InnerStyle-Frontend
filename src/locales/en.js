@@ -19,6 +19,7 @@ export const en = {
     printHistory: "Print history",
     staff: "Staff dashboard",
     admin: "Traffic",
+    revenue: "Revenue",
   },
 
   lab: {
@@ -112,6 +113,34 @@ export const en = {
     activeAccounts: "Active accounts",
     visits: "Visits",
     newUsers: "New accounts",
+  },
+
+  revenue: {
+    title: "Revenue",
+    subtitle: "payOS payment orders in the system. Use “Reconcile” to re-check an order with payOS.",
+    total: "Total revenue",
+    subscription: "Memberships",
+    print: "3D print orders",
+    paidCount: "Paid orders",
+    awaitingCount: "Awaiting payment",
+    all: "All",
+    empty: "No payment orders yet.",
+    loadFail: "Couldn't load revenue",
+    orderCode: "Order code",
+    purpose: "Type",
+    customer: "Customer",
+    amount: "Amount",
+    statusCol: "Status",
+    createdAt: "Created",
+    paidAt: "Paid",
+    reconcile: "Reconcile",
+    reconciled: "payOS confirms this order is paid",
+    notPaid: "payOS has no payment for this order yet",
+    reconcileFail: "Reconcile failed",
+    prev: "Previous",
+    next: "Next",
+    purposes: { SUBSCRIPTION: "Membership", PRINT: "3D print" },
+    statuses: { PENDING: "Created", PROCESSING: "Awaiting payment", SUCCEEDED: "Paid", FAILED: "Failed" },
   },
 
   staff: {
