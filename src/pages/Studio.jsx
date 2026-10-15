@@ -22,6 +22,26 @@ import { TERMINAL_STATUSES } from "@/lib/constants";
 
 // Step-by-step onboarding tour. Targets are real elements tagged with data-tour.
 const TOUR_SEEN_KEY = "innerstyle-studio-tour-seen";
+// The task being generated, so leaving the Studio mid-generation and coming back resumes it.
+// shortcut: per-browser only, a task started on another device isn't picked up — query unfinished tasks via api.listTasks if that matters.
+const ACTIVE_TASK_KEY = "innerstyle-studio-active-task";
+
+function saveActive(value) {
+  try {
+    if (value) window.localStorage.setItem(ACTIVE_TASK_KEY, JSON.stringify(value));
+    else window.localStorage.removeItem(ACTIVE_TASK_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadActive() {
+  try {
+    return JSON.parse(window.localStorage.getItem(ACTIVE_TASK_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
 const TOUR_STEPS = [
   { selector: '[data-tour="mode"]', title: "studio.tour.modeTitle", body: "studio.tour.modeBody" },
   { selector: '[data-tour="input"]', title: "studio.tour.inputTitle", body: "studio.tour.inputBody" },
@@ -67,10 +87,31 @@ export default function Studio() {
   };
 
   const handleCreated = (created) => {
+    const now = Date.now();
     setChainError(null);
-    setStartedAt(Date.now());
+    setStartedAt(now);
+    saveActive(created?.id ? { id: created.id, startedAt: now } : null);
     start(created);
   };
+
+  // Resume the task that was still generating when the user left the Studio.
+  useEffect(() => {
+    const saved = loadActive();
+    if (!saved?.id) return undefined;
+    let cancelled = false;
+    api
+      .getTask(saved.id)
+      .then((fresh) => {
+        if (cancelled || loadActive()?.id !== saved.id) return; // user already started something new
+        setStartedAt(saved.startedAt || Date.parse(fresh.createdAt) || Date.now());
+        start(fresh);
+      })
+      .catch(() => saveActive(null)); // deleted, or belongs to another account on this browser
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { actions, busyAction } = usePipelineActions(handleCreated);
 
@@ -92,9 +133,13 @@ export default function Studio() {
         launchBuild(task.id);
         return;
       }
+      saveActive(null);
       toast.success(t("toast.readyTitle"), t("toast.readyBody"));
     } else if (status === "FAILED") {
+      saveActive(null);
       toast.error(t("toast.failTitle"), tServer(task.errorMessage) || undefined);
+    } else if (TERMINAL_STATUSES.includes(status)) {
+      saveActive(null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
@@ -118,6 +163,7 @@ export default function Studio() {
 
   const startOver = () => {
     reset();
+    saveActive(null);
     setStartedAt(null);
     builtFor.current = null;
     setChainError(null);
