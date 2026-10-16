@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Printer, Loader2, RefreshCw, CreditCard } from "lucide-react";
+import { Printer, Loader2, RefreshCw, CreditCard, Truck } from "lucide-react";
+import OrderTracking from "@/components/print/OrderTracking";
 import Seo from "@/components/seo/Seo";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
@@ -26,6 +27,19 @@ export default function PrintOrders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState("");
+  const [openId, setOpenId] = useState("");
+  const [tracking, setTracking] = useState({});
+
+  const toggleTracking = async (id) => {
+    if (openId === id) return setOpenId("");
+    setOpenId(id);
+    try {
+      const data = await printApi.tracking(id);
+      setTracking((m) => ({ ...m, [id]: data }));
+    } catch (err) {
+      toast.error(t("tracking.loadFail"), friendly(err));
+    }
+  };
   const navigate = useNavigate();
 
   // Same hand-off as placing the order (ResultPanel): payOS QR page, else redirect to the link.
@@ -89,10 +103,8 @@ export default function PrintOrders() {
       ) : (
         <ul className="mt-8 space-y-3">
           {orders.map((o) => (
-            <li
-              key={o.id}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-app-line/10 bg-app-line/[0.03] p-4"
-            >
+            <li key={o.id} className="rounded-2xl border border-app-line/10 bg-app-line/[0.03] p-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <Badge tone={STATUS_TONE[o.status] || "violet"}>{o.status}</Badge>
@@ -121,8 +133,21 @@ export default function PrintOrders() {
                     {t("profile.prints.continuePay")}
                   </Button>
                 )}
+                <Button size="sm" variant="ghost" icon={Truck} onClick={() => toggleTracking(o.id)} aria-expanded={openId === o.id}>
+                  {openId === o.id ? t("tracking.hide") : t("tracking.track")}
+                </Button>
                 <span className="font-semibold text-app-text">{vnd.format(o.amount)}</span>
               </div>
+            </div>
+            {openId === o.id && (
+              <div className="mt-4 border-t border-app-line/10 pt-4">
+                {tracking[o.id] ? (
+                  <OrderTracking data={tracking[o.id]} />
+                ) : (
+                  <Loader2 className="h-5 w-5 animate-spin text-app-muted" />
+                )}
+              </div>
+            )}
             </li>
           ))}
         </ul>

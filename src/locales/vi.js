@@ -155,10 +155,16 @@ export const vi = {
     prev: "Trước",
     next: "Sau",
     purposes: { SUBSCRIPTION: "Gói", PRINT: "In 3D" },
-    statuses: { PENDING: "Mới tạo", PROCESSING: "Chờ thanh toán", SUCCEEDED: "Đã thanh toán", FAILED: "Thất bại" },
+    statuses: { PENDING: "Mới tạo", PROCESSING: "Chờ thanh toán", SUCCEEDED: "Đã thanh toán", FAILED: "Thất bại", EXPIRED: "Hết hạn (quá 30 phút)", CANCELED: "Đã huỷ" },
   },
 
   staff: {
+    updateProgress: "Cập nhật tiến độ",
+    progressStatus: "Trạng thái",
+    progressNote: "Ghi chú cho khách",
+    progressNotePlaceholder: "VD: Đã in xong, đang sơn hoàn thiện",
+    carrierPlaceholder: "GHN, GHTK, Viettel Post…",
+    saveProgress: "Lưu cập nhật",
     extras: "Gửi kèm",
     light: "Đế đèn LED",
     card: "Thiệp",
@@ -583,6 +589,37 @@ export const vi = {
     loading: "Đang tải",
     ready: "Sẵn sàng",
     skip: "Bỏ qua",
+  },
+
+  tracking: {
+    track: "Theo dõi đơn",
+    hide: "Ẩn",
+    carrier: "Đơn vị vận chuyển",
+    trackingCode: "Mã vận đơn",
+    copy: "Sao chép mã vận đơn",
+    copied: "Đã sao chép mã vận đơn",
+    cancelled: "Đơn hàng đã bị huỷ.",
+    empty: "Chưa có cập nhật nào.",
+    loadFail: "Không tải được tiến độ đơn",
+    steps: {
+      PENDING: "Đặt hàng",
+      PAID: "Đã thanh toán",
+      IN_PRODUCTION: "Đang in",
+      SHIPPED: "Đang giao",
+      COMPLETED: "Đã nhận hàng",
+      CANCELLED: "Huỷ đơn",
+    },
+    status: {
+      PENDING: "Đơn hàng đã được đặt, chờ thanh toán",
+      PAID: "Đã thanh toán, đơn đang chờ xử lý",
+      IN_PRODUCTION: "Mô hình đang được in",
+      SHIPPED: "Đã giao cho đơn vị vận chuyển",
+      COMPLETED: "Giao hàng thành công",
+      CANCELLED: "Đơn hàng đã bị huỷ",
+    },
+    notes: {
+      paymentExpired: "Quá 30 phút chưa thanh toán nên đơn tự huỷ.",
+    },
   },
 
   footer: {
@@ -1194,6 +1231,12 @@ export const vi = {
       },
       longitude: {
         invalid: "Vị trí ghim trên bản đồ không hợp lệ.",
+      },
+      carrier: {
+        tooLong: "Tên đơn vị vận chuyển tối đa 100 ký tự.",
+      },
+      trackingCode: {
+        tooLong: "Mã vận đơn tối đa 100 ký tự.",
       },
       cardMessage: {
         tooLong: "Lời nhắn trên thiệp tối đa 300 ký tự.",

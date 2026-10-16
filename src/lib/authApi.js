@@ -48,6 +48,9 @@ export const printApi = {
   // Continue paying a PENDING order: returns the same shape as placeOrder, reusing its payOS link.
   resumePayment: (id) =>
     request(`/api/user/print/orders/${id}/pay`, { method: "POST", auth: true }),
+
+  // Shopee-style tracking: { status, carrier, trackingCode, events: [{ status, note, at }] }
+  tracking: (id) => request(`/api/user/print/orders/${id}/tracking`, { auth: true }),
 };
 
 // Staff order-fulfilment API (requires ROLE_STAFF).
@@ -63,12 +66,15 @@ export const staffApi = {
 
   getOrder: (id) => request(`/api/staff/orders/${id}`, { auth: true }),
 
-  updateStatus: (id, status) =>
+  // `update` is a status string, or { status, note, carrier, trackingCode } to post a tracking update
+  updateStatus: (id, update) =>
     request(`/api/staff/orders/${id}/status`, {
       method: "PATCH",
       auth: true,
-      body: { status },
+      body: typeof update === "string" ? { status: update } : update,
     }),
+
+  tracking: (id) => request(`/api/staff/orders/${id}/tracking`, { auth: true }),
 
   // Analyse the order model's 3D-print readiness (watertight / holes / non-manifold).
   // pair=true targets the Couple Set's second model (same for repair/revert).

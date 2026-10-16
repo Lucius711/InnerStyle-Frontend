@@ -8,11 +8,13 @@ import { useT } from "@/hooks/useI18n";
 import { friendly } from "@/lib/messages";
 import { vnd } from "@/lib/pricing";
 
-const STATUSES = ["", "SUCCEEDED", "PROCESSING", "FAILED"];
+const STATUSES = ["", "SUCCEEDED", "PROCESSING", "EXPIRED", "FAILED"];
 const STATUS_TONE = {
   SUCCEEDED: "text-emerald-400",
   PROCESSING: "text-amber-400",
   FAILED: "text-rose-400",
+  EXPIRED: "text-app-faint",
+  CANCELED: "text-app-faint",
   PENDING: "text-app-muted",
 };
 

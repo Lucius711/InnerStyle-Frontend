@@ -155,10 +155,16 @@ export const en = {
     prev: "Previous",
     next: "Next",
     purposes: { SUBSCRIPTION: "Membership", PRINT: "3D print" },
-    statuses: { PENDING: "Created", PROCESSING: "Awaiting payment", SUCCEEDED: "Paid", FAILED: "Failed" },
+    statuses: { PENDING: "Created", PROCESSING: "Awaiting payment", SUCCEEDED: "Paid", FAILED: "Failed", EXPIRED: "Expired (over 30 min)", CANCELED: "Cancelled" },
   },
 
   staff: {
+    updateProgress: "Update progress",
+    progressStatus: "Status",
+    progressNote: "Note for the customer",
+    progressNotePlaceholder: "e.g. Printing done, now painting the details",
+    carrierPlaceholder: "GHN, GHTK, Viettel Post…",
+    saveProgress: "Save update",
     extras: "Pack with it",
     light: "LED light base",
     card: "Card",
@@ -583,6 +589,37 @@ export const en = {
     loading: "Loading",
     ready: "Ready",
     skip: "Skip",
+  },
+
+  tracking: {
+    track: "Track order",
+    hide: "Hide",
+    carrier: "Carrier",
+    trackingCode: "Tracking code",
+    copy: "Copy tracking code",
+    copied: "Tracking code copied",
+    cancelled: "This order was cancelled.",
+    empty: "No updates yet.",
+    loadFail: "Couldn't load the order progress",
+    steps: {
+      PENDING: "Ordered",
+      PAID: "Paid",
+      IN_PRODUCTION: "Printing",
+      SHIPPED: "Shipping",
+      COMPLETED: "Delivered",
+      CANCELLED: "Cancel",
+    },
+    status: {
+      PENDING: "Order placed, awaiting payment",
+      PAID: "Payment received, order is queued",
+      IN_PRODUCTION: "Your figure is being printed",
+      SHIPPED: "Handed to the carrier",
+      COMPLETED: "Delivered",
+      CANCELLED: "Order cancelled",
+    },
+    notes: {
+      paymentExpired: "Not paid within 30 minutes, so the order was cancelled automatically.",
+    },
   },
 
   footer: {
@@ -1197,6 +1234,12 @@ export const en = {
       },
       longitude: {
         invalid: "Invalid map location.",
+      },
+      carrier: {
+        tooLong: "The carrier name can be at most 100 characters.",
+      },
+      trackingCode: {
+        tooLong: "The tracking code can be at most 100 characters.",
       },
       cardMessage: {
         tooLong: "The card message can be at most 300 characters.",

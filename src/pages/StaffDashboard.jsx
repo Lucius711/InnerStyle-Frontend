@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useState } from "react";
 import {
   Loader2,
   RefreshCw,
@@ -10,15 +9,15 @@ import {
   User,
   Package,
   ExternalLink,
-  ChevronDown,
-  Check,
+  Truck,
 } from "lucide-react";
 import { zipSync, unzipSync } from "three/examples/jsm/libs/fflate.module.js";
 import { buildModelFiles } from "@/lib/modelExport";
 import Button from "@/components/ui/Button";
 import { Badge } from "@/components/ui/primitives";
-import { Field, SelectMenu } from "@/components/ui/FormControls";
+import { Field, SelectMenu, TextInput, TextArea } from "@/components/ui/FormControls";
 import PrintabilityCard from "@/components/studio/PrintabilityCard";
+import OrderTracking from "@/components/print/OrderTracking";
 import { staffApi } from "@/lib/authApi";
 import { authedFetch } from "@/lib/http";
 import { vnd } from "@/lib/pricing";
@@ -107,6 +106,7 @@ export default function StaffDashboard() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
   const [busyId, setBusyId] = useState("");
+  const [trackId, setTrackId] = useState("");
   // Per-order selected format: { [orderId]: fmt }
   const [formatMap, setFormatMap] = useState({});
 
@@ -157,20 +157,6 @@ export default function StaffDashboard() {
       }
     } catch (err) {
       toast.error(t("staff.downloadFail"), friendly(err));
-    } finally {
-      setBusyId("");
-    }
-  };
-
-  const changeStatus = async (order, status) => {
-    if (!status || status === order.status) return;
-    setBusyId(order.id + "status");
-    try {
-      const updated = await staffApi.updateStatus(order.id, status);
-      setOrders((list) => list.map((o) => (o.id === order.id ? { ...o, status: updated.status } : o)));
-      toast.success(t("staff.statusUpdated"), `${order.id.slice(0, 8)} → ${updated.status}`);
-    } catch (err) {
-      toast.error(t("staff.statusFail"), friendly(err));
     } finally {
       setBusyId("");
     }
@@ -278,11 +264,15 @@ export default function StaffDashboard() {
                         {t("staff.downloadPair")}
                       </Button>
                     )}
-                    <StatusMenu
-                      current={o.status}
-                      busy={busyId === o.id + "status"}
-                      onSelect={(s) => changeStatus(o, s)}
-                    />
+                    <Button
+                      size="sm"
+                      variant={trackId === o.id ? "primary" : "ghost"}
+                      icon={Truck}
+                      onClick={() => setTrackId(trackId === o.id ? "" : o.id)}
+                      aria-expanded={trackId === o.id}
+                    >
+                      {t("staff.updateProgress")}
+                    </Button>
                   </div>
                 </div>
 
@@ -343,6 +333,13 @@ export default function StaffDashboard() {
                   {t("staff.placedBy")}: {o.customerName || o.customerEmail || "—"}
                 </p>
 
+                {trackId === o.id && (
+                  <TrackingPanel
+                    order={o}
+                    onUpdated={(u) => setOrders((list) => list.map((x) => (x.id === u.id ? { ...x, ...u } : x)))}
+                  />
+                )}
+
                 {/* 3D-print readiness: check + auto-fix the model in place before printing. */}
                 {o.sourceTaskId && (
                   <div className="mt-3">
@@ -375,65 +372,90 @@ export default function StaffDashboard() {
 }
 
 /**
- * Themed "advance status" dropdown. Replaces the native <select> (whose option list
- * the OS renders unstyled/greyed) with a fully theme-aware menu that works in both
- * the light and dark palettes via the app design tokens + glass-strong surface.
+ * Staff "update progress" panel: pick the next status (or keep it to post a plain note), add a
+ * note the customer sees on their tracking timeline, and set carrier + tracking code.
  */
-function StatusMenu({ current, busy, onSelect }) {
+function TrackingPanel({ order, onUpdated }) {
   const t = useT();
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  const options = NEXT_STATUSES.filter((s) => s !== current);
+  const toast = useToast();
+  const [status, setStatus] = useState(order.status);
+  const [note, setNote] = useState("");
+  const [carrier, setCarrier] = useState(order.carrier || "");
+  const [trackingCode, setTrackingCode] = useState(order.trackingCode || "");
+  const [tracking, setTracking] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadTracking = useCallback(() => {
+    staffApi.tracking(order.id).then(setTracking).catch((err) => toast.error(t("tracking.loadFail"), friendly(err)));
+  }, [order.id, t, toast]);
 
   useEffect(() => {
-    const onClick = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
-  }, []);
+    loadTracking();
+  }, [loadTracking]);
+
+  const nothingToSave =
+    status === order.status && !note.trim() && carrier === (order.carrier || "") && trackingCode === (order.trackingCode || "");
+
+  const save = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const updated = await staffApi.updateStatus(order.id, { status, note, carrier, trackingCode });
+      onUpdated(updated);
+      setNote("");
+      loadTracking();
+      toast.success(t("staff.statusUpdated"), `${order.id.slice(0, 8)} → ${updated.status}`);
+    } catch (err) {
+      toast.error(t("staff.statusFail"), friendly(err));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        disabled={busy}
-        className="focus-ring flex items-center gap-1.5 rounded-lg border border-app-line/10 bg-app-line/5 px-2.5 py-1.5 text-xs font-medium text-app-muted transition-colors hover:text-app-text disabled:opacity-50"
-      >
-        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-        {t("staff.setStatus")}
-        <ChevronDown
-          className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.ul
-            initial={{ opacity: 0, y: -8, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.96 }}
-            transition={{ duration: 0.16 }}
-            className="glass-menu absolute right-0 top-10 z-50 w-48 overflow-hidden rounded-2xl p-1.5 shadow-card"
-          >
-            {options.map((s) => (
-              <li key={s}>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    onSelect(s);
-                  }}
-                  className="flex w-full items-center rounded-xl px-2 py-1.5 transition-colors hover:bg-app-line/5"
-                >
-                  <Badge tone={STATUS_TONE[s] || "violet"}>{s}</Badge>
-                </button>
-              </li>
+    <div className="mt-4 grid gap-5 rounded-2xl border border-app-line/10 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <form onSubmit={save} className="space-y-3">
+        <Field label={t("staff.progressStatus")}>
+          <div className="flex flex-wrap gap-1.5">
+            {NEXT_STATUSES.map((s) => (
+              <button
+                key={s}
+                type="button"
+                aria-pressed={status === s}
+                onClick={() => setStatus(s)}
+                className={`rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors ${
+                  status === s ? "border-brand-violet bg-brand-violet/10 text-app-text" : "border-app-line/15 text-app-muted hover:text-app-text"
+                }`}
+              >
+                {t(`tracking.steps.${s}`)}
+              </button>
             ))}
-          </motion.ul>
-        )}
-      </AnimatePresence>
+          </div>
+        </Field>
+        <Field label={t("staff.progressNote")} hint={`${note.length}/500`}>
+          <TextArea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={500}
+            className="min-h-[70px]"
+            placeholder={t("staff.progressNotePlaceholder")}
+          />
+        </Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label={t("tracking.carrier")}>
+            <TextInput value={carrier} onChange={(e) => setCarrier(e.target.value)} maxLength={100} placeholder={t("staff.carrierPlaceholder")} />
+          </Field>
+          <Field label={t("tracking.trackingCode")}>
+            <TextInput value={trackingCode} onChange={(e) => setTrackingCode(e.target.value)} maxLength={100} />
+          </Field>
+        </div>
+        <Button type="submit" size="sm" loading={saving} disabled={saving || nothingToSave}>
+          {t("staff.saveProgress")}
+        </Button>
+      </form>
+      <div className="min-w-0">
+        {tracking ? <OrderTracking data={tracking} /> : <Loader2 className="h-5 w-5 animate-spin text-app-muted" />}
+      </div>
     </div>
   );
 }
