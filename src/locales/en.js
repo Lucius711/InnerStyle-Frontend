@@ -20,6 +20,7 @@ export const en = {
     staff: "Staff dashboard",
     admin: "Traffic",
     revenue: "Revenue",
+    models: "Model stats",
   },
 
   lab: {
@@ -128,6 +129,17 @@ export const en = {
     activeAccounts: "Active accounts",
     visits: "Visits",
     newUsers: "New accounts",
+  },
+
+  models: {
+    title: "Model stats",
+    subtitle: "3D models created successfully, by creation method and by account.",
+    total: "Total models",
+    loadFail: "Couldn't load model stats",
+    empty: "No account has created a model yet.",
+    account: "Account",
+    totalCol: "Total",
+    lastCreated: "Last created",
   },
 
   revenue: {

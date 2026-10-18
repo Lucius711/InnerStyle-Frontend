@@ -20,6 +20,7 @@ export const vi = {
     staff: "Trang nhân viên",
     admin: "Lưu lượng truy cập",
     revenue: "Doanh thu",
+    models: "Thống kê mô hình",
   },
 
   lab: {
@@ -128,6 +129,17 @@ export const vi = {
     activeAccounts: "Tài khoản đang hoạt động",
     visits: "Lượt truy cập",
     newUsers: "Tài khoản mới",
+  },
+
+  models: {
+    title: "Thống kê mô hình",
+    subtitle: "Số mô hình 3D đã tạo thành công, theo cách tạo và theo tài khoản.",
+    total: "Tổng mô hình",
+    loadFail: "Không tải được thống kê mô hình",
+    empty: "Chưa có tài khoản nào tạo mô hình.",
+    account: "Tài khoản",
+    totalCol: "Tổng",
+    lastCreated: "Tạo gần nhất",
   },
 
   revenue: {

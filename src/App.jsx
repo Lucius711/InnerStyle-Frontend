@@ -37,6 +37,7 @@ const CreativeLab = lazy(() => import("@/pages/CreativeLab"));
 const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 const AdminTraffic = lazy(() => import("@/pages/AdminTraffic"));
 const AdminRevenue = lazy(() => import("@/pages/AdminRevenue"));
+const AdminModels = lazy(() => import("@/pages/AdminModels"));
 const MyModels = lazy(() => import("@/pages/MyModels"));
 const PrintOrders = lazy(() => import("@/pages/PrintOrders"));
 const Membership = lazy(() => import("@/pages/Membership"));
@@ -179,6 +180,16 @@ function AnimatedRoutes() {
             <PageTransition>
               <StaffRoute role="ADMIN">
                 <AdminRevenue />
+              </StaffRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/admin/models"
+          element={
+            <PageTransition>
+              <StaffRoute role="ADMIN">
+                <AdminModels />
               </StaffRoute>
             </PageTransition>
           }
