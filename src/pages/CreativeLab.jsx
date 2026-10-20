@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Loader2,
   Cuboid,
+  PersonStanding,
 } from "lucide-react";
 import Seo from "@/components/seo/Seo";
 import Button from "@/components/ui/Button";
@@ -23,11 +24,13 @@ import { useI18n } from "@/hooks/useI18n";
 import { useToast } from "@/hooks/useToast";
 import { usePipelineActions } from "@/hooks/usePipelineActions";
 import { useTaskPolling } from "@/hooks/useTaskPolling";
+import { useCostConfirm } from "@/hooks/useCostConfirm";
+import { useConfirm } from "@/hooks/useConfirm";
+import { membershipApi } from "@/lib/authApi";
 import { TERMINAL_STATUSES } from "@/lib/constants";
 
-// Rigged / animated models already have a skeleton; everything else is auto-rigged before editing
-// so the editor can split it into head / body / arms / legs from the bone weights.
-const ALREADY_RIGGED = ["RIG", "ANIMATE"];
+// Rigged / animated models already have a skeleton; others can be rigged on demand (Pro/Max) so
+// the editor can split them into head / body / arms / legs from the bone weights.
 const needsRig = (task) =>
   task?.status === "SUCCEEDED" && !ALREADY_RIGGED.includes(task.taskType) && Boolean(task.modelUrls?.glb || task.modelUrls?.gltf);
 
@@ -73,23 +76,34 @@ export default function CreativeLab() {
   const editPoll = useTaskPolling();
   const { actions, busyAction } = usePipelineActions((next) => editPoll.start(next));
   const editing = busyAction != null || editPoll.isPolling;
-  // Auto-rig state: true while the rig task runs (editor waits), false once done or given up.
+  // Rig state: true while a rig task the user asked for runs (editor waits).
   const [rigging, setRigging] = useState(false);
-  const rigTried = useRef(null);
+  const confirmCost = useCostConfirm();
+  const confirm = useConfirm();
 
-  useEffect(() => {
-    if (!needsRig(task) || rigTried.current === task.id) return;
-    rigTried.current = task.id;
-    setRigging(true);
-    api
-      .rig({ sourceTaskId: task.id, heightMeters: 1.7 })
-      .then((rigTask) => editPoll.start(rigTask))
-      .catch((err) => {
-        setRigging(false); // no credits / API error → edit the unrigged model instead
-        toast.error(t("lab.rigFailTitle"), tServer(err.message));
+  /** "Rig & animate" button: Pro/Max only (backend enforces it too), billed, so confirm first. */
+  const startRig = async () => {
+    if (!needsRig(task) || rigging) return;
+    const quota = await membershipApi.freeUses().catch(() => null);
+    if (quota?.freePlan) {
+      const upgrade = await confirm({
+        title: t("lab.rigProTitle"),
+        message: t("lab.rigProMsg"),
+        confirmLabel: t("lab.rigProCta"),
+        cancelLabel: t("confirm.cancel"),
       });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [task]);
+      if (upgrade) navigate("/membership");
+      return;
+    }
+    if (!(await confirmCost("RIG"))) return;
+    setRigging(true);
+    try {
+      editPoll.start(await api.rig({ sourceTaskId: task.id, heightMeters: 1.7 }));
+    } catch (err) {
+      setRigging(false);
+      toast.error(t("lab.rigFailTitle"), tServer(err.message));
+    }
+  };
 
   useEffect(() => {
     const edited = editPoll.task;
@@ -192,6 +206,7 @@ export default function CreativeLab() {
               editing={editing}
               actions={actions}
               busyAction={busyAction}
+              onRig={needsRig(task) ? startRig : null}
               t={t}
             />
           }
@@ -213,7 +228,7 @@ export default function CreativeLab() {
 
 /* ------------------------------------------------- editor left panel */
 
-function LabSidePanel({ task, onBack, onAr, onEdit, editing, actions, busyAction, t }) {
+function LabSidePanel({ task, onBack, onAr, onEdit, editing, actions, busyAction, onRig, t }) {
   const [imgError, setImgError] = useState(false);
   const [editMode, setEditMode] = useState("retexture");
   const [prompt, setPrompt] = useState("");
@@ -287,6 +302,21 @@ function LabSidePanel({ task, onBack, onAr, onEdit, editing, actions, busyAction
             {editing ? t("lab.editGenerating") : t("lab.editApply")}
           </Button>
           <p className="mt-2 text-[11px] leading-relaxed text-app-faint">{t("lab.editHint")}</p>
+        </div>
+      )}
+
+      {onRig && (
+        <div className="shrink-0 rounded-2xl border border-app-line/10 bg-app-line/[0.04] p-3">
+          <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-app-text">
+            <PersonStanding className="h-3.5 w-3.5 text-brand-violet" /> {t("lab.rigTitle")}
+            <span className="ml-auto rounded-full bg-brand-violet/15 px-2 py-0.5 text-[10px] font-semibold text-brand-violet">
+              Pro · Max
+            </span>
+          </p>
+          <p className="mb-2 text-[11px] leading-relaxed text-app-faint">{t("lab.rigDesc")}</p>
+          <Button variant="secondary" icon={PersonStanding} className="w-full" disabled={editing} onClick={onRig}>
+            {t("lab.rigCta")}
+          </Button>
         </div>
       )}
 

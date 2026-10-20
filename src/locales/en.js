@@ -44,6 +44,12 @@ export const en = {
     loadFailTitle: "Couldn't load model",
     rigging: "Rigging the model so it can be split into parts…",
     rigFailTitle: "Couldn't rig the model",
+    rigTitle: "Rig & animate",
+    rigDesc: "Add a skeleton to auto-split parts (head, body, arms, legs) and add motions like walking or running. Takes a few minutes.",
+    rigCta: "Rig model",
+    rigProTitle: "Pro & Max feature",
+    rigProMsg: "Rigging and animation are available on Pro or Max. Upgrade to use this feature.",
+    rigProCta: "Upgrade",
     rigFailBody: "It may not be a humanoid — you can still edit it, but auto-split will be less accurate.",
     editTitle: "Edit with a prompt",
     editRetexture: "Re-texture",
@@ -1139,6 +1145,9 @@ export const en = {
       invalidReference: "Invalid reference",
     },
     meshy: {
+      rig: {
+        premiumOnly: "Rigging and animation are available on Pro or Max only.",
+      },
       base: {
         none: "This model has no base to remove.",
       },
@@ -1160,9 +1169,6 @@ export const en = {
         found: "3D task retrieved successfully",
         notFound: "3D task not found",
         notSucceeded: "The source task has not succeeded yet",
-      },
-      figurine: {
-        alreadyBuilt: "This concept has already been built into a 3D model. Create a new concept for another figurine.",
       },
       tasks: { found: "3D tasks retrieved successfully" },
       export: {

@@ -44,6 +44,12 @@ export const vi = {
     loadFailTitle: "Không tải được mô hình",
     rigging: "Đang gắn xương cho mô hình để chia bộ phận…",
     rigFailTitle: "Không gắn xương được",
+    rigTitle: "Gắn xương & chuyển động",
+    rigDesc: "Gắn khung xương để tự chia bộ phận (đầu, thân, tay, chân) và thêm chuyển động như đi, chạy. Mất vài phút.",
+    rigCta: "Gắn xương",
+    rigProTitle: "Tính năng dành cho Pro & Max",
+    rigProMsg: "Gắn xương và chuyển động chỉ có ở gói Pro hoặc Max. Nâng cấp để dùng tính năng này.",
+    rigProCta: "Nâng cấp",
     rigFailBody: "Mô hình có thể không phải dáng người — vẫn chỉnh sửa được, nhưng tự chia bộ phận sẽ kém chính xác hơn.",
     editTitle: "Chỉnh sửa bằng prompt",
     editRetexture: "Đổi texture",
@@ -1136,6 +1142,9 @@ export const vi = {
       invalidReference: "Tham chiếu không hợp lệ",
     },
     meshy: {
+      rig: {
+        premiumOnly: "Gắn xương và chuyển động chỉ có ở gói Pro hoặc Max.",
+      },
       base: {
         none: "Model này không có đế để gỡ.",
       },
@@ -1157,9 +1166,6 @@ export const vi = {
         found: "Lấy tác vụ 3D thành công",
         notFound: "Không tìm thấy tác vụ 3D",
         notSucceeded: "Tác vụ nguồn chưa hoàn thành",
-      },
-      figurine: {
-        alreadyBuilt: "Mẫu này đã được dựng thành mô hình 3D. Tạo mẫu mới để làm figurine khác.",
       },
       tasks: { found: "Lấy danh sách tác vụ 3D thành công" },
       export: {

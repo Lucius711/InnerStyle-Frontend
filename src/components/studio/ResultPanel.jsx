@@ -70,7 +70,9 @@ export default function ResultPanel({ task, actions = {}, busyAction }) {
   const best = pickModelUrl(task.modelUrls);
   // The viewer picks the right three.js loader from the ?format= (glb/gltf/obj/fbx/stl), so we
   // can preview whatever native format the task has.
-  const viewerFormat = best?.format || null;
+  // Rig/animate tasks have no modelUrls, only animation files; the model proxy serves their GLB.
+  const hasAnimGlb = Object.values(task.animationUrls || {}).some((u) => /\.glb(\?|$)/i.test(u || ""));
+  const viewerFormat = best?.format || (hasAnimGlb ? "glb" : null);
   // Cache-bust the model proxy by the task's last-updated time (and by modelVersion for in-session
   // edits). The proxy sends a long Cache-Control, so without this a page refresh after editing
   // (e.g. adding a base) would serve the stale, pre-edit GLB from the browser cache.
