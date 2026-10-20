@@ -119,7 +119,7 @@ export default function CreativeLab() {
       const text = (prompt || "").trim();
       if (!text || !task || editing) return;
       if (mode === "refine") actions.onRefine(task, { texturePrompt: text });
-      else actions.onRetexture(task, { textStylePrompt: text, enablePbr: true });
+      else actions.onRetexture(task, { textStylePrompt: text, enablePbr: false }); // figurine = print: PBR maps unused, skip them
     },
     [task, editing, actions]
   );

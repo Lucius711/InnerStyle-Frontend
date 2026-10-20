@@ -129,6 +129,7 @@ export default function TaskProgress({ task, startedAt }) {
           {phases[phaseIndex]}…
         </motion.p>
         <p className="text-xs text-app-faint">{t(isFigure ? "studio.takesTimeFigure" : "studio.takesTime")}</p>
+        <p className="max-w-xs text-xs text-app-faint">{t("studio.canLeave")}</p>
 
         {/* stepped phase dots */}
         <div className="mt-1 flex items-center gap-1.5">

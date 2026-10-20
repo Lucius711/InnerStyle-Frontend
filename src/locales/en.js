@@ -778,6 +778,7 @@ export const en = {
     },
     takesTime: "This usually takes 1–3 minutes",
     takesTimeFigure: "This usually takes 5–7 minutes",
+    canLeave: "You can leave this page — your model keeps generating. Find it in \"My 3D models\"; we'll email you when it's ready.",
     retryBuild: "Retry building the 3D model",
     credits: "{n} credits",
     modelReady: "Model ready",

@@ -777,6 +777,7 @@ export const vi = {
     },
     takesTime: "Thường mất 1–3 phút",
     takesTimeFigure: "Thường mất 5–7 phút",
+    canLeave: "Bạn có thể rời trang — mô hình vẫn tiếp tục tạo, xem lại trong \"Sản phẩm 3D\" và chúng tôi sẽ gửi email khi xong.",
     retryBuild: "Thử dựng lại mô hình 3D",
     credits: "{n} tín dụng",
     modelReady: "Mô hình sẵn sàng",
