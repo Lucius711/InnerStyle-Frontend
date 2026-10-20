@@ -205,6 +205,8 @@ export const en = {
     title: "Confirm",
     creditMsg: "This operation will use",
     creditsUnit: "credits.",
+    chainMsg: "Creating a Chibi figurine uses {total} credits ({first} concept + {second} 3D build).",
+    freeUseMsg: "This will use 1 free generation ({left}/{limit} left).",
     proceed: "Continue",
     cancel: "Cancel",
     printTitle: "Order 3D print",
@@ -1158,6 +1160,9 @@ export const en = {
         found: "3D task retrieved successfully",
         notFound: "3D task not found",
         notSucceeded: "The source task has not succeeded yet",
+      },
+      figurine: {
+        alreadyBuilt: "This concept has already been built into a 3D model. Create a new concept for another figurine.",
       },
       tasks: { found: "3D tasks retrieved successfully" },
       export: {

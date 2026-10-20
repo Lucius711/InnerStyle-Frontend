@@ -205,6 +205,8 @@ export const vi = {
     title: "Xác nhận",
     creditMsg: "Thao tác này sẽ dùng",
     creditsUnit: "credit.",
+    chainMsg: "Tạo Chibi figurine sẽ dùng {total} credit ({first} tạo mẫu + {second} dựng mô hình 3D).",
+    freeUseMsg: "Thao tác này sẽ dùng 1 lượt tạo miễn phí (còn {left}/{limit} lượt).",
     proceed: "Tiếp tục",
     cancel: "Huỷ",
     printTitle: "Đặt in 3D",
@@ -1155,6 +1157,9 @@ export const vi = {
         found: "Lấy tác vụ 3D thành công",
         notFound: "Không tìm thấy tác vụ 3D",
         notSucceeded: "Tác vụ nguồn chưa hoàn thành",
+      },
+      figurine: {
+        alreadyBuilt: "Mẫu này đã được dựng thành mô hình 3D. Tạo mẫu mới để làm figurine khác.",
       },
       tasks: { found: "Lấy danh sách tác vụ 3D thành công" },
       export: {
