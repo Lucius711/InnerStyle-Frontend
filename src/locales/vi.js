@@ -21,6 +21,7 @@ export const vi = {
     admin: "Lưu lượng truy cập",
     revenue: "Doanh thu",
     models: "Thống kê mô hình",
+    plans: "Thống kê gói",
   },
 
   lab: {
@@ -146,6 +147,24 @@ export const vi = {
     account: "Tài khoản",
     totalCol: "Tổng",
     lastCreated: "Tạo gần nhất",
+  },
+
+  plans: {
+    title: "Thống kê gói",
+    subtitle: "Các gói thành viên đã thanh toán thành công, chia theo từng loại gói.",
+    totalPaid: "Tổng gói đã bán",
+    totalRevenue: "Doanh thu từ gói",
+    buyers: "Khách đã mua",
+    packs: "gói",
+    lastPaid: "Mua gần nhất",
+    all: "Tất cả",
+    empty: "Chưa có gói nào được thanh toán.",
+    loadFail: "Không tải được thống kê gói",
+    orderCode: "Mã đơn",
+    plan: "Gói",
+    customer: "Khách hàng",
+    amount: "Số tiền",
+    paidAt: "Thanh toán lúc",
   },
 
   revenue: {
@@ -922,6 +941,7 @@ export const vi = {
     dropHint: "PNG, JPG hoặc WEBP · tối đa {mb} MB",
     dropTypeError: "Vui lòng dùng ảnh PNG, JPG hoặc WEBP.",
     dropSizeError: "Ảnh phải nhỏ hơn {mb} MB.",
+    dropReadError: "Không đọc được ảnh này. Hãy tải ảnh về máy rồi chọn lại, hoặc chọn ảnh khác.",
     generateModel: "Tạo mô hình 3D",
     describeLabel: "Mô tả mô hình của bạn",
     describePlaceholder: "vd: chiến binh robot tương lai với giáp phát sáng",
@@ -1062,6 +1082,9 @@ export const vi = {
   },
 
   server: {
+    network: {
+      failed: "Mất kết nối khi gửi lên máy chủ. Kiểm tra mạng rồi thử lại.",
+    },
     user: {
       notFound: "Không tìm thấy tài khoản.",
     },

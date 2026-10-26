@@ -87,7 +87,11 @@ export async function authedFetch(path, { method = "GET", headers = {}, rawBody,
     const h = { ...headers };
     if (auth && tokenStore.access) h["Authorization"] = `Bearer ${tokenStore.access}`;
     // credentials:"include" so the HttpOnly refresh cookie rides along on auth calls.
-    return fetch(`${BASE}${path}`, { method, headers: h, body: rawBody, credentials: "include" });
+    try {
+      return await fetch(`${BASE}${path}`, { method, headers: h, body: rawBody, credentials: "include" });
+    } catch {
+      throw new Error("network.failed"); // fetch's own "Failed to fetch": no response reached us
+    }
   };
   let res = await send();
   if (res.status === 401 && auth) {

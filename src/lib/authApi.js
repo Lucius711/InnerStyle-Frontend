@@ -116,6 +116,9 @@ export const adminApi = {
     request(`/api/admin/revenue/payments/${encodeURIComponent(orderCode)}/reconcile`, { method: "POST", auth: true }),
   modelSummary: () => request("/api/admin/models/summary", { auth: true }),
   modelAccounts: () => request("/api/admin/models/accounts", { auth: true }),
+  planSummary: () => request("/api/admin/plans/summary", { auth: true }),
+  planPurchases: (plan, page = 0) =>
+    request(`/api/admin/plans/purchases?page=${page}&size=20${plan ? `&plan=${encodeURIComponent(plan)}` : ""}`, { auth: true }),
 };
 
 // Counts one site visit; the app calls it once per browser session.

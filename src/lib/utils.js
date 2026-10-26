@@ -43,3 +43,14 @@ export function pickModelUrl(modelUrls) {
   const entries = Object.entries(modelUrls);
   return entries.length ? { format: entries[0][0], url: entries[0][1] } : null;
 }
+
+/**
+ * Copy a picked file's bytes into memory right away. On Android the picker (Google Photos,
+ * "1000004785.jpg"-style names) hands the browser a handle that can stop being readable by the
+ * time the form is sent (cloud photo, tab paused while the gallery was open) -> "Failed to fetch".
+ * An in-memory copy always uploads. Throws if the file can't be read at all.
+ */
+export async function readIntoMemory(file) {
+  const bytes = await file.arrayBuffer();
+  return new File([bytes], file.name || "image.jpg", { type: file.type, lastModified: file.lastModified });
+}

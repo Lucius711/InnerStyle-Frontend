@@ -8,6 +8,7 @@ import Dropzone from "./Dropzone";
 import AdvancedOptions from "./AdvancedOptions";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/useToast";
+import { readIntoMemory } from "@/lib/utils";
 import { useI18n } from "@/hooks/useI18n";
 import { useCostConfirm } from "@/hooks/useCostConfirm";
 import { MODEL_STYLES, TARGET_FORMATS } from "@/lib/constants";
@@ -55,10 +56,16 @@ export default function ImageTo3DForm({ onCreated, disabled }) {
   const addMulti = () => setMultiUrls((arr) => (arr.length >= MAX_IMAGES ? arr : [...arr, ""]));
   const removeMulti = (i) => setMultiUrls((arr) => arr.filter((_, idx) => idx !== i));
 
-  const onMultiFiles = (e) => {
-    const picked = Array.from(e.target.files || []);
-    setMultiFiles((prev) => [...prev, ...picked].slice(0, MAX_IMAGES));
-    e.target.value = ""; // allow re-picking the same file
+  const onMultiFiles = async (e) => {
+    const input = e.target;
+    const picked = Array.from(input.files || []);
+    input.value = ""; // allow re-picking the same file
+    try {
+      const copies = await Promise.all(picked.map(readIntoMemory));
+      setMultiFiles((prev) => [...prev, ...copies].slice(0, MAX_IMAGES));
+    } catch {
+      toast.error(t("form.dropReadError"));
+    }
   };
   const removeMultiFile = (i) => setMultiFiles((arr) => arr.filter((_, idx) => idx !== i));
 

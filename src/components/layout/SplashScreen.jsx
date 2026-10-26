@@ -6,7 +6,7 @@ import { useT } from "@/hooks/useI18n";
 /**
  * Intro splash: the logo's mascot hops in as a 2D sketch, squashes the "I" of Inner, is sprung into
  * the scanner box, gets coloured in by the scan line and its head pops up on a coil into the logo pose.
- * Plays on every full page load (like the old splash); tap, scroll or any key skips it. The underline under the tagline
+ * Plays on every full page load of the home page "/" (gated in App.jsx); tap, scroll or any key skips it. The underline under the tagline
  * only completes once the page has finished loading.
  */
 const NS = "http://www.w3.org/2000/svg";

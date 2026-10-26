@@ -21,6 +21,7 @@ export const en = {
     admin: "Traffic",
     revenue: "Revenue",
     models: "Model stats",
+    plans: "Plan stats",
   },
 
   lab: {
@@ -146,6 +147,24 @@ export const en = {
     account: "Account",
     totalCol: "Total",
     lastCreated: "Last created",
+  },
+
+  plans: {
+    title: "Plan stats",
+    subtitle: "Membership plans paid successfully, broken down by plan type.",
+    totalPaid: "Plans sold",
+    totalRevenue: "Plan revenue",
+    buyers: "Buyers",
+    packs: "sold",
+    lastPaid: "Last purchase",
+    all: "All",
+    empty: "No plan has been paid yet.",
+    loadFail: "Couldn't load plan stats",
+    orderCode: "Order",
+    plan: "Plan",
+    customer: "Customer",
+    amount: "Amount",
+    paidAt: "Paid at",
   },
 
   revenue: {
@@ -925,6 +944,7 @@ export const en = {
     dropHint: "PNG, JPG or WEBP · up to {mb} MB",
     dropTypeError: "Please use a PNG, JPG or WEBP image.",
     dropSizeError: "Image must be under {mb} MB.",
+    dropReadError: "Couldn't read this image. Download it to your device and pick it again, or choose another one.",
     generateModel: "Generate 3D model",
     describeLabel: "Describe your model",
     describePlaceholder: "e.g. a futuristic robot warrior with glowing armor",
@@ -1065,6 +1085,9 @@ export const en = {
   },
 
   server: {
+    network: {
+      failed: "Couldn't reach the server. Check your connection and try again.",
+    },
     user: {
       notFound: "Account not found.",
     },

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { UploadCloud, X, ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, readIntoMemory } from "@/lib/utils";
 import { useT } from "@/hooks/useI18n";
 
 const MAX_MB = 20; // backend multipart max-file-size
@@ -14,7 +14,7 @@ export default function Dropzone({ file, onFile, error }) {
   const inputRef = useRef(null);
   const previewUrl = file ? URL.createObjectURL(file) : null;
 
-  const validate = (f) => {
+  const validate = async (f) => {
     if (!f) return;
     if (!/image\/(png|jpe?g|webp)/.test(f.type)) {
       setLocalError(t("form.dropTypeError"));
@@ -24,8 +24,13 @@ export default function Dropzone({ file, onFile, error }) {
       setLocalError(t("form.dropSizeError", { mb: MAX_MB }));
       return;
     }
-    setLocalError(null);
-    onFile(f);
+    try {
+      const copy = await readIntoMemory(f);
+      setLocalError(null);
+      onFile(copy);
+    } catch {
+      setLocalError(t("form.dropReadError"));
+    }
   };
 
   return (

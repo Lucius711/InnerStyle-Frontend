@@ -16,6 +16,7 @@ import {
   BarChart3,
   Banknote,
   Shapes,
+  Crown,
 } from "lucide-react";
 import MagneticButton from "@/components/motion/MagneticButton";
 import Button from "@/components/ui/Button";
@@ -61,6 +62,7 @@ export default function Navbar() {
         { to: "/admin", icon: BarChart3, label: t("nav.admin") },
         { to: "/admin/revenue", icon: Banknote, label: t("nav.revenue") },
         { to: "/admin/models", icon: Shapes, label: t("nav.models") },
+        { to: "/admin/plans", icon: Crown, label: t("nav.plans") },
       ]
     : [];
   const accountLinks = [...adminLinks, ...(userIsStaff

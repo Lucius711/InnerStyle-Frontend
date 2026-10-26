@@ -38,6 +38,7 @@ const StaffDashboard = lazy(() => import("@/pages/StaffDashboard"));
 const AdminTraffic = lazy(() => import("@/pages/AdminTraffic"));
 const AdminRevenue = lazy(() => import("@/pages/AdminRevenue"));
 const AdminModels = lazy(() => import("@/pages/AdminModels"));
+const AdminPlans = lazy(() => import("@/pages/AdminPlans"));
 const MyModels = lazy(() => import("@/pages/MyModels"));
 const PrintOrders = lazy(() => import("@/pages/PrintOrders"));
 const Membership = lazy(() => import("@/pages/Membership"));
@@ -103,13 +104,7 @@ function AnimatedRoutes() {
         />
         <Route
           path="/lab"
-          element={
-            <PageTransition>
-              <ProtectedRoute customerOnly>
-                <CreativeLab />
-              </ProtectedRoute>
-            </PageTransition>
-          }
+          element={<Navigate to="/my-3d-printing" replace />}
         />
         <Route
           path="/lab/:taskId"
@@ -190,6 +185,16 @@ function AnimatedRoutes() {
             <PageTransition>
               <StaffRoute role="ADMIN">
                 <AdminModels />
+              </StaffRoute>
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/admin/plans"
+          element={
+            <PageTransition>
+              <StaffRoute role="ADMIN">
+                <AdminPlans />
               </StaffRoute>
             </PageTransition>
           }
@@ -277,7 +282,8 @@ export default function App() {
   return (
     <ThemeProvider>
       <I18nProvider>
-        <SplashScreen />
+        {/* Intro only on the home page; deep links (lab, studio, admin…) open straight away. */}
+        {window.location.pathname === "/" && <SplashScreen />}
         <BrowserRouter>
           <ToastProvider>
             <AuthProvider>

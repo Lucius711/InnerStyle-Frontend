@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate, useParams, Navigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Wand2,
@@ -31,6 +31,7 @@ import { TERMINAL_STATUSES } from "@/lib/constants";
 
 // Rigged / animated models already have a skeleton; others can be rigged on demand (Pro/Max) so
 // the editor can split them into head / body / arms / legs from the bone weights.
+const ALREADY_RIGGED = ["RIG", "ANIMATE"];
 const needsRig = (task) =>
   task?.status === "SUCCEEDED" && !ALREADY_RIGGED.includes(task.taskType) && Boolean(task.modelUrls?.glb || task.modelUrls?.gltf);
 
@@ -57,16 +58,13 @@ function previewModelFormat(task) {
 /**
  * Creative Lab — editor-only view, opened via /lab/:taskId.
  * Access it from My Models (the "Edit 3D" button on each task card).
- * /lab without a taskId redirects to /my-3d-printing.
+ * /lab without a taskId redirects to /my-3d-printing (see App.jsx).
  */
 export default function CreativeLab() {
   const { t, tServer } = useI18n();
   const toast = useToast();
   const navigate = useNavigate();
   const { taskId } = useParams();
-
-  // No taskId → send back to the model library
-  if (!taskId) return <Navigate to="/my-3d-printing" replace />;
 
   const [task, setTask] = useState(null);
   const [loadingTask, setLoadingTask] = useState(true);
@@ -119,8 +117,7 @@ export default function CreativeLab() {
       return;
     }
     if (edited.status === "SUCCEEDED" && isViewable(edited)) {
-      setTask(edited);
-      setModelVersion(Date.now());
+      navigate(`/lab/${edited.id}`, { replace: true }); // URL follows the edited copy, so a reload keeps it
     } else {
       toast.error(t("lab.loadFailTitle"), edited.error || "");
     }
