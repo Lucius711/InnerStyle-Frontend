@@ -1560,11 +1560,11 @@ export default function ModelEditor({ url, baseColorUrl, open, onClose, task, on
           style={{ background: scene.bg || "radial-gradient(ellipse at center,#1b2030,#070810)" }}
         >
           <Canvas shadows camera={{ position: [0, 0.4, 4], fov: 40 }} dpr={[1, 2]}
-            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+            gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.35 }}
             onCreated={(state) => (glStateRef.current = state)}
             onPointerMissed={() => setSelectedId(null)}>
-            <ambientLight intensity={0.4 * scene.light} />
-            <directionalLight position={[4, 6, 5]} intensity={1.1 * scene.light} castShadow />
+            <ambientLight intensity={0.7 * scene.light} />
+            <directionalLight position={[4, 6, 5]} intensity={1.5 * scene.light} castShadow />
             {scene.grid && <gridHelper args={[10, 20, "#3a3f55", "#23283a"]} position={[0, -1, 0]} />}
             <Suspense fallback={<CanvasLoader />}>
               <EditableModel url={modelUrl} baseColorUrl={baseColorUrl} registerScene={registerScene} onParts={setParts}
