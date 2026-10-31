@@ -10,6 +10,8 @@ import {
   Package,
   ExternalLink,
   Truck,
+  Cuboid,
+  X,
 } from "lucide-react";
 import { zipSync, unzipSync } from "three/examples/jsm/libs/fflate.module.js";
 import { buildModelFiles } from "@/lib/modelExport";
@@ -24,6 +26,8 @@ import { vnd } from "@/lib/pricing";
 import { useToast } from "@/hooks/useToast";
 import { useT } from "@/hooks/useI18n";
 import { friendly } from "@/lib/messages";
+import ModelViewer from "@/components/three/ModelViewer";
+import { api } from "@/lib/api";
 
 /**
  * Fetch a staff-authed image URL and return a blob: URL the browser can load.
@@ -99,6 +103,44 @@ function OrderThumbnail({ orderId, isPair = false }) {
   );
 }
 
+/** Full-screen 3D viewer of an order's model — the same viewer customers see (rotate, zoom, textured/clay). */
+function OrderModelModal({ taskId, title, onClose }) {
+  // Cache-bust per opening: staff may have just repaired the model in place.
+  const [url] = useState(() => `${api.modelUrl(taskId, "glb")}&v=${Date.now()}`);
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+  return (
+    <div
+      className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={title}
+    >
+      <div
+        className="glass-strong relative w-full max-w-4xl rounded-3xl p-4 shadow-card"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-3 flex items-center justify-between gap-3 pr-1">
+          <p className="truncate text-sm font-semibold text-app-text">{title}</p>
+          <button
+            type="button"
+            onClick={onClose}
+            className="focus-ring rounded-lg p-1.5 text-app-faint transition hover:bg-app-line/10 hover:text-app-text"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <ModelViewer url={url} className="h-[70vh] w-full" />
+      </div>
+    </div>
+  );
+}
+
 export default function StaffDashboard() {
   const t = useT();
   const toast = useToast();
@@ -107,6 +149,7 @@ export default function StaffDashboard() {
   const [statusFilter, setStatusFilter] = useState("");
   const [busyId, setBusyId] = useState("");
   const [trackId, setTrackId] = useState("");
+  const [viewing, setViewing] = useState(null); // { taskId, title } of the model open in the 3D viewer
   // Per-order selected format: { [orderId]: fmt }
   const [formatMap, setFormatMap] = useState({});
 
@@ -164,6 +207,9 @@ export default function StaffDashboard() {
 
   return (
     <div className="mx-auto min-h-screen max-w-5xl px-5 pb-24 pt-28">
+      {viewing && (
+        <OrderModelModal taskId={viewing.taskId} title={viewing.title} onClose={() => setViewing(null)} />
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold text-app-text">
@@ -215,8 +261,25 @@ export default function StaffDashboard() {
               >
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="flex items-start gap-3">
-                    <OrderThumbnail orderId={o.sourceTaskId ? o.id : null} />
-                    {o.pairTaskId && <OrderThumbnail orderId={o.id} isPair />}
+                    <button
+                      type="button"
+                      className="focus-ring rounded-xl"
+                      disabled={!o.sourceTaskId}
+                      onClick={() => setViewing({ taskId: o.sourceTaskId, title: t("staff.view3dTitle", { id: o.id.slice(0, 8) }) })}
+                      aria-label={t("staff.view3d")}
+                    >
+                      <OrderThumbnail orderId={o.sourceTaskId ? o.id : null} />
+                    </button>
+                    {o.pairTaskId && (
+                      <button
+                        type="button"
+                        className="focus-ring rounded-xl"
+                        onClick={() => setViewing({ taskId: o.pairTaskId, title: `${t("staff.view3dTitle", { id: o.id.slice(0, 8) })} · ${t("staff.pairModel")}` })}
+                        aria-label={t("staff.view3dPair")}
+                      >
+                        <OrderThumbnail orderId={o.id} isPair />
+                      </button>
+                    )}
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <Badge tone={STATUS_TONE[o.status] || "violet"}>{o.status}</Badge>
@@ -241,6 +304,25 @@ export default function StaffDashboard() {
                     </div>
                     {fmt === "stl" && (
                       <span className="text-[11px] text-amber-400">{t("studio.stlTextureNote")}</span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      icon={Cuboid}
+                      disabled={!o.sourceTaskId}
+                      onClick={() => setViewing({ taskId: o.sourceTaskId, title: t("staff.view3dTitle", { id: o.id.slice(0, 8) }) })}
+                    >
+                      {t("staff.view3d")}
+                    </Button>
+                    {o.pairTaskId && (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        icon={Cuboid}
+                        onClick={() => setViewing({ taskId: o.pairTaskId, title: `${t("staff.view3dTitle", { id: o.id.slice(0, 8) })} · ${t("staff.pairModel")}` })}
+                      >
+                        {t("staff.view3dPair")}
+                      </Button>
                     )}
                     <Button
                       size="sm"
